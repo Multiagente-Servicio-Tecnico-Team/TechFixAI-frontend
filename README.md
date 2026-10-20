@@ -1,7 +1,9 @@
 # TechFix.AI — Frontend
 
-Interfaz web de TechFix.AI: landing, registro de cuenta, inicio de sesión y recuperación de contraseña,
+Interfaz web de TechFix.AI (la API está en [TechFixAI-backend](https://github.com/Multiagente-Servicio-Tecnico-Team/TechFixAI-backend)): landing, registro de cuenta, inicio de sesión y recuperación de contraseña,
 más el portal del cliente y el panel del taller. Las pantallas siguen los prototipos de Figma del proyecto.
+
+Producción: https://techfixai.vercel.app
 
 ## Frameworks y librerías
 
@@ -17,7 +19,7 @@ más el portal del cliente y el panel del taller. Las pantallas siguen los proto
 ## Estructura de carpetas
 
 ```text
-landing/
+TechFixAI-frontend/
 ├── index.html               # Documento base y fuentes
 ├── public/favicon.svg
 ├── src/
@@ -41,7 +43,6 @@ landing/
 │   ├── styles.css           # Estilos propios de la landing
 │   └── app.css              # Estilos propios del portal, el taller y el acceso
 ├── tests/                   # Pruebas Vitest (contrato de API y pantallas de autenticación)
-├── .env.example             # VITE_API_URL
 └── vite.config.js           # Configuración de Vite y de Vitest
 ```
 
@@ -77,7 +78,7 @@ El cliente `src/api/auth.js` decide el modo según `VITE_API_URL`:
 
 - **Sin definir (por defecto):** modo demostración con simulador local. Cualquier correo válido inicia sesión;
   `registrado@techfix.ai` simula un correo ya registrado (409) y `token=expirado` un enlace vencido.
-- **Definido:** llama a la API de cuentas ([`app/accounts`](../app/accounts/README.md)) con `POST`, JSON y
+- **Definido:** llama a la API de cuentas ([`app/accounts`](https://github.com/Multiagente-Servicio-Tecnico-Team/TechFixAI-backend/blob/develop/app/accounts/README.md)) con `POST`, JSON y
   `credentials: "include"` (cookie de sesión HttpOnly).
 - **Producción:** si no está definido o contiene una URL absoluta, se usa `/backend/auth` para mantener la
   cookie same-origin con el portal.
@@ -109,11 +110,11 @@ autenticación. En desarrollo sin URL se conserva el modo demostración.
 Requisitos: Node.js 18 o superior (probado con Node 24) y npm.
 
 ```bash
-npm --prefix landing install
-npm --prefix landing run dev
+npm install
+npm run dev
 ```
 
-Abrir http://localhost:5173. Para usar un backend local, crear `landing/.env` a partir de `.env.example`:
+Abrir http://localhost:5173. Para usar un backend local, crear un archivo `.env` (no se sube al repositorio) con:
 
 ```bash
 VITE_API_URL=http://localhost:8000/auth
@@ -123,7 +124,7 @@ VITE_CHAT_URL=http://localhost:8000
 ## Pruebas
 
 ```bash
-npm --prefix landing test
+npm test
 ```
 
 61 pruebas en 7 archivos: contrato de cuentas y chat, rutas de API same-origin en
@@ -134,14 +135,14 @@ restablecimiento, roles, cierre de sesión y consulta nueva.
 ## Compilación y despliegue
 
 ```bash
-npm --prefix landing run build
+npm run build
 ```
 
-Genera `landing/dist/` (HTML, CSS y JS estáticos). Para publicarlo:
+Genera `dist/` (HTML, CSS y JS estáticos). Para publicarlo:
 
 1. Para Netlify, definir `VITE_API_URL=/backend/auth` y `VITE_CHAT_URL=/backend` antes de compilar. No
    configurar URLs absolutas del backend Render en el cliente.
-2. Publicar `landing/public/_redirects` junto con `dist/`; `/backend/*` debe proxyar al backend unificado,
+2. En Netlify, publicar `public/_redirects` junto con `dist/`; `/backend/*` debe proxyar al backend unificado,
    conservando método, cuerpo y cabeceras `Set-Cookie`/`Cookie`.
 3. Configurar fallback de rutas SPA a `index.html`.
 4. El backend debe usar HTTPS y cookie `HttpOnly; Secure; SameSite=Lax; Path=/`. Con proxy same-origin no se
@@ -151,11 +152,11 @@ Genera `landing/dist/` (HTML, CSS y JS estáticos). Para publicarlo:
 ## Limitaciones actuales
 
 - En modo demostración (sin `VITE_API_URL`) no se verifican contraseñas ni se persisten datos al recargar.
-- El proxy same-origin de producción está configurado para Netlify en `landing/public/_redirects`; otros
+- El proxy same-origin de producción está configurado para Netlify en `public/_redirects` y, en Vercel, en la configuración del proyecto; otros
   hostings necesitan una regla equivalente para `/backend/*`.
 - Tickets, inventario y asistente usan datos de demostración en memoria.
 - Sin `VITE_CHAT_URL` el asistente responde con textos de demostración. Con `VITE_CHAT_URL` usa el patrón
-  LangGraph configurado (contrato en `app/chat/README.md`); la conversación vive en la pestaña y recargar
+  LangGraph configurado (contrato en [`app/chat/README.md`](https://github.com/Multiagente-Servicio-Tecnico-Team/TechFixAI-backend/blob/develop/app/chat/README.md)); la conversación vive en la pestaña y recargar
   empieza una nueva.
 
 ## Chat con los agentes

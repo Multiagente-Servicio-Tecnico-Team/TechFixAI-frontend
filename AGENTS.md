@@ -8,7 +8,7 @@ Frontend de TechFix.AI (React 18 + Vite 5 + React Router 6). La API está en
 1. Lee `memory.md` (decisiones y limitaciones), `features.md` (pantallas, estado y responsables) y `docs.md` (índice).
 2. Revisa el trabajo en curso para no duplicarlo: `git fetch --all`, `gh pr list` y las ramas abiertas.
 3. Busca si ya existe un componente, estilo o cliente de API antes de crear otro (`git grep`). Reutiliza y extiende.
-4. Si el cambio toca pantallas o archivos de otro integrante (`features.md`), avisa antes o hazlo en un PR aparte.
+4. El responsable del frontend es SebasBazauri: los cambios se proponen con un PR hacia `develop` y él los revisa. Si el cambio depende del backend (contrato de la API), coordínalo también con su responsable.
 
 ## Dónde va cada cosa
 

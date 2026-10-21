@@ -5,11 +5,14 @@ Estado al 2026-10-20 (rama `develop`).
 
 ## Responsables
 
-| Área | Responsable principal | También participan |
+**Responsable de todo el frontend: SebasBazauri.** Revisa y aprueba los cambios de este repositorio; cualquier
+integrante puede proponer cambios con un PR hacia `develop`.
+
+| Área | Responsable | Contribuciones anteriores |
 | --- | --- | --- |
 | Landing, registro, acceso, recuperación y restablecimiento | SebasBazauri | — |
 | Portal del cliente (asistente con selector de patrón) | SebasBazauri | jsalinas4 |
-| «Mis Tickets» conectado a la API | jsalinas4 | SebasBazauri |
+| «Mis Tickets» conectado a la API | SebasBazauri | jsalinas4 |
 | Panel del taller (cola, detalle, ticket presencial, inventario) | SebasBazauri | jsalinas4 |
 | Estilos generales (`src/shared/styles/`) | SebasBazauri | — |
 | Clientes de API (`authApi.js`, `chatApi.js`) | SebasBazauri | jsalinas4 |

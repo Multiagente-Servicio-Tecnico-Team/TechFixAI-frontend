@@ -2,7 +2,7 @@ import { Link, Outlet } from "react-router-dom";
 import { UserRound } from "lucide-react";
 import Logo from "../../shared/ui/Logo.jsx";
 
-export function AppFooterLegal() {
+function AppFooterLegal() {
   return (
     <footer className="auth-footer">
       <span className="auth-footer__dot" aria-hidden="true" />

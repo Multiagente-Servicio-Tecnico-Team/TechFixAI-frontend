@@ -1,10 +1,11 @@
 import { useEffect, useRef, useState } from "react";
+import { Archive, Brain, CircleCheck, Clock, Cpu, Info, PhoneCall, ReceiptText, SendHorizontal, Ticket, Wrench } from "lucide-react";
 import { Link, useSearchParams } from "react-router-dom";
-import { Archive, Bot, Brain, CircleCheck, Clock, Cpu, Info, PhoneCall, ReceiptText, SendHorizontal, Ticket, UserRound, Wrench } from "lucide-react";
 import { useStore } from "../../state/store.jsx";
 import { formatPEN } from "../../domain/money.js";
 import { chatApi } from "./chatApi.js";
 import LiveChat from "./LiveChat.jsx";
+import { ChatTitle, chatTime, CopilotHeader, TypingIndicator, UserMessage } from "./ChatParts.jsx";
 
 /*
  * Dos modos:
@@ -32,10 +33,6 @@ const ticketSuggestions = [
 ];
 
 const ticketFallback = (id) => `Recibí tu consulta y la añadí al expediente del ticket #${id}. Un especialista la revisará y te responderá por este canal.`;
-
-function now() {
-  return new Date().toLocaleTimeString("es-PE", { hour: "2-digit", minute: "2-digit" });
-}
 
 // Conversación del diseño de Figma para el ticket con presupuesto detallado.
 const figmaConversation = [
@@ -117,7 +114,7 @@ function Chat({ ticketId }) {
       : [{
           id: 1,
           from: "bot",
-          time: now(),
+          time: chatTime(),
           paragraphs: [
             `Hola${firstName ? `, ${firstName}` : ""}. Soy el Agente de Diagnóstico de TechFix.AI.`,
             "Para abrir tu consulta, cuéntame primero qué equipo necesitas revisar (tipo, marca y modelo).",
@@ -145,11 +142,11 @@ function Chat({ ticketId }) {
     clearTimeout(timer.current);
     timer.current = setTimeout(() => {
       setTyping(false);
-      setMessages((m) => [...m, { id: Date.now() + 1, from: "bot", time: now(), paragraphs, ...extra }]);
+      setMessages((m) => [...m, { id: Date.now() + 1, from: "bot", time: chatTime(), paragraphs, ...extra }]);
     }, 700);
   };
 
-  const addUser = (text) => setMessages((m) => [...m, { id: Date.now(), from: "user", time: now(), text }]);
+  const addUser = (text) => setMessages((m) => [...m, { id: Date.now(), from: "user", time: chatTime(), text }]);
 
   const send = (text, answer) => {
     const clean = text.trim();
@@ -200,30 +197,15 @@ function Chat({ ticketId }) {
 
   return (
     <div className="container-chat">
-      <div className="chat-title">
-        <h1>{existing ? "Diagnóstico Asistido y Cotización Inteligente" : "Nueva Consulta de Diagnóstico"}</h1>
-        <span className="pill pill--green"><span className="pill__dot" />En línea</span>
-      </div>
+      <ChatTitle title={existing ? "Diagnóstico Asistido y Cotización Inteligente" : "Nueva Consulta de Diagnóstico"} />
 
       <section className="copilot" aria-label="Conversación con TechFix Copilot">
-        <header className="copilot__head">
-          <span className="copilot__avatar"><Bot size={22} aria-hidden="true" /></span>
-          <div>
-            <h2>TechFix Copilot</h2>
-            <p>Especialista en Diagnóstico y Presupuestos de Hardware{currentId ? ` · Ticket #${currentId}` : " · Nueva consulta"}</p>
-          </div>
-        </header>
+        <CopilotHeader subtitle={`Especialista en Diagnóstico y Presupuestos de Hardware${currentId ? ` · Ticket #${currentId}` : " · Nueva consulta"}`} />
 
         <div className="copilot__log" aria-live="polite">
           {messages.map((m) =>
             m.from === "user" ? (
-              <div key={m.id} className="msg msg--user">
-                <div className="msg__content">
-                  <p className="msg__meta">Tú (Cliente) <time>{m.time}</time></p>
-                  <p className="msg__bubble">{m.text}</p>
-                </div>
-                <span className="msg__avatar msg__avatar--user"><UserRound size={16} aria-hidden="true" /></span>
-              </div>
+              <UserMessage key={m.id} label="Tú (Cliente)" time={m.time}>{m.text}</UserMessage>
             ) : (
               <div key={m.id} className="msg msg--bot">
                 <span className="msg__avatar"><Brain size={16} aria-hidden="true" /></span>
@@ -239,10 +221,7 @@ function Chat({ ticketId }) {
             )
           )}
           {typing && (
-            <div className="msg msg--bot">
-              <span className="msg__avatar"><Brain size={16} aria-hidden="true" /></span>
-              <div className="typing" aria-label="El agente está escribiendo"><span /><span /><span /></div>
-            </div>
+            <TypingIndicator />
           )}
           <div ref={endRef} />
         </div>

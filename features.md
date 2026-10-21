@@ -43,8 +43,6 @@ demostración.
 
 ## Pendientes conocidos
 
-- **Prueba que falla en `develop`:** `consultation.test.jsx` («asks for device and fault…»), desde el cambio de la
-  vista «Mis Tickets».
 - **Taller:** tickets e inventario usan datos de demostración; no están conectados a la API.
 - **Despliegue:** Vercel (`techfixai.vercel.app`) debe apuntar a este repositorio; el proxy `/backend/*` hacia Render
   no está versionado (falta un `vercel.json`).

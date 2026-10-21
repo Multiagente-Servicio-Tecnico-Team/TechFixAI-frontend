@@ -1,16 +1,13 @@
 import { useEffect, useRef, useState } from "react";
+import { Brain, CircleCheck, CircleX, Info, ReceiptText, RotateCcw, SendHorizontal, Ticket, TriangleAlert } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
-import { Bot, Brain, CircleCheck, CircleX, Info, ReceiptText, RotateCcw, SendHorizontal, Ticket, TriangleAlert, UserRound } from "lucide-react";
 import { useStore } from "../../state/store.jsx";
 import { formatPEN, parseMoney } from "../../domain/money.js";
 import { authApi } from "../auth/authApi.js";
 import { chatApi as defaultChatApi } from "./chatApi.js";
 import { TICKET_STATUS_LABEL } from "../../domain/tickets.js";
 import RichText from "../../shared/ui/RichText.jsx";
-
-function now() {
-  return new Date().toLocaleTimeString("es-PE", { hour: "2-digit", minute: "2-digit" });
-}
+import { ChatTitle, chatTime, CopilotHeader, TypingIndicator, UserMessage } from "./ChatParts.jsx";
 
 function welcomeMessage(firstName) {
   return `Hola${firstName ? `, ${firstName}` : ""}. Soy TechFix Copilot. Puedo orientarte con soporte y reparaciones, consultar componentes y cotizaciones, ayudarte a armar una PC según tu presupuesto y resolver consultas de garantía o logística. ¿Qué necesitas hoy?`;
@@ -77,7 +74,7 @@ export default function LiveChat({ api = defaultChatApi }) {
   const navigate = useNavigate();
   const firstName = (session?.name || "").split(" ")[0];
   const [messages, setMessages] = useState([{
-    id: 0, from: "bot", time: now(),
+    id: 0, from: "bot", time: chatTime(),
     text: welcomeMessage(firstName),
   }]);
   const [conversationId, setConversationId] = useState(null);
@@ -97,7 +94,7 @@ export default function LiveChat({ api = defaultChatApi }) {
     try {
       const data = await api.sendMessage({ conversationId, pattern, ...payload });
       setConversationId(data.conversation_id);
-      setMessages((m) => [...m, { id: Date.now() + 1, from: "bot", time: now(), text: data.reply, quote: data.quote, ticket: data.ticket }]);
+      setMessages((m) => [...m, { id: Date.now() + 1, from: "bot", time: chatTime(), text: data.reply, quote: data.quote, ticket: data.ticket }]);
     } catch (err) {
       if (err?.code === "session_required") {
         // La sesión del servidor terminó: se cierra la local y se vuelve al chat después de ingresar.
@@ -117,7 +114,7 @@ export default function LiveChat({ api = defaultChatApi }) {
     e?.preventDefault();
     const text = draft.trim();
     if (!text || busy) return;
-    setMessages((m) => [...m, { id: Date.now(), from: "user", time: now(), text }]);
+    setMessages((m) => [...m, { id: Date.now(), from: "user", time: chatTime(), text }]);
     setDraft("");
     call({ message: text });
   };
@@ -128,7 +125,7 @@ export default function LiveChat({ api = defaultChatApi }) {
     setMessages([{
       id: Date.now(),
       from: "bot",
-      time: now(),
+      time: chatTime(),
       text: welcomeMessage(firstName),
     }]);
     setError(null);
@@ -139,19 +136,10 @@ export default function LiveChat({ api = defaultChatApi }) {
 
   return (
     <div className="container-chat">
-      <div className="chat-title">
-        <h1>Diagnóstico Asistido y Cotización Inteligente</h1>
-        <span className="pill pill--green"><span className="pill__dot" />En línea</span>
-      </div>
+      <ChatTitle title="Diagnóstico Asistido y Cotización Inteligente" />
 
       <section className="copilot" aria-label="Conversación con TechFix Copilot">
-        <header className="copilot__head">
-          <span className="copilot__avatar"><Bot size={22} aria-hidden="true" /></span>
-          <div>
-            <h2>TechFix Copilot</h2>
-            <p>Agentes de atención, soporte técnico y ventas</p>
-          </div>
-        </header>
+        <CopilotHeader subtitle="Agentes de atención, soporte técnico y ventas" />
 
         <div className="pattern-picker">
           <label htmlFor="chat-pattern">Patrón de agentes</label>
@@ -181,13 +169,7 @@ export default function LiveChat({ api = defaultChatApi }) {
         <div className="copilot__log" aria-live="polite">
           {messages.map((m) =>
             m.from === "user" ? (
-              <div key={m.id} className="msg msg--user">
-                <div className="msg__content">
-                  <p className="msg__meta">Tú <time>{m.time}</time></p>
-                  <p className="msg__bubble">{m.text}</p>
-                </div>
-                <span className="msg__avatar msg__avatar--user"><UserRound size={16} aria-hidden="true" /></span>
-              </div>
+              <UserMessage key={m.id} label="Tú" time={m.time}>{m.text}</UserMessage>
             ) : (
               <div key={m.id} className="msg msg--bot">
                 <span className="msg__avatar"><Brain size={16} aria-hidden="true" /></span>
@@ -215,10 +197,7 @@ export default function LiveChat({ api = defaultChatApi }) {
             )
           )}
           {busy && (
-            <div className="msg msg--bot">
-              <span className="msg__avatar"><Brain size={16} aria-hidden="true" /></span>
-              <div className="typing" aria-label="El agente está escribiendo"><span /><span /><span /></div>
-            </div>
+            <TypingIndicator />
           )}
           <div ref={endRef} />
         </div>

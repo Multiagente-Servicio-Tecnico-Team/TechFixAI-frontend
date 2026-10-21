@@ -23,36 +23,41 @@ TechFixAI-frontend/
 ├── index.html               # Documento base y fuentes
 ├── public/favicon.svg
 ├── src/
-│   ├── main.jsx             # Punto de entrada: router + estado global
-│   ├── App.jsx              # Tabla de rutas y protección por rol
-│   ├── api/auth.js          # Cliente HTTP de /registro, /login, /recuperar, /restablecer (o simulador)
-│   ├── data/store.jsx       # Estado en memoria (tickets, repuestos, sesión) e importes en céntimos
-│   ├── layouts/             # AuthLayout (acceso), PortalLayout (cliente), StaffLayout (taller)
-│   ├── components/          # Secciones de la landing y piezas comunes (ui, PasswordFields, Logo…)
-│   ├── pages/
-│   │   ├── Landing.jsx
-│   │   ├── portal/          # Login, Register, Recover, Reset, Tickets, Assistant
-│   │   ├── staff/           # StaffLogin, Workshop, TicketDetail, NewTicket, Inventory, PartForm
-│   │   ├── Help.jsx         # Soporte, preguntas frecuentes, estado y legales
-│   │   └── NotFound.jsx
-│   ├── styles/              # Estilos generales, se cargan primero
-│   │   ├── index.css        # Importa tokens, base y componentes
-│   │   ├── tokens.css       # Variables: colores, radios, sombras, tipografías y anillo de foco
-│   │   ├── base.css         # Reset, documento, foco y animaciones compartidas
-│   │   └── components.css   # Botones, etiquetas, íconos, logo, enlaces, avisos y formularios
-│   ├── styles.css           # Estilos propios de la landing
-│   └── app.css              # Estilos propios del portal, el taller y el acceso
-├── tests/                   # Pruebas Vitest (contrato de API y pantallas de autenticación)
+│   ├── main.jsx             # Punto de entrada: carga estilos, router y estado
+│   ├── app/                 # Composición: rutas (App.jsx), layouts y ScrollManager
+│   ├── domain/              # JS puro, sin React: dinero, validaciones, estados de ticket, cuenta, inventario
+│   ├── state/               # Estado de React (store.jsx), datos de demostración y sesión del navegador
+│   ├── features/            # Una carpeta por funcionalidad
+│   │   ├── auth/            # Acceso, registro, recuperar, restablecer, LoginForm, RequireRole, authApi.js
+│   │   ├── chat/            # Asistente (real y demostración), LiveChat, chatApi.js
+│   │   ├── tickets/         # Mis Tickets
+│   │   ├── workshop/        # Panel del taller: cola, detalle, ticket presencial, inventario
+│   │   ├── landing/         # Landing, sus secciones (sections/) y landing.css
+│   │   └── help/            # Ayuda y página 404
+│   └── shared/              # Reutilizable y sin estado
+│       ├── ui/              # ui.jsx, FormAlert, RichText, Logo, Eyebrow
+│       ├── api/baseUrl.js   # URL de la API (mismo origen en producción)
+│       └── styles/          # index, tokens, base, components y screens.css (portal, taller y acceso)
+├── tests/
+│   ├── unit/                # Dominio, clientes de API y regla de dependencias entre capas
+│   └── integration/         # Pantallas con Testing Library
 └── vite.config.js           # Configuración de Vite y de Vitest
 ```
+
+### Capas
+
+`domain` ← `shared` ← `state` ← `features` ← `app`: cada capa solo importa de las de su izquierda;
+`tests/unit/architecture.test.js` lo comprueba. Las reglas de negocio (importes, validaciones, estados) van en
+`domain` y se prueban sin React; las pantallas de una funcionalidad viven en su carpeta de `features`.
 
 ## Estilos
 
 - Una pieza que usan varias pantallas (botón, etiqueta, campo de formulario, aviso…) va en
-  `src/styles/components.css`; lo propio de una sola pantalla va en `styles.css` (landing) o `app.css`.
-- Los colores, radios y sombras se toman de `src/styles/tokens.css` con `var(--…)`; si un valor se repite,
+  `src/shared/styles/components.css`; lo propio de la landing va en `src/features/landing/landing.css` y lo del
+  portal, el taller y el acceso en `src/shared/styles/screens.css`.
+- Los colores, radios y sombras se toman de `src/shared/styles/tokens.css` con `var(--…)`; si un valor se repite,
   se agrega un token en lugar de escribirlo a mano.
-- El orden de carga (`main.jsx`) es `styles/index.css`, `styles.css` y `app.css`: los estilos de pantalla
+- El orden de carga (`main.jsx`) es `shared/styles/index.css`, `landing.css` y `screens.css`: los estilos de pantalla
   pueden ajustar a los generales sin subir la especificidad.
 
 ## Funcionalidad
@@ -74,7 +79,7 @@ acceso y registro redirigen al área del usuario. La sesión del navegador guard
 
 ## Conexión con el backend
 
-El cliente `src/api/auth.js` decide el modo según `VITE_API_URL`:
+El cliente `src/features/auth/authApi.js` decide el modo según `VITE_API_URL`:
 
 - **Sin definir (por defecto):** modo demostración con simulador local. Cualquier correo válido inicia sesión;
   `registrado@techfix.ai` simula un correo ya registrado (409) y `token=expirado` un enlace vencido.
@@ -98,7 +103,7 @@ una cuenta de cliente no puede entrar al panel. El campo "Nombre y Apellido" se 
 Mensajes al usuario: 409 se muestra en el campo correo; 401 como "Correo o contraseña incorrectos"; errores de
 red o 5xx con un mensaje genérico, nunca con el texto del servidor.
 
-El asistente usa `src/api/chat.js` y `VITE_CHAT_URL`. El portal envía `POST /api/chat`
+El asistente usa `src/features/chat/chatApi.js` y `VITE_CHAT_URL`. El portal envía `POST /api/chat`
 con `credentials: "include"` y el patrón seleccionado (`hierarchical`, `orchestrator`
 o `decentralized`); el patrón no cambia hasta iniciar una conversación nueva.
 `GET /api/chat/patterns` también requiere sesión. En producción, si la URL está vacía

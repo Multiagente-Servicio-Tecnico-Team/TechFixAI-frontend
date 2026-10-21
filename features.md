@@ -11,8 +11,8 @@ Estado al 2026-10-20 (rama `develop`).
 | Portal del cliente (asistente con selector de patrón) | SebasBazauri | jsalinas4 |
 | «Mis Tickets» conectado a la API | jsalinas4 | SebasBazauri |
 | Panel del taller (cola, detalle, ticket presencial, inventario) | SebasBazauri | jsalinas4 |
-| Estilos generales (`src/styles/`) | SebasBazauri | — |
-| Clientes de API (`src/api/`) | SebasBazauri | jsalinas4 |
+| Estilos generales (`src/shared/styles/`) | SebasBazauri | — |
+| Clientes de API (`authApi.js`, `chatApi.js`) | SebasBazauri | jsalinas4 |
 
 ## Pantallas
 
@@ -28,8 +28,8 @@ Estado al 2026-10-20 (rama `develop`).
 | `/ayuda` | Soporte, preguntas frecuentes, estado y legales | Lista | — |
 | `*` | Página 404 | Lista | — |
 
-Clientes de API: `src/api/auth.js` (cuentas) y `src/api/chat.js` (chat y tickets), con pruebas de contrato en
-`auth-api.test.js`, `chat.test.jsx` y `api-base-url.test.js`. Sin `VITE_API_URL`/`VITE_CHAT_URL` funcionan en modo
+Clientes de API: `src/features/auth/authApi.js` (cuentas) y `src/features/chat/chatApi.js` (chat y tickets), con pruebas
+de contrato en `tests/unit/auth-api.test.js`, `tests/integration/chat.test.jsx` y `tests/unit/api-base-url.test.js`. Sin `VITE_API_URL`/`VITE_CHAT_URL` funcionan en modo
 demostración.
 
 ## Calidad verificada
@@ -42,8 +42,6 @@ demostración.
 
 - **Prueba que falla en `develop`:** `consultation.test.jsx` («asks for device and fault…»), desde el cambio de la
   vista «Mis Tickets».
-- **Negrita en el chat:** el agente responde con `**texto**` y el chat muestra los asteriscos. El arreglo (componente
-  `RichText`) está en el PR #30 del repositorio anterior y debe traerse a este repositorio.
 - **Taller:** tickets e inventario usan datos de demostración; no están conectados a la API.
 - **Despliegue:** Vercel (`techfixai.vercel.app`) debe apuntar a este repositorio; el proxy `/backend/*` hacia Render
   no está versionado (falta un `vercel.json`).
@@ -52,9 +50,13 @@ demostración.
 
 | Necesidad | Usa |
 | --- | --- |
-| Botón, etiqueta, aviso, tarjeta, protección por rol | `src/components/ui.jsx` |
-| Contraseña con requisitos y confirmación | `src/components/PasswordFields.jsx` |
-| Llamadas a cuentas | `src/api/auth.js` (no uses `fetch` directo en las pantallas) |
-| Llamadas al chat y tickets | `src/api/chat.js` |
-| Formato de importes en soles | `formatPEN` y `parseMoney` en `src/data/store.jsx` |
-| Colores, radios, sombras, foco | variables de `src/styles/tokens.css` |
+| Botón, campo, paginación, ícono, aviso | `src/shared/ui/ui.jsx`, `src/shared/ui/FormAlert.jsx` |
+| Texto del agente con negritas | `src/shared/ui/RichText.jsx` |
+| Protección de rutas por rol | `src/features/auth/RequireRole.jsx` |
+| Contraseña con requisitos y confirmación | `src/features/auth/PasswordFields.jsx` (reglas en `src/domain/validation.js`) |
+| Validar correo o móvil | `EMAIL_RE` e `isMobilePhone` en `src/domain/validation.js` |
+| Llamadas a cuentas | `src/features/auth/authApi.js` (no uses `fetch` directo en las pantallas) |
+| Llamadas al chat y tickets | `src/features/chat/chatApi.js` |
+| Formato de importes en soles | `formatPEN`, `parseMoney` y `centsToInput` en `src/domain/money.js` |
+| Estados y categorías de ticket | `src/domain/tickets.js` |
+| Colores, radios, sombras, foco | variables de `src/shared/styles/tokens.css` |

@@ -12,10 +12,13 @@ Frontend de TechFix.AI (React 18 + Vite 5 + React Router 6). La API está en
 
 ## Dónde va cada cosa
 
-- Pantallas: `src/pages/` (`portal/` cliente, `staff/` taller). Rutas y protección por rol: `src/App.jsx`.
-- Piezas comunes: `src/components/` (`ui.jsx`, `PasswordFields.jsx`…). No dupliques un botón, campo o aviso: usa los existentes.
-- Estilos: lo que usan varias pantallas va en `src/styles/components.css`; los colores, radios y sombras salen de `src/styles/tokens.css` con `var(--…)`. Lo propio de la landing va en `src/styles.css` y lo del portal y el taller en `src/app.css`.
-- Llamadas al backend: solo desde `src/api/auth.js` (cuentas) y `src/api/chat.js` (chat y tickets). Siempre con `credentials: "include"`; la sesión vive en una cookie HttpOnly que el frontend no lee.
+- Capas: `domain` ← `shared` ← `state` ← `features` ← `app`; cada capa solo importa de las anteriores (lo verifica `tests/unit/architecture.test.js`).
+- Reglas de negocio (importes en céntimos, validaciones, estados de ticket, datos de la cuenta): `src/domain/`, sin React; se prueban en `tests/unit/`.
+- Pantallas: `src/features/<funcionalidad>/` (`auth`, `chat`, `tickets`, `workshop`, `landing`, `help`). Rutas y layouts: `src/app/`.
+- Piezas comunes sin estado: `src/shared/ui/` (`ui.jsx`, `FormAlert`, `RichText`, `Logo`…). No dupliques un botón, campo o aviso: usa los existentes.
+- Estado de React y datos de demostración: `src/state/`.
+- Estilos: lo que usan varias pantallas va en `src/shared/styles/components.css`; los colores, radios y sombras salen de `src/shared/styles/tokens.css` con `var(--…)`. Lo propio de la landing va en `src/features/landing/landing.css` y lo del portal y el taller en `src/shared/styles/screens.css`.
+- Llamadas al backend: solo desde `src/features/auth/authApi.js` (cuentas) y `src/features/chat/chatApi.js` (chat y tickets). Siempre con `credentials: "include"`; la sesión vive en una cookie HttpOnly que el frontend no lee.
 - Contrato con el backend: `POST /api/chat` y `/auth/*` están documentados en el backend (`app/chat/README.md`, `app/accounts/README.md`). Si cambias lo que envías o esperas, coordínalo con el backend.
 
 ## Reglas

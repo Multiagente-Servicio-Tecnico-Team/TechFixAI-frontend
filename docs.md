@@ -11,7 +11,7 @@ Dónde está explicado cada tema. Antes de documentar algo nuevo, revisa si ya e
 | `features.md` | Pantallas, estado, responsables, pendientes y código que no hay que duplicar |
 | `memory.md` | Historial de decisiones y limitaciones del frontend |
 | `public/_redirects` | Proxy `/backend/*` y rutas de la SPA para Netlify |
-| `tests/` | Pruebas Vitest: contrato de API, registro, acceso, recuperación, chat y consulta |
+| `tests/unit/`, `tests/integration/` | Pruebas Vitest: dominio, contrato de API y capas (unit); pantallas de acceso, registro, recuperación, chat y consulta (integration) |
 
 ## En el backend ([TechFixAI-backend](https://github.com/Multiagente-Servicio-Tecnico-Team/TechFixAI-backend))
 

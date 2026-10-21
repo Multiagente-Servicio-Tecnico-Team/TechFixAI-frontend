@@ -103,17 +103,3 @@ export const chatApi = createChatApi({
     import.meta.env?.PROD === true,
   ),
 });
-
-/** Estados de ticket del script de BD -> texto para el cliente. */
-export const TICKET_STATUS_LABEL = {
-  NEW: "Recibido",
-  IN_DIAGNOSIS: "En diagnóstico",
-  QUOTED: "Presupuesto enviado",
-  PAYMENT_PENDING: "Pago pendiente",
-  IN_REPAIR: "En reparación",
-  READY_FOR_PICKUP: "Listo para retiro",
-  READY_FOR_DELIVERY: "Listo para despacho",
-  WARRANTY_IN_REVIEW: "Garantía en revisión",
-  DELIVERED: "Entregado",
-  CANCELLED: "Cancelado",
-};

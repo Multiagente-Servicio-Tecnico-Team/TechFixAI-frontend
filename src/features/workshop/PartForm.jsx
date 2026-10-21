@@ -2,7 +2,9 @@ import { useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { Archive, Banknote, Barcode, Laptop, Lock, Save, X } from "lucide-react";
 import { BackLink, Field, InputIcon } from "../../shared/ui/ui.jsx";
-import { centsToInput, parseMoney, PART_CATEGORIES, useStore } from "../../state/store.jsx";
+import { useStore } from "../../state/store.jsx";
+import { centsToInput, parseMoney } from "../../domain/money.js";
+import { PART_CATEGORIES } from "../../domain/inventory.js";
 
 const SKU_RE = /^[A-Z0-9]+(?:-[A-Z0-9]+)*$/;
 

@@ -1,5 +1,6 @@
 import { Route, Routes } from "react-router-dom";
-import { RequireRole, ScrollManager } from "../shared/ui/ui.jsx";
+import { RequireRole } from "../features/auth/RequireRole.jsx";
+import { ScrollManager } from "./ScrollManager.jsx";
 import AuthLayout from "./layouts/AuthLayout.jsx";
 import PortalLayout from "./layouts/PortalLayout.jsx";
 import StaffLayout from "./layouts/StaffLayout.jsx";

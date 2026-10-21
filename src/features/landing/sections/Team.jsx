@@ -1,7 +1,4 @@
-import {
-  RefreshCw, GitBranch, UserCheck, Stethoscope, Filter, PackageSearch, MessageSquareText, Sparkles,
-  Timer, BadgeCheck, BellRing, CircleCheck,
-} from "lucide-react";
+import { RefreshCw, GitBranch, UserCheck, Stethoscope, Filter, PackageSearch, MessageSquareText, Sparkles, Timer, BadgeCheck, BellRing, CircleCheck } from "lucide-react";
 import Eyebrow from "../../../shared/ui/Eyebrow.jsx";
 
 const points = [

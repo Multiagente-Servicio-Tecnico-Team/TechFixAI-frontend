@@ -2,9 +2,9 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { ArrowRight, AtSign, Info, LoaderCircle, MailCheck, ShieldCheck } from "lucide-react";
 import { BackLink, Field, InputIcon } from "../../shared/ui/ui.jsx";
-import { EMAIL_RE } from "../../state/store.jsx";
+import { EMAIL_RE } from "../../domain/validation.js";
 import { authApi as defaultApi, MESSAGES } from "./authApi.js";
-import { FormAlert } from "./Login.jsx";
+import { FormAlert } from "../../shared/ui/FormAlert.jsx";
 
 export default function Recover({ api = defaultApi }) {
   const [email, setEmail] = useState("");

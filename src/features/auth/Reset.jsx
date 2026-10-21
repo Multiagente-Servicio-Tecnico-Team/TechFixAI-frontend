@@ -2,9 +2,10 @@ import { useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { ArrowRight, CircleCheck, LinkIcon, LoaderCircle, ShieldCheck } from "lucide-react";
 import { BackLink } from "../../shared/ui/ui.jsx";
-import PasswordFields, { isStrongPassword } from "./PasswordFields.jsx";
+import PasswordFields from "./PasswordFields.jsx";
+import { isStrongPassword } from "../../domain/validation.js";
 import { authApi as defaultApi, MESSAGES } from "./authApi.js";
-import { FormAlert } from "./Login.jsx";
+import { FormAlert } from "../../shared/ui/FormAlert.jsx";
 
 /**
  * Pantalla creada: destino del enlace que envía /recuperar.

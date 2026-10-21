@@ -2,7 +2,9 @@ import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { Banknote, Bot, CalendarDays, CircleCheck, Laptop, MessageSquareText, Save, UserRound } from "lucide-react";
 import { BackLink, Toast } from "../../shared/ui/ui.jsx";
-import { formatPEN, STAFF_STATUSES, useStore } from "../../state/store.jsx";
+import { useStore } from "../../state/store.jsx";
+import { formatPEN } from "../../domain/money.js";
+import { STAFF_STATUSES } from "../../domain/tickets.js";
 
 function Info({ label, children, wide }) {
   return (

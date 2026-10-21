@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { CircleCheck, Plus, Search, Store } from "lucide-react";
 import { ItemIcon } from "../../shared/ui/ui.jsx";
-import { formatPEN, parseMoney } from "../../state/store.jsx";
+import { formatPEN, parseMoney } from "../../domain/money.js";
 import { chatApi } from "../chat/chatApi.js";
 
 const statusInfo = {

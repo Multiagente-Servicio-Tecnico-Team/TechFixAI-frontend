@@ -2,7 +2,9 @@ import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { ArrowUpDown, ClipboardCheck, Laptop, Pencil, PlusCircle, Search, SlidersHorizontal, TriangleAlert } from "lucide-react";
 import { ItemIcon, Pagination } from "../../shared/ui/ui.jsx";
-import { formatPEN, PART_CATEGORIES, useStore } from "../../state/store.jsx";
+import { useStore } from "../../state/store.jsx";
+import { formatPEN } from "../../domain/money.js";
+import { PART_CATEGORIES } from "../../domain/inventory.js";
 
 const PAGE_SIZE = 4;
 const sorters = {

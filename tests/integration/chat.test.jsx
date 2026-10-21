@@ -4,13 +4,9 @@ import userEvent from "@testing-library/user-event";
 import { MemoryRouter, Route, Routes, useLocation } from "react-router-dom";
 import Assistant from "../../src/features/chat/Assistant.jsx";
 import { StoreProvider } from "../../src/state/store.jsx";
-import { RequireRole } from "../../src/shared/ui/ui.jsx";
-import {
-  CHAT_MESSAGES,
-  ChatError,
-  createChatApi,
-  TICKET_STATUS_LABEL,
-} from "../../src/features/chat/chatApi.js";
+import { RequireRole } from "../../src/features/auth/RequireRole.jsx";
+import { CHAT_MESSAGES, ChatError, createChatApi } from "../../src/features/chat/chatApi.js";
+import { TICKET_STATUS_LABEL } from "../../src/domain/tickets.js";
 
 const future = { v7_startTransition: true, v7_relativeSplatPath: true };
 const QUOTE = { status: "proposed", currency: "PEN", total: "260.00", lines: [{ label: "Instalación de SSD", amount: "80.00" }, { label: "SSD de 480 GB", amount: "180.00" }] };

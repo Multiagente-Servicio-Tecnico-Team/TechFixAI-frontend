@@ -2,12 +2,12 @@ import { useState } from "react";
 import { Link, Navigate, useNavigate } from "react-router-dom";
 import { ArrowRight, BellRing, CircleCheck, Contact, LoaderCircle, Mail, Smartphone } from "lucide-react";
 import { Field, InputIcon } from "../../shared/ui/ui.jsx";
-import PasswordFields, { isStrongPassword } from "./PasswordFields.jsx";
-import { EMAIL_RE, useStore } from "../../state/store.jsx";
-import { authApi as defaultApi, fullName, MESSAGES, splitFullName, toE164 } from "./authApi.js";
-import { FormAlert } from "./Login.jsx";
-
-export { PASSWORD_RULES } from "./PasswordFields.jsx";
+import PasswordFields from "./PasswordFields.jsx";
+import { EMAIL_RE, isMobilePhone, isStrongPassword } from "../../domain/validation.js";
+import { fullName, splitFullName, toE164 } from "../../domain/user.js";
+import { useStore } from "../../state/store.jsx";
+import { FormAlert } from "../../shared/ui/FormAlert.jsx";
+import { authApi as defaultApi, MESSAGES } from "./authApi.js";
 
 // Campos del contrato POST /registro -> campos del formulario.
 const API_FIELDS = { nombre: "name", email: "email", telefono: "phone", password: "password" };
@@ -17,7 +17,7 @@ export function validateRegister(form) {
   const errors = {};
   if (form.name.trim().length < 3) errors.name = "Ingresa tu nombre y apellido.";
   if (!EMAIL_RE.test(form.email.trim())) errors.email = "Ingresa un correo electrónico válido.";
-  if (!/^\d{9}$/.test(form.phone.replace(/\D/g, ""))) errors.phone = "Ingresa un número móvil de 9 dígitos.";
+  if (!isMobilePhone(form.phone)) errors.phone = "Ingresa un número móvil de 9 dígitos.";
   if (!isStrongPassword(form.password)) errors.password = "La contraseña no cumple todos los requisitos.";
   if (!form.confirm || form.confirm !== form.password) errors.confirm = "Las contraseñas no coinciden.";
   if (!form.terms) errors.terms = "Debes aceptar los términos para continuar.";

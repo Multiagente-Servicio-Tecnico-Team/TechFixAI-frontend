@@ -1,44 +1,6 @@
 import { useEffect, useState } from "react";
-import { Link, Navigate, useLocation } from "react-router-dom";
-import {
-  ArrowLeft, Battery, Check, ChevronLeft, ChevronRight, CircleCheck, Cpu, Eye, EyeOff, Laptop,
-  MemoryStick, Monitor,
-} from "lucide-react";
-import { useStore } from "../../state/store.jsx";
-
-/** Lleva al inicio en cada cambio de ruta, o al ancla indicada en el hash. */
-export function ScrollManager() {
-  const { pathname, hash } = useLocation();
-  const { signedOut, dispatch } = useStore();
-
-  // Al llegar a la landing tras cerrar sesión, las rutas protegidas vuelven a pedir acceso.
-  useEffect(() => {
-    if (signedOut && pathname === "/") dispatch({ type: "clearSignedOut" });
-  }, [signedOut, pathname, dispatch]);
-
-  useEffect(() => {
-    if (hash) {
-      const el = document.getElementById(hash.slice(1));
-      if (el) {
-        el.scrollIntoView();
-        return;
-      }
-    }
-    window.scrollTo(0, 0);
-  }, [pathname, hash]);
-  return null;
-}
-
-/** Protege rutas por rol; si no hay sesión, envía al acceso correspondiente. */
-export function RequireRole({ role, children }) {
-  const { session, signedOut } = useStore();
-  const location = useLocation();
-  if (session?.role === role) return children;
-  // Tras "Cerrar sesión" se vuelve a la landing en lugar de pedir acceso otra vez.
-  if (!session && signedOut) return <Navigate to="/" replace />;
-  const to = role === "staff" ? "/taller/acceso" : "/portal/acceso";
-  return <Navigate to={to} replace state={{ from: location.pathname }} />;
-}
+import { Link } from "react-router-dom";
+import { ArrowLeft, Battery, Check, ChevronLeft, ChevronRight, CircleCheck, Cpu, Eye, EyeOff, Laptop, MemoryStick, Monitor } from "lucide-react";
 
 export function Field({ label, htmlFor, required, hint, error, aside, children, className = "" }) {
   return (

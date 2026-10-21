@@ -1,16 +1,8 @@
 import { Check, CircleCheck, KeyRound, X } from "lucide-react";
 import { Field, PasswordInput } from "../../shared/ui/ui.jsx";
-
-export const PASSWORD_RULES = [
-  { id: "len", label: "Mínimo 8 caracteres", test: (p) => p.length >= 8 },
-  { id: "upper", label: "Una mayúscula (A-Z)", test: (p) => /[A-Z]/.test(p) },
-  { id: "num", label: "Al menos un número (0-9)", test: (p) => /\d/.test(p) },
-  { id: "sym", label: "Un símbolo especial (!@#$)", test: (p) => /[^A-Za-z0-9]/.test(p) },
-];
+import { PASSWORD_RULES } from "../../domain/validation.js";
 
 const strengthLabel = ["Muy débil", "Débil", "Media", "Buena", "Fuerte"];
-
-export const isStrongPassword = (p) => PASSWORD_RULES.every((r) => r.test(p));
 
 /** Contraseña nueva + confirmación con requisitos en vivo (registro y restablecimiento). */
 export default function PasswordFields({ password, confirm, onPassword, onConfirm, errors = {}, label = "Contraseña", idPrefix = "reg" }) {

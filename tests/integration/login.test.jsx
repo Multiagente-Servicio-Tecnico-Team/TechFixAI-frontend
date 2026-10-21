@@ -3,7 +3,7 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import App from "../../src/app/App.jsx";
-import { LoginForm } from "../../src/features/auth/Login.jsx";
+import { LoginForm } from "../../src/features/auth/LoginForm.jsx";
 import { StoreProvider } from "../../src/state/store.jsx";
 import { ApiError, MESSAGES } from "../../src/features/auth/authApi.js";
 

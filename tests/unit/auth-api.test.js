@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
-import { ApiError, areaForRole, createAuthApi, MESSAGES, splitFullName, toE164 } from "../../src/features/auth/authApi.js";
+import { ApiError, createAuthApi, MESSAGES } from "../../src/features/auth/authApi.js";
+import { areaForRole, splitFullName, toE164 } from "../../src/domain/user.js";
 
 function jsonResponse(status, body) {
   return { ok: status >= 200 && status < 300, status, json: async () => body };

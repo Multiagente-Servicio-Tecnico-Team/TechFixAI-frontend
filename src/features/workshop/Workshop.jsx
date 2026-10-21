@@ -2,7 +2,9 @@ import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { Bot, CircleCheck, ClipboardCheck, Eye, Mail, PlusCircle, Search, SlidersHorizontal, Ticket, Upload, UserRound } from "lucide-react";
 import { Pagination } from "../../shared/ui/ui.jsx";
-import { centsToInput, formatPEN, STAFF_STATUSES, TICKET_CATEGORIES, useStore } from "../../state/store.jsx";
+import { useStore } from "../../state/store.jsx";
+import { centsToInput, formatPEN } from "../../domain/money.js";
+import { STAFF_STATUSES, TICKET_CATEGORIES } from "../../domain/tickets.js";
 
 const PAGE_SIZE = 5;
 const categoryTone = { "Reparación": "blue", Venta: "cyan", Soporte: "muted" };

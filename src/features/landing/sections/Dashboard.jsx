@@ -1,8 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import {
-  ArrowRight, Ticket, Package, CircleCheck, MessageCircle, Stethoscope, ListChecks, PackageSearch, MessageSquareText,
-} from "lucide-react";
+import { ArrowRight, Ticket, Package, CircleCheck, MessageCircle, Stethoscope, ListChecks, PackageSearch, MessageSquareText } from "lucide-react";
 import Logo from "../../../shared/ui/Logo.jsx";
 
 const views = {

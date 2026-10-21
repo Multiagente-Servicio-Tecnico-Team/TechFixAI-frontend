@@ -2,7 +2,10 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Banknote, CircleCheck, Laptop, ReceiptText, UserRound } from "lucide-react";
 import { BackLink, Field } from "../../shared/ui/ui.jsx";
-import { EMAIL_RE, formatPEN, parseMoney, TICKET_CATEGORIES, useStore } from "../../state/store.jsx";
+import { useStore } from "../../state/store.jsx";
+import { EMAIL_RE } from "../../domain/validation.js";
+import { formatPEN, parseMoney } from "../../domain/money.js";
+import { TICKET_CATEGORIES } from "../../domain/tickets.js";
 
 const methods = ["Yape/Plin", "Efectivo", "Tarjeta"];
 

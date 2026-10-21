@@ -1,9 +1,11 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Bot, Brain, CircleCheck, CircleX, Info, ReceiptText, RotateCcw, SendHorizontal, Ticket, TriangleAlert, UserRound } from "lucide-react";
-import { formatPEN, parseMoney, useStore } from "../../state/store.jsx";
+import { useStore } from "../../state/store.jsx";
+import { formatPEN, parseMoney } from "../../domain/money.js";
 import { authApi } from "../auth/authApi.js";
-import { chatApi as defaultChatApi, TICKET_STATUS_LABEL } from "./chatApi.js";
+import { chatApi as defaultChatApi } from "./chatApi.js";
+import { TICKET_STATUS_LABEL } from "../../domain/tickets.js";
 
 function now() {
   return new Date().toLocaleTimeString("es-PE", { hour: "2-digit", minute: "2-digit" });

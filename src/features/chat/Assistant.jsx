@@ -1,9 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import {
-  Archive, Bot, Brain, CircleCheck, Clock, Cpu, Info, PhoneCall, ReceiptText, SendHorizontal, Ticket, UserRound, Wrench,
-} from "lucide-react";
-import { formatPEN, useStore } from "../../state/store.jsx";
+import { Archive, Bot, Brain, CircleCheck, Clock, Cpu, Info, PhoneCall, ReceiptText, SendHorizontal, Ticket, UserRound, Wrench } from "lucide-react";
+import { useStore } from "../../state/store.jsx";
+import { formatPEN } from "../../domain/money.js";
 import { chatApi } from "./chatApi.js";
 import LiveChat from "./LiveChat.jsx";
 

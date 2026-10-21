@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { CircleCheck, Plus, Search, Store } from "lucide-react";
 import { ItemIcon } from "../../shared/ui/ui.jsx";
 import { formatPEN, parseMoney } from "../../domain/money.js";
+import { useStore } from "../../state/store.jsx";
 import { chatApi } from "../chat/chatApi.js";
 
 const statusInfo = {
@@ -33,6 +34,12 @@ const filters = [
   { id: "done", label: "Finalizado", match: (t) => t.status === "done" },
 ];
 
+/** Ticket de demostración (estado en memoria) con la etiqueta y el tono de su estado. */
+function cardFromDemo(ticket) {
+  const state = Object.values(statusInfo).find((s) => s.id === ticket.status) || statusInfo.NEW;
+  return { ...ticket, statusLabel: state.label, tone: state.tone };
+}
+
 function cardFromTicket(ticket) {
   const state = statusInfo[ticket.status] || statusInfo.NEW;
   const quote = ticket.quote;
@@ -62,7 +69,9 @@ function cardFromTicket(ticket) {
   };
 }
 
-export default function Tickets() {
+export default function Tickets({ api = chatApi }) {
+  const { clientTickets } = useStore();
+  const demo = api.mode !== "api";
   const [tickets, setTickets] = useState([]);
   const [filter, setFilter] = useState("all");
   const [query, setQuery] = useState("");
@@ -70,10 +79,11 @@ export default function Tickets() {
   const [error, setError] = useState("");
 
   const loadTickets = async () => {
+    if (demo) return;
     setLoading(true);
     setError("");
     try {
-      const data = await chatApi.listMyTickets();
+      const data = await api.listMyTickets();
       setTickets(data.map(cardFromTicket));
     } catch (err) {
       setError(err?.message || "No se pudieron cargar tus tickets.");
@@ -82,7 +92,14 @@ export default function Tickets() {
     }
   };
 
-  useEffect(() => { loadTickets(); }, []);
+  // Sin backend (modo demostración) se muestran los tickets del estado, incluidas las consultas del chat.
+  useEffect(() => {
+    if (!demo) return;
+    setTickets(clientTickets.map(cardFromDemo));
+    setLoading(false);
+  }, [demo, clientTickets]);
+
+  useEffect(() => { if (!demo) loadTickets(); }, [demo]);
 
   const visible = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -150,7 +167,12 @@ export default function Tickets() {
                 {t.note && <p className="mono-small">{t.note}</p>}
                 {t.status === "ready" && <span className="pickup"><Store size={14} aria-hidden="true" /> Disponible para retiro o despacho</span>}
               </div>
-              {t.total !== null && <div className="tcard__amount"><span className="mono-label">Total cotizado</span><strong>{formatPEN(t.total)}</strong></div>}
+              {(t.total !== null || t.status === "received") && (
+                <div className="tcard__amount">
+                  <span className="mono-label">{t.total !== null ? "Total cotizado" : "Presupuesto"}</span>
+                  <strong>{formatPEN(t.total)}</strong>
+                </div>
+              )}
             </div>
             {t.lines.length > 0 && (
               <div className="budget">

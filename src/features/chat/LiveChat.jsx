@@ -6,6 +6,7 @@ import { formatPEN, parseMoney } from "../../domain/money.js";
 import { authApi } from "../auth/authApi.js";
 import { chatApi as defaultChatApi } from "./chatApi.js";
 import { TICKET_STATUS_LABEL } from "../../domain/tickets.js";
+import RichText from "../../shared/ui/RichText.jsx";
 
 function now() {
   return new Date().toLocaleTimeString("es-PE", { hour: "2-digit", minute: "2-digit" });
@@ -192,7 +193,7 @@ export default function LiveChat({ api = defaultChatApi }) {
                 <span className="msg__avatar"><Brain size={16} aria-hidden="true" /></span>
                 <div className="msg__content">
                   <p className="msg__meta"><strong>Agente TechFix</strong> <time>{m.time}</time></p>
-                  <div className="msg__bubble"><p>{m.text}</p></div>
+                  <div className="msg__bubble"><p><RichText text={m.text} /></p></div>
                   {m.quote && (
                     <QuoteCard
                       quote={m.id === lastQuoteId ? m.quote : { ...m.quote, status: m.quote.status === "proposed" ? "superseded" : m.quote.status }}

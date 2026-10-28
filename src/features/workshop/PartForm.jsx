@@ -1,74 +1,103 @@
 import { useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { Archive, Banknote, Barcode, Laptop, Lock, Save, X } from "lucide-react";
+import { Archive, Banknote, Barcode, Laptop, Lock, Save, Trash2, X } from "lucide-react";
 import { BackLink, Field, InputIcon } from "../../shared/ui/ui.jsx";
-import { useStore } from "../../state/store.jsx";
-import { centsToInput, parseMoney } from "../../domain/money.js";
-import { PART_CATEGORIES } from "../../domain/inventory.js";
+import { ConfirmDialog } from "../../shared/ui/ConfirmDialog.jsx";
+import { FormAlert } from "../../shared/ui/FormAlert.jsx";
+import { centsToInput } from "../../domain/money.js";
+import { PART_CATEGORIES, validatePart } from "../../domain/inventory.js";
+import { useInventory } from "./useInventory.js";
 
-const SKU_RE = /^[A-Z0-9]+(?:-[A-Z0-9]+)*$/;
+const BACK = "/taller/inventario";
 
-/** Alta de un SKU nuevo (sin parámetro) o edición y ajuste de stock (con :sku). */
-export default function PartForm() {
+/** Alta de un SKU nuevo (sin parámetro) o edición, ajuste de stock y baja (con :sku). */
+export default function PartForm({ api }) {
   const { sku } = useParams();
-  const { parts, dispatch } = useStore();
-  const navigate = useNavigate();
-  const existing = sku ? parts.find((p) => p.sku === sku) : null;
+  const inventory = useInventory(api);
   const editing = Boolean(sku);
+  const existing = editing ? inventory.parts.find((p) => p.sku === sku) : null;
 
+  if (editing && inventory.status === "loading") {
+    return (
+      <div className="staff-page">
+        <BackLink to={BACK}>Volver a Inventario de Repuestos</BackLink>
+        <p className="empty" role="status">Cargando repuesto…</p>
+      </div>
+    );
+  }
+  if (editing && !existing) {
+    return (
+      <div className="staff-page">
+        <BackLink to={BACK}>Volver a Inventario de Repuestos</BackLink>
+        <div className="panel empty-panel">
+          <h1 className="page-title">Repuesto no encontrado</h1>
+          <p>No existe el SKU <strong>{sku}</strong>.</p>
+          {inventory.error && <FormAlert>{inventory.error}</FormAlert>}
+          <Link to={BACK} className="btn btn--primary">Volver al inventario</Link>
+        </div>
+      </div>
+    );
+  }
+  // El formulario se monta con el repuesto ya cargado para que sus valores iniciales sean los correctos.
+  return <PartEditor key={existing?.sku ?? "nuevo"} existing={existing} inventory={inventory} />;
+}
+
+function PartEditor({ existing, inventory }) {
+  const navigate = useNavigate();
+  const editing = Boolean(existing);
   const [form, setForm] = useState(() => ({
     sku: existing?.sku ?? "",
     name: existing?.name ?? "",
-    category: existing?.category ?? PART_CATEGORIES[1],
+    category: existing?.category || PART_CATEGORIES[1],
     compat: existing?.compat ?? "",
     stock: existing ? String(existing.stock) : "",
     min: existing ? String(existing.min) : "",
     price: existing ? centsToInput(existing.price) : "",
   }));
   const [errors, setErrors] = useState({});
+  const [saving, setSaving] = useState(false);
+  const [serverError, setServerError] = useState("");
+  const [confirming, setConfirming] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState("");
   const set = (key) => (e) => setForm((f) => ({ ...f, [key]: key === "sku" ? e.target.value.toUpperCase() : e.target.value }));
 
-  if (editing && !existing) {
-    return (
-      <div className="staff-page">
-        <BackLink to="/taller/inventario">Volver a Inventario de Repuestos</BackLink>
-        <div className="panel empty-panel">
-          <h1 className="page-title">Repuesto no encontrado</h1>
-          <p>No existe el SKU <strong>{sku}</strong>.</p>
-          <Link to="/taller/inventario" className="btn btn--primary">Volver al inventario</Link>
-        </div>
-      </div>
-    );
-  }
-
-  const submit = (e) => {
+  const submit = async (e) => {
     e.preventDefault();
-    const next = {};
-    const code = form.sku.trim();
-    if (!editing) {
-      if (!SKU_RE.test(code)) next.sku = "Usa mayúsculas, números y guiones (ej. SSD-NVME-2TB-KC).";
-      else if (parts.some((p) => p.sku === code)) next.sku = "Este SKU ya existe en el inventario.";
-    }
-    if (form.name.trim().length < 3) next.name = "Ingresa el nombre del componente.";
-    const stock = /^\d+$/.test(form.stock.trim()) ? Number(form.stock) : null;
-    const min = /^\d+$/.test(form.min.trim()) ? Number(form.min) : null;
-    const price = parseMoney(form.price);
-    if (stock === null) next.stock = "Cantidad entera mayor o igual a 0.";
-    if (min === null) next.min = "Cantidad entera mayor o igual a 0.";
-    if (price === null || price === 0) next.price = "Importe válido, ej. 114.75.";
-    setErrors(next);
-    if (Object.keys(next).length) return;
-
-    dispatch({
-      type: "savePart",
-      part: { sku: editing ? existing.sku : code, name: form.name.trim(), category: form.category, compat: form.compat.trim(), stock, min, price },
+    const { errors: next, part } = validatePart(editing ? { ...form, sku: existing.sku } : form, {
+      editing,
+      existingSkus: inventory.parts.map((p) => p.sku),
     });
-    navigate("/taller/inventario");
+    setErrors(next);
+    setServerError("");
+    if (!part) return;
+    setSaving(true);
+    try {
+      await inventory.save({ ...existing, ...part }, { editing });
+      navigate(BACK);
+    } catch (err) {
+      // Un SKU duplicado se muestra en su campo; el resto, arriba de los botones.
+      if (err.field && err.field in form) setErrors({ [err.field]: err.message });
+      else setServerError(err.message);
+      setSaving(false);
+    }
+  };
+
+  const confirmDelete = async () => {
+    setDeleting(true);
+    setDeleteError("");
+    try {
+      await inventory.remove(existing.sku);
+      navigate(BACK);
+    } catch (err) {
+      setDeleteError(err.message);
+      setDeleting(false);
+    }
   };
 
   return (
     <div className="staff-page staff-page--form">
-      <BackLink to="/taller/inventario">Volver a Inventario de Repuestos</BackLink>
+      <BackLink to={BACK}>Volver a Inventario de Repuestos</BackLink>
       <h1 className="page-title">{editing ? "Editar Repuesto y Ajustar Stock" : "Registrar Nuevo Repuesto (SKU)"}</h1>
 
       <form onSubmit={submit} noValidate className="stack">
@@ -92,7 +121,7 @@ export default function PartForm() {
                 <input id="pf-sku" className={`input mono${editing ? " input--locked" : " input--icon"}`} placeholder="SSD-NVME-2TB-KC" value={form.sku} onChange={set("sku")} readOnly={editing} />
               </InputIcon>
             </Field>
-            <Field label="Categoría de Componente" htmlFor="pf-cat" required>
+            <Field label="Categoría de Componente" htmlFor="pf-cat" required error={errors.category}>
               <select id="pf-cat" className="input select" value={form.category} onChange={set("category")}>
                 {PART_CATEGORIES.map((c) => <option key={c}>{c}</option>)}
               </select>
@@ -136,13 +165,35 @@ export default function PartForm() {
           </div>
         </section>
 
+        <FormAlert>{serverError}</FormAlert>
         <div className="form-actions">
-          <Link to="/taller/inventario" className="btn btn--ghost"><X size={17} aria-hidden="true" /> Cancelar</Link>
-          <button type="submit" className="btn btn--primary btn--lg">
-            <Save size={18} aria-hidden="true" /> {editing ? "Guardar Cambios" : "Guardar Repuesto"}
+          {editing && (
+            <button type="button" className="btn btn--danger-ghost form-actions__start" onClick={() => { setDeleteError(""); setConfirming(true); }} disabled={saving}>
+              <Trash2 size={17} aria-hidden="true" /> Eliminar repuesto
+            </button>
+          )}
+          <Link to={BACK} className="btn btn--ghost"><X size={17} aria-hidden="true" /> Cancelar</Link>
+          <button type="submit" className="btn btn--primary btn--lg" disabled={saving}>
+            <Save size={18} aria-hidden="true" /> {saving ? "Guardando…" : editing ? "Guardar Cambios" : "Guardar Repuesto"}
           </button>
         </div>
       </form>
+
+      {editing && (
+        <ConfirmDialog
+          open={confirming}
+          title="¿Eliminar este repuesto?"
+          busy={deleting}
+          error={deleteError}
+          onConfirm={confirmDelete}
+          onCancel={() => setConfirming(false)}
+        >
+          <p>
+            Se quitará <strong>{existing.name}</strong> (SKU <span className="mono">{existing.sku}</span>) del inventario.
+            Esta acción no se puede deshacer.
+          </p>
+        </ConfirmDialog>
+      )}
     </div>
   );
 }

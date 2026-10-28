@@ -61,6 +61,10 @@ function reducer(state, action) {
           : [{ icon: "chip", ...action.part }, ...state.parts],
       };
     }
+    case "deletePart":
+      return { ...state, parts: state.parts.filter((p) => p.sku !== action.sku) };
+    case "setParts":
+      return { ...state, parts: action.parts };
     default:
       return state;
   }

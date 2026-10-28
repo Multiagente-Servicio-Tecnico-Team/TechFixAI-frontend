@@ -44,4 +44,8 @@
   --slate-100: #eef1f6;
   --line-strong: #c5d2e6;
   --focus-ring: 0 0 0 3px rgba(31, 91, 224, 0.15);
+
+  /* Acciones destructivas y diálogos */
+  --red-800: #912018;
+  --overlay: rgba(13, 27, 46, 0.45);
 }

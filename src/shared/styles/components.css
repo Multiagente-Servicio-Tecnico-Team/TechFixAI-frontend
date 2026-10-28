@@ -223,6 +223,43 @@
 .form-alert svg { flex: none; margin-top: 2px; }
 .spin { animation: spin 0.9s linear infinite; }
 
+/* ---------- Acciones destructivas y confirmación ---------- */
+.btn--danger { background: var(--red-700); color: var(--white); }
+.btn--danger:hover:not(:disabled) { background: var(--red-800); transform: translateY(-1px); }
+.btn--danger-ghost { background: var(--white); color: var(--red-700); border-color: var(--red-100); }
+.btn--danger-ghost:hover:not(:disabled) { background: var(--red-50); border-color: var(--red-700); }
+.icon-btn--danger { background: var(--red-50); color: var(--red-700); cursor: pointer; }
+.icon-btn--danger:hover { background: var(--red-100); }
+.icon-btn:focus-visible, .btn:focus-visible { outline: none; box-shadow: var(--focus-ring); }
+.dialog-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  background: var(--overlay);
+  animation: fade 0.2s ease;
+}
+.dialog {
+  display: grid;
+  gap: 12px;
+  width: min(440px, 100%);
+  padding: 24px;
+  border-radius: 14px;
+  background: var(--white);
+  box-shadow: var(--shadow-lg);
+}
+.dialog__icon { display: grid; place-items: center; width: 44px; height: 44px; border-radius: 10px; background: var(--red-50); color: var(--red-700); }
+.dialog__title { font-size: 19px; font-weight: 700; color: var(--ink); }
+.dialog__body { font-size: 15px; line-height: 1.55; color: var(--text); }
+.dialog__body strong { color: var(--ink); }
+.dialog__error { padding: 10px 12px; border-radius: 8px; background: var(--red-50); color: var(--red-700); font-size: 14px; }
+.dialog__actions { display: flex; justify-content: flex-end; gap: 10px; flex-wrap: wrap; margin-top: 6px; }
+@media (max-width: 480px) {
+  .dialog__actions .btn { flex: 1 1 100%; }
+}
+
 /* ---------- Formularios ---------- */
 .form { display: grid; gap: 18px; margin-top: 26px; }
 .form__right { justify-self: end; margin-top: -8px; }

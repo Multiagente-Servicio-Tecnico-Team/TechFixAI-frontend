@@ -1,10 +1,12 @@
 import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { ArrowUpDown, ClipboardCheck, Laptop, Pencil, PlusCircle, Search, SlidersHorizontal, TriangleAlert } from "lucide-react";
-import { ItemIcon, Pagination } from "../../shared/ui/ui.jsx";
-import { useStore } from "../../state/store.jsx";
+import { ArrowUpDown, ClipboardCheck, Laptop, Pencil, PlusCircle, RotateCcw, Search, SlidersHorizontal, Trash2, TriangleAlert } from "lucide-react";
+import { ItemIcon, Pagination, Toast } from "../../shared/ui/ui.jsx";
+import { ConfirmDialog } from "../../shared/ui/ConfirmDialog.jsx";
+import { FormAlert } from "../../shared/ui/FormAlert.jsx";
 import { formatPEN } from "../../domain/money.js";
-import { PART_CATEGORIES } from "../../domain/inventory.js";
+import { isLowStock, PART_CATEGORIES } from "../../domain/inventory.js";
+import { useInventory } from "./useInventory.js";
 
 const PAGE_SIZE = 4;
 const sorters = {
@@ -15,23 +17,44 @@ const sorters = {
   priceDesc: { label: "Precio: mayor a menor", fn: (a, b) => b.price - a.price },
 };
 
-export default function Inventory() {
-  const { parts } = useStore();
+export default function Inventory({ api }) {
+  const { parts, status, error, reload, remove } = useInventory(api);
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState("");
   const [onlyCritical, setOnlyCritical] = useState(false);
   const [sort, setSort] = useState("relevance");
   const [page, setPage] = useState(1);
+  const [pending, setPending] = useState(null);
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState("");
+  const [toast, setToast] = useState("");
 
   const totalUnits = parts.reduce((s, p) => s + p.stock, 0);
-  const critical = parts.filter((p) => p.stock <= p.min);
+  const critical = parts.filter(isLowStock);
+
+  const askDelete = (part) => {
+    setDeleteError("");
+    setPending(part);
+  };
+  const confirmDelete = async () => {
+    setDeleting(true);
+    try {
+      await remove(pending.sku);
+      setToast(`Repuesto ${pending.sku} eliminado del inventario.`);
+      setPending(null);
+    } catch (err) {
+      setDeleteError(err.message);
+    } finally {
+      setDeleting(false);
+    }
+  };
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
     return parts
       .filter((p) =>
         (!category || p.category === category) &&
-        (!onlyCritical || p.stock <= p.min) &&
+        (!onlyCritical || isLowStock(p)) &&
         (!q || `${p.sku} ${p.name} ${p.compat}`.toLowerCase().includes(q))
       )
       .sort(sorters[sort].fn);
@@ -105,10 +128,19 @@ export default function Inventory() {
           <span className="mono-label">Listado de componentes</span>
           <span className="mono-label">Mostrando {rows.length} de {filtered.length} ítems</span>
         </div>
-        {rows.length === 0 && <p className="empty">No hay repuestos con estos filtros.</p>}
+        {status === "loading" && <p className="empty" role="status">Cargando inventario…</p>}
+        {status === "error" && (
+          <div className="list-error">
+            <FormAlert>{error}</FormAlert>
+            <button type="button" className="btn btn--ghost btn--sm" onClick={reload}><RotateCcw size={14} aria-hidden="true" /> Reintentar</button>
+          </div>
+        )}
+        {status === "ready" && rows.length === 0 && (
+          <p className="empty">{parts.length ? "No hay repuestos con estos filtros." : "Todavía no hay repuestos registrados."}</p>
+        )}
         <ul className="parts">
           {rows.map((p) => {
-            const low = p.stock <= p.min;
+            const low = isLowStock(p);
             return (
               <li key={p.sku} className={`part${low ? " part--low" : ""}`}>
                 <span className="part__icon"><ItemIcon name={p.icon} size={22} /></span>
@@ -124,9 +156,14 @@ export default function Inventory() {
                 </div>
                 <p className={`part__stock${low ? " is-low" : ""}`}><strong>{p.stock} u.</strong> libres</p>
                 <p className={`part__price${low ? " is-low" : ""}`}>{formatPEN(p.price)}</p>
-                <Link to={`/taller/inventario/${encodeURIComponent(p.sku)}/editar`} className="icon-btn icon-btn--soft" aria-label={`Editar ${p.sku}`}>
-                  <Pencil size={17} />
-                </Link>
+                <div className="part__actions">
+                  <Link to={`/taller/inventario/${encodeURIComponent(p.sku)}/editar`} className="icon-btn icon-btn--soft" aria-label={`Editar ${p.sku}`} title="Editar">
+                    <Pencil size={17} />
+                  </Link>
+                  <button type="button" className="icon-btn icon-btn--danger" aria-label={`Eliminar ${p.sku}`} title="Eliminar" onClick={() => askDelete(p)}>
+                    <Trash2 size={17} />
+                  </button>
+                </div>
               </li>
             );
           })}
@@ -135,6 +172,23 @@ export default function Inventory() {
           <Pagination page={current} pages={pages} onChange={setPage} label={`Página ${current} de ${pages}`} />
         </div>
       </div>
+
+      <ConfirmDialog
+        open={Boolean(pending)}
+        title="¿Eliminar este repuesto?"
+        busy={deleting}
+        error={deleteError}
+        onConfirm={confirmDelete}
+        onCancel={() => setPending(null)}
+      >
+        {pending && (
+          <p>
+            Se quitará <strong>{pending.name}</strong> (SKU <span className="mono">{pending.sku}</span>) del inventario.
+            Esta acción no se puede deshacer.
+          </p>
+        )}
+      </ConfirmDialog>
+      <Toast message={toast} onDone={() => setToast("")} />
     </div>
   );
 }

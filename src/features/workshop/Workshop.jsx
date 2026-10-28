@@ -1,8 +1,9 @@
 import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { Bot, CircleCheck, ClipboardCheck, Eye, Mail, PlusCircle, Search, SlidersHorizontal, Ticket, Upload, UserRound } from "lucide-react";
-import { Pagination } from "../../shared/ui/ui.jsx";
-import { useStore } from "../../state/store.jsx";
+import { Pagination, Toast } from "../../shared/ui/ui.jsx";
+import { FormAlert } from "../../shared/ui/FormAlert.jsx";
+import { useTickets } from "./useTickets.js";
 import { centsToInput, formatPEN } from "../../domain/money.js";
 import { STAFF_STATUSES, TICKET_CATEGORIES } from "../../domain/tickets.js";
 
@@ -22,8 +23,24 @@ function exportCsv(rows) {
   URL.revokeObjectURL(url);
 }
 
-export default function Workshop() {
-  const { staffTickets, dispatch } = useStore();
+export default function Workshop({ api }) {
+  const { tickets: staffTickets, status: loadStatus, error, reload, updateStatus } = useTickets({ api });
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState("");
+  const [toast, setToast] = useState("");
+  const changeStatus = async (id, status) => {
+    if (saving) return;
+    setSaving(true);
+    setSaveError("");
+    try {
+      const saved = await updateStatus(id, status);
+      setToast(`Ticket #${saved.id} actualizado: ${saved.status}.`);
+    } catch (err) {
+      setSaveError(err.message);
+    } finally {
+      setSaving(false);
+    }
+  };
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState("Todos");
   const [status, setStatus] = useState("");
@@ -63,7 +80,7 @@ export default function Workshop() {
           <h1 className="page-title">Gestión Integral de Taller</h1>
         </div>
         <div className="page-head__actions">
-          <button type="button" className="btn btn--soft" onClick={() => exportCsv(filtered)}>
+          <button type="button" className="btn btn--soft" onClick={() => exportCsv(filtered)} disabled={loadStatus !== "ready"}>
             <Upload size={17} aria-hidden="true" /> Exportar Reporte
           </button>
           <Link to="/taller/tickets/nuevo" className="btn btn--primary">
@@ -126,7 +143,16 @@ export default function Workshop() {
         </label>
       </div>
 
+      <FormAlert>{saveError}</FormAlert>
+      {saving && <p role="status">Guardando…</p>}
       <div className="table-card">
+        {loadStatus === "loading" && <p className="empty" role="status">Cargando tickets…</p>}
+        {loadStatus === "error" && (
+          <div className="list-error">
+            <FormAlert>{error}</FormAlert>
+            <button type="button" className="btn btn--ghost btn--sm" onClick={reload}>Reintentar</button>
+          </div>
+        )}
         <table className="rtable">
           <thead>
             <tr>
@@ -141,7 +167,7 @@ export default function Workshop() {
             </tr>
           </thead>
           <tbody>
-            {rows.length === 0 && (
+            {loadStatus === "ready" && rows.length === 0 && (
               <tr><td colSpan={8} className="empty">No hay tickets con estos filtros.</td></tr>
             )}
             {rows.map((t) => (
@@ -164,7 +190,8 @@ export default function Workshop() {
                   <select
                     className="status-select"
                     value={t.status}
-                    onChange={(e) => dispatch({ type: "updateTicket", id: t.id, changes: { status: e.target.value } })}
+                    onChange={(e) => changeStatus(t.id, e.target.value)}
+                    disabled={saving}
                     aria-label={`Estado de ${t.id}`}
                   >
                     {STAFF_STATUSES.map((s) => <option key={s}>{s}</option>)}
@@ -199,6 +226,7 @@ export default function Workshop() {
           />
         </div>
       </div>
+      <Toast message={toast} onDone={() => setToast("")} />
     </div>
   );
 }

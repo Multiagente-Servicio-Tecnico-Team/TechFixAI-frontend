@@ -2,23 +2,27 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Banknote, CircleCheck, Laptop, ReceiptText, UserRound } from "lucide-react";
 import { BackLink, Field } from "../../shared/ui/ui.jsx";
-import { useStore } from "../../state/store.jsx";
+import { FormAlert } from "../../shared/ui/FormAlert.jsx";
+import { useTickets } from "./useTickets.js";
 import { EMAIL_RE } from "../../domain/validation.js";
 import { formatPEN, parseMoney } from "../../domain/money.js";
 import { TICKET_CATEGORIES } from "../../domain/tickets.js";
 
 const methods = ["Yape/Plin", "Efectivo", "Tarjeta"];
 
-export default function NewTicket() {
-  const { staffTickets, dispatch } = useStore();
+export default function NewTicket({ api }) {
+  const { create, nextId, live } = useTickets({ api, load: false });
+  const [saving, setSaving] = useState(false);
+  const [serverError, setServerError] = useState("");
   const navigate = useNavigate();
   const [form, setForm] = useState({ client: "", phone: "", email: "", device: "", issue: "", category: "Reparación", advance: "", method: "Yape/Plin" });
   const [errors, setErrors] = useState({});
   const set = (key) => (e) => setForm((f) => ({ ...f, [key]: e.target.value }));
-  const nextId = `TCK-${Math.max(...staffTickets.map((t) => Number(t.id.split("-")[1]))) + 1}`;
 
-  const submit = (e) => {
+  const submit = async (e) => {
     e.preventDefault();
+    if (saving) return;
+    setServerError("");
     const next = {};
     if (form.client.trim().length < 3) next.client = "Ingresa el nombre o razón social.";
     if (form.phone.replace(/\D/g, "").length < 9) next.phone = "Ingresa un número de 9 dígitos.";
@@ -30,9 +34,9 @@ export default function NewTicket() {
     setErrors(next);
     if (Object.keys(next).length) return;
 
-    dispatch({
-      type: "createTicket",
-      ticket: {
+    setSaving(true);
+    try {
+      const saved = await create({
         client: form.client.trim(),
         phone: `+51 ${form.phone.replace(/\D/g, "").replace(/(\d{3})(\d{3})(\d{3}).*/, "$1 $2 $3")}`,
         email: form.email.trim(),
@@ -42,9 +46,12 @@ export default function NewTicket() {
         advance,
         method: advance !== null ? form.method : null,
         payment: advance !== null ? `Adelanto ${formatPEN(advance)} · ${form.method}` : "Pendiente",
-      },
-    });
-    navigate(`/taller/tickets/${nextId}`);
+      });
+      navigate(`/taller/tickets/${encodeURIComponent(saved.id)}`, { state: { ticketCreated: saved.id } });
+    } catch (err) {
+      setServerError(err.message);
+      setSaving(false);
+    }
   };
 
   return (
@@ -52,7 +59,7 @@ export default function NewTicket() {
       <BackLink to="/taller">Volver a Gestión de Tickets</BackLink>
       <h1 className="page-title page-title--sm">Crear Nuevo Ticket</h1>
 
-      <form className="new-ticket" onSubmit={submit} noValidate>
+      <form className="new-ticket" onSubmit={submit} noValidate aria-busy={saving}>
         <section className="panel">
           <div className="panel__head">
             <span className="icon-tile icon-tile--sm"><UserRound size={18} aria-hidden="true" /></span>
@@ -123,12 +130,13 @@ export default function NewTicket() {
         </div>
 
         <div className="panel submit-bar">
+          <FormAlert>{serverError}</FormAlert>
           <div className="submit-bar__info">
             <span className="icon-tile icon-tile--sm"><ReceiptText size={18} aria-hidden="true" /></span>
-            <div><strong>Listo para Emisión Rápida</strong><p className="mono-small">Ticket #{nextId}</p></div>
+            <div><strong>Listo para Emisión Rápida</strong><p className="mono-small">{live ? "El código se asignará al generar el ticket" : `Ticket #${nextId}`}</p></div>
           </div>
-          <button type="submit" className="btn btn--primary btn--lg">
-            <CircleCheck size={19} aria-hidden="true" /> Generar Ticket
+          <button type="submit" className="btn btn--primary btn--lg" disabled={saving}>
+            <CircleCheck size={19} aria-hidden="true" /> {saving ? "Generando…" : "Generar Ticket"}
           </button>
         </div>
       </form>

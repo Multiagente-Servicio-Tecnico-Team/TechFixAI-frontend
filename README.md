@@ -70,7 +70,8 @@ TechFixAI-frontend/
 | `/portal/recuperar` | Recuperar contraseña | Pide el correo; la respuesta no revela si existe |
 | `/portal/restablecer?token=…` | Restablecer contraseña | Nueva contraseña con la misma política; enlace inválido o vencido |
 | `/portal/tickets`, `/portal/asistente` | Portal del cliente | Tickets, aprobación de presupuestos y consulta nueva con el asistente |
-| `/taller/acceso`, `/taller/*` | Panel del taller | Cola de triage, detalle, ticket presencial e inventario |
+| `/taller/acceso`, `/taller/*` | Panel del taller | Cola de triage, detalle y ticket presencial |
+| `/taller/inventario` | Inventario de repuestos | Listar (búsqueda, categoría, stock crítico, orden), crear, editar y eliminar con confirmación |
 | `/ayuda` | Ayuda | Soporte, FAQ, estado del sistema y legales |
 
 Reglas de sesión: las rutas `/portal/*` y `/taller/*` exigen sesión del rol correspondiente; con sesión abierta,
@@ -110,6 +111,24 @@ o `decentralized`); el patrón no cambia hasta iniciar una conversación nueva.
 o apunta a un origen absoluto, se usa `/backend`, el mismo host que las rutas de
 autenticación. En desarrollo sin URL se conserva el modo demostración.
 
+### Inventario de repuestos
+
+`src/features/workshop/inventoryApi.js` y `VITE_INVENTORY_URL`. Sin la variable el inventario trabaja en modo
+demostración (datos en memoria), también en producción, hasta que el backend publique estas rutas. Con la variable
+llama a la API con `credentials: "include"`; la sesión debe ser de personal del taller.
+
+| Método y ruta | Cuerpo | Respuesta esperada |
+| --- | --- | --- |
+| `GET /api/inventory/parts` | — | `200 { parts: [repuesto] }` |
+| `POST /api/inventory/parts` | `repuesto` | `201 { part }` · `409` SKU duplicado · `422` datos inválidos |
+| `PUT /api/inventory/parts/{code}` | `repuesto` | `200 { part }` · `404` no existe · `422` |
+| `DELETE /api/inventory/parts/{code}` | — | `204` · `404` · `409` el repuesto figura en presupuestos |
+
+`repuesto` = `{ code, name, category, description, unit_price, current_stock, minimum_threshold }`, con los nombres
+de la tabla `spare_parts`; `unit_price` va como texto con dos decimales (`"114.75"`) y `description` guarda los
+equipos compatibles. `401` y `403` muestran que hay que iniciar sesión como personal; los demás errores, un mensaje
+genérico. La pantalla solo cambia cuando el servidor confirma la operación.
+
 ## Ejecución local
 
 Requisitos: Node.js 18 o superior (probado con Node 24) y npm.
@@ -124,6 +143,7 @@ Abrir http://localhost:5173. Para usar un backend local, crear un archivo `.env`
 ```bash
 VITE_API_URL=http://localhost:8000/auth
 VITE_CHAT_URL=http://localhost:8000
+VITE_INVENTORY_URL=http://localhost:8000
 ```
 
 ## Pruebas
@@ -132,10 +152,10 @@ VITE_CHAT_URL=http://localhost:8000
 npm test
 ```
 
-61 pruebas en 7 archivos: contrato de cuentas y chat, rutas de API same-origin en
-producción, errores HTTP/red, selector y
+96 pruebas en 11 archivos: contrato de cuentas, chat e inventario, rutas de API same-origin en
+producción, errores HTTP/red, reglas del dominio y de capas, selector y
 bloqueo de patrón, propuestas y tickets, registro, acceso, recuperación,
-restablecimiento, roles, cierre de sesión y consulta nueva.
+restablecimiento, roles, cierre de sesión, consulta nueva y CRUD del inventario.
 
 ## Compilación y despliegue
 

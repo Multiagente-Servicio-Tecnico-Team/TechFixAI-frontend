@@ -127,15 +127,16 @@ export default function Tickets({ api = chatApi }) {
           <Search size={18} aria-hidden="true" />
           <input type="search" placeholder="Buscar por código o equipo..." value={query} onChange={(e) => setQuery(e.target.value)} aria-label="Buscar tickets" />
         </label>
-        <div className="toggle-group" role="tablist" aria-label="Filtrar por estado">
+        <div className="toggle-group" role="group" aria-label="Filtrar por estado">
           {filters.map((f) => (
-            <button key={f.id} type="button" role="tab" aria-selected={filter === f.id} className="toggle" onClick={() => setFilter(f.id)}>
+            <button key={f.id} type="button" aria-pressed={filter === f.id} className="toggle" onClick={() => setFilter(f.id)}>
               {f.label} ({tickets.filter(f.match).length})
             </button>
           ))}
         </div>
       </div>
 
+      <p className="vh" role="status">{loading ? "" : `${visible.length} tickets`}</p>
       <div className="portal" aria-busy={loading}>
         {loading && <p className="empty">Cargando tus tickets...</p>}
         {!loading && error && (
@@ -154,7 +155,7 @@ export default function Tickets({ api = chatApi }) {
               <span className="mono small">{g.items.length}</span>
             </div>
             <div className="group__list">
-              {g.items.map((t) => <TicketTag key={t.id} ticket={t} canApprove={demo && g.urgent} />)}
+              {g.items.map((t) => <TicketTag key={t.id} ticket={t} canApprove={demo && t.status === "approval"} />)}
             </div>
           </section>
         ))}
@@ -178,7 +179,7 @@ function TicketTag({ ticket: t, canApprove }) {
         <span className="small muted">{t.when}</span>
         <span className="small muted">{t.kind}</span>
         <span className={`stamp${tone ? ` stamp--${tone}` : ""}`}>
-          {t.status === "done" && <CircleCheck size={13} aria-hidden="true" />}
+          {t.status === "done" && !cancelled && <CircleCheck size={13} aria-hidden="true" />}
           {t.statusLabel}
         </span>
       </div>
@@ -213,7 +214,7 @@ function TicketTag({ ticket: t, canApprove }) {
       {(t.status === "ready" || (canApprove && t.lines.length > 0)) && (
         <div className="tticket__foot">
           {t.status === "ready" && <span className="stamp stamp--ok"><Store size={14} aria-hidden="true" /> Disponible para retiro o despacho</span>}
-          {canApprove && t.lines.length > 0 && <Link to={`/portal/asistente?ticket=${t.id}`} className="btn btn--primary btn--sm">Revisar y aprobar</Link>}
+          {canApprove && t.lines.length > 0 && <Link to={`/portal/asistente?ticket=${t.id}`} className="btn btn--primary">Revisar y aprobar</Link>}
         </div>
       )}
     </article>

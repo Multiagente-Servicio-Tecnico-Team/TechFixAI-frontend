@@ -5,6 +5,7 @@
 .muted { color: var(--text-2); }
 .small { font-size: var(--size-sm); }
 .nowrap { white-space: nowrap; }
+.vh { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 .spin { animation: spin 0.9s linear infinite; }
 .link { color: var(--accent); font-weight: 700; text-decoration: underline; text-underline-offset: 3px; }
 .link:hover { color: var(--accent-hover); }
@@ -99,9 +100,9 @@
 .select-tool { min-height: var(--control); max-width: 100%; padding: 0 8px; border: var(--border) solid var(--text); border-radius: var(--radius); background: var(--surface); font-weight: 700; font-size: var(--size-sm); }
 
 .toggle-group { display: flex; flex-wrap: wrap; gap: 4px; }
-.toggle { min-height: var(--control-sm); padding: 0 10px; border: var(--border) solid var(--line); border-radius: var(--radius); background: transparent; font-size: var(--size-sm); font-weight: 700; white-space: nowrap; }
+.toggle { min-height: var(--control); padding: 0 10px; border: var(--border) solid var(--text-2); border-radius: var(--radius); background: transparent; font-size: var(--size-sm); font-weight: 700; white-space: nowrap; }
 .toggle:hover { border-color: var(--text); }
-.toggle[aria-selected="true"], .toggle[aria-pressed="true"] { background: var(--text); border-color: var(--text); color: var(--bg); }
+.toggle[aria-pressed="true"] { background: var(--text); border-color: var(--text); color: var(--bg); }
 
 /* ---------- Sellos de estado ---------- */
 .stamp { display: inline-flex; align-items: center; gap: 6px; width: fit-content; padding: 1px 8px; border: var(--border) solid currentColor; border-radius: var(--radius); font-size: var(--size-xs); font-weight: 700; color: var(--text-2); transform: rotate(-1.5deg); white-space: nowrap; }
@@ -111,11 +112,14 @@
 .stamp--info { color: var(--accent); }
 
 /* ---------- Etiqueta de trabajo ---------- */
-.jobtag { position: relative; display: grid; gap: 6px; align-content: start; min-width: 0; padding: 12px; background: var(--surface); clip-path: polygon(0 0, calc(100% - var(--notch)) 0, 100% var(--notch), 100% 100%, 0 100%); }
+.jobtag { position: relative; display: grid; gap: 6px; align-content: start; min-width: 0; padding: 12px; isolation: isolate; }
+/* La forma va en una capa propia para que el recorte no se lleve el contorno de foco. */
+.jobtag::after { content: ""; position: absolute; inset: 0; z-index: -1; background: var(--surface); clip-path: polygon(0 0, calc(100% - var(--notch)) 0, 100% var(--notch), 100% 100%, 0 100%); }
 .jobtag::before { content: ""; position: absolute; top: 9px; right: 24px; width: 8px; height: 8px; border-radius: 50%; background: var(--bg); }
-.jobtag--lg { padding: clamp(20px, 3vw, 32px); gap: 16px; clip-path: polygon(0 0, calc(100% - var(--notch-lg)) 0, 100% var(--notch-lg), 100% 100%, 0 100%); }
+.jobtag--lg { padding: clamp(20px, 3vw, 32px); gap: 16px; }
+.jobtag--lg::after { clip-path: polygon(0 0, calc(100% - var(--notch-lg)) 0, 100% var(--notch-lg), 100% 100%, 0 100%); }
 .jobtag--lg::before { top: 16px; right: 44px; width: 12px; height: 12px; }
-.jobtag--alert { box-shadow: inset 5px 0 0 var(--danger); }
+.jobtag--alert::after { box-shadow: inset 5px 0 0 var(--danger); }
 
 /* ---------- Carril de estaciones ---------- */
 .rail { display: grid; grid-template-columns: repeat(var(--rail-steps, 6), minmax(0, 1fr)); gap: 4px; font-size: var(--size-sm); }

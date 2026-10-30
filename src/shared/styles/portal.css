@@ -14,7 +14,7 @@
 .tticket__amount { display: grid; justify-items: end; }
 .tticket__amount strong { font: 600 var(--size-lg) var(--mono); white-space: nowrap; }
 .tticket__foot { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
-.tticket--done { background: transparent; box-shadow: inset 0 0 0 2px var(--line); }
+.tticket--done::after { background: transparent; box-shadow: inset 0 0 0 2px var(--text-2); }
 .budget { display: grid; gap: 4px; padding-top: 8px; border-top: 1px solid var(--line); }
 .budget__row { display: flex; justify-content: space-between; gap: 16px; font-size: var(--size-sm); }
 .budget__row--total { padding-top: 4px; font-weight: 700; }
@@ -48,7 +48,7 @@
 .composer__hint { display: flex; flex-wrap: wrap; align-items: center; gap: 2px 8px; font-size: var(--size-xs); color: var(--text-2); }
 .desk__foot { display: grid; gap: 8px; }
 .quick { display: flex; flex-wrap: wrap; gap: 6px; }
-.quick__btn { display: inline-flex; align-items: center; gap: 6px; min-height: var(--control-sm); padding: 0 10px; border: var(--border) solid var(--line); border-radius: var(--radius); background: transparent; font-size: var(--size-sm); font-weight: 700; }
+.quick__btn { display: inline-flex; align-items: center; gap: 6px; min-height: var(--control-sm); padding: 0 10px; border: var(--border) solid var(--text-2); border-radius: var(--radius); background: transparent; font-size: var(--size-sm); font-weight: 700; }
 .quick__btn:hover { border-color: var(--text); }
 
 .quote { display: grid; gap: 10px; }

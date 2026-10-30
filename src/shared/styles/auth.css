@@ -39,11 +39,13 @@
 .help__head { display: grid; gap: 12px; }
 .help-channels { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr)); gap: 10px; }
 .help-channel { padding-top: 16px; }
-.help-channel:hover strong { text-decoration: underline; text-underline-offset: 3px; }
+.help-channel:hover strong, .help-channel:focus-visible strong { text-decoration: underline; text-underline-offset: 3px; }
 .help-channel span { color: var(--text-2); font-size: var(--size-sm); }
 .faq details { border-top: var(--border) solid var(--text); }
 .faq details:last-child { border-bottom: var(--border) solid var(--text); }
-.faq summary { display: flex; align-items: center; min-height: 48px; padding: 8px 0; font-weight: 700; cursor: pointer; }
+.faq summary { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 48px; padding: 8px 0; font-weight: 700; cursor: pointer; }
+.faq summary::after { content: "+"; font: 600 var(--size-lg) var(--mono); }
+.faq details[open] summary::after { content: "–"; }
 .faq p { padding-bottom: 14px; max-width: 70ch; color: var(--text-2); }
 
 /* ---------- 404 ---------- */

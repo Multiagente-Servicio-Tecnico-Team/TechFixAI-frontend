@@ -13,7 +13,7 @@ export default function Landing() {
   return (
     <>
       <Navbar />
-      <main>
+      <main tabIndex={-1}>
         <Hero />
         <Team />
         <Flow />

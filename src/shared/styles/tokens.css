@@ -48,6 +48,8 @@
   --warn: #7a5200;
   --focus: #1f3fbf;
   --overlay: rgba(16, 27, 59, 0.55);
+  --band: #101b3b;
+  --on-band: #f2f4fb;
   color-scheme: light;
 }
 
@@ -67,5 +69,7 @@
   --warn: #ffd755;
   --focus: #ffc91f;
   --overlay: rgba(5, 9, 24, 0.72);
+  --band: #222e5e;
+  --on-band: #f2f4fb;
   color-scheme: dark;
 }

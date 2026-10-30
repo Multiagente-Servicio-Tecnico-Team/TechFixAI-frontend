@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useLocation } from "react-router-dom";
 import { useStore } from "../state/store.jsx";
 
@@ -12,15 +12,28 @@ export function ScrollManager() {
     if (signedOut && pathname === "/") dispatch({ type: "clearSignedOut" });
   }, [signedOut, pathname, dispatch]);
 
+  const firstRender = useRef(true);
+
   useEffect(() => {
+    // Cada pantalla se anuncia con su título y el foco pasa al contenido nuevo.
+    const heading = document.querySelector("main h1")?.textContent;
+    document.title = heading ? `${heading} · TechFix.AI` : "TechFix.AI";
+    const isFirst = firstRender.current;
+    firstRender.current = false;
+
     if (hash) {
       const el = document.getElementById(hash.slice(1));
       if (el) {
         el.scrollIntoView();
+        if (!isFirst) {
+          el.setAttribute("tabindex", "-1");
+          el.focus({ preventScroll: true });
+        }
         return;
       }
     }
     window.scrollTo(0, 0);
+    if (!isFirst) document.querySelector("main")?.focus({ preventScroll: true });
   }, [pathname, hash]);
   return null;
 }

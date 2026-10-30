@@ -39,7 +39,7 @@ Las rutas no cambian.
 | Registro | Franja mínima | Etiqueta de dos columnas: datos a la izquierda, contraseña y requisitos a la derecha | Deja el formulario largo de una columna |
 | Recuperar y restablecer | Franja mínima | Una tarea por etiqueta y el resultado con un sello | Mismos mensajes y reglas |
 | Mis Tickets | Franja: Mis tickets, Asistente | «Necesita tu aprobación», luego «En curso» y «Entregados»; cada etiqueta muestra su avance | Deja la lista con filtros como primer elemento; búsqueda y filtros siguen disponibles |
-| Asistente | Igual | Chat a la izquierda y etiqueta en preparación a la derecha; en celular, resumen fijo que se despliega | El presupuesto deja de quedar enterrado en el hilo |
+| Asistente | Igual | Chat a la izquierda y etiqueta en preparación a la derecha; en celular, la etiqueta va antes del chat | El presupuesto deja de quedar enterrado en el hilo |
 | Banco `/taller` | Franja: Banco, Repuestos, Nuevo ticket | Resumen, herramientas y tablero de seis estaciones | La tabla pasa a tablero; en celular, una estación por vista con selector |
 | Detalle | Volver al banco | Etiqueta grande con carril de estaciones y datos del cliente, equipo y costo | Deja las tres tarjetas apiladas; el cambio de estado va en el carril |
 | Ticket presencial | Volver al banco | Orden de ingreso a la izquierda y etiqueta en vivo a la derecha | Deja la cuadrícula de tarjetas y la barra inferior |

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
-import { NavLink, Outlet, useNavigate } from "react-router-dom";
-import { LogOut, MessageSquareText, TicketCheck, UserRound } from "lucide-react";
+import { Link, NavLink, Outlet, useNavigate } from "react-router-dom";
+import { LifeBuoy, LogOut, MessageSquareText, TicketCheck, UserRound } from "lucide-react";
 import Logo from "../../shared/ui/Logo.jsx";
 import ThemeToggle from "../../shared/ui/ThemeToggle.jsx";
 import { useStore } from "../../state/store.jsx";
@@ -11,13 +11,18 @@ export function UserMenu({ extra }) {
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
+  const buttonRef = useRef(null);
 
   useEffect(() => {
     if (!open) return undefined;
     const onDoc = (e) => {
       if (ref.current && !ref.current.contains(e.target)) setOpen(false);
     };
-    const onKey = (e) => e.key === "Escape" && setOpen(false);
+    const onKey = (e) => {
+      if (e.key !== "Escape") return;
+      setOpen(false);
+      buttonRef.current?.focus();
+    };
     document.addEventListener("mousedown", onDoc);
     document.addEventListener("keydown", onKey);
     return () => {
@@ -35,9 +40,9 @@ export function UserMenu({ extra }) {
   return (
     <div className="user-menu" ref={ref}>
       <button
+        ref={buttonRef}
         type="button"
         className="avatar"
-        aria-haspopup="menu"
         aria-expanded={open}
         aria-label="Menú de usuario"
         onClick={() => setOpen((v) => !v)}
@@ -45,11 +50,12 @@ export function UserMenu({ extra }) {
         <UserRound size={18} />
       </button>
       {open && (
-        <div className="user-menu__panel" role="menu">
+        <div className="user-menu__panel">
           <p className="user-menu__name">{session?.name}</p>
           <p className="user-menu__mail">{session?.email}</p>
           {extra}
-          <button type="button" role="menuitem" className="user-menu__item" onClick={signOut}>
+          <Link to="/ayuda" className="user-menu__item"><LifeBuoy size={16} aria-hidden="true" /> Ayuda</Link>
+          <button type="button" className="user-menu__item" onClick={signOut}>
             <LogOut size={16} aria-hidden="true" /> Cerrar sesión
           </button>
         </div>
@@ -74,7 +80,7 @@ export default function PortalLayout() {
           <UserMenu />
         </div>
       </header>
-      <main className="app__main">
+      <main className="app__main" tabIndex={-1}>
         <Outlet />
       </main>
       <footer className="app-foot">

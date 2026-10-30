@@ -125,7 +125,7 @@ function Chat({ ticketId }) {
 
   useEffect(() => () => clearTimeout(timer.current), []);
   useEffect(() => {
-    endRef.current?.scrollIntoView({ block: "nearest", behavior: "smooth" });
+    endRef.current?.scrollIntoView({ block: "nearest", behavior: window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
   }, [messages, typing]);
 
   const reply = (paragraphs, extra = {}) => {
@@ -195,7 +195,7 @@ function Chat({ ticketId }) {
           <CopilotHeader subtitle={`Especialista en Diagnóstico y Presupuestos de Hardware${currentId ? ` · Ticket #${currentId}` : " · Nueva consulta"}`} />
         </div>
 
-        <div className="log" aria-live="polite">
+        <div className="log" role="log" aria-label="Conversación" tabIndex={0}>
           {messages.map((m) =>
             m.from === "user" ? (
               <UserMessage key={m.id} label="Tú (Cliente)" time={m.time}>{m.text}</UserMessage>

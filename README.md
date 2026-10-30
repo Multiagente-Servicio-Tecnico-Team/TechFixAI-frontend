@@ -14,7 +14,7 @@ Producción: https://techfixai.vercel.app
 | Rutas | React Router | 6 |
 | Iconos | lucide-react | 0.460 |
 | Pruebas | Vitest + Testing Library + jsdom | 2.1 / 16 / 25 |
-| Estilos | CSS propio con variables (sin framework); tipografías Hanken Grotesk y JetBrains Mono | — |
+| Estilos | CSS propio con variables (sin framework), sistema «Banco» con tema claro y oscuro; tipografías Bricolage Grotesque, Atkinson Hyperlegible y Martian Mono | — |
 
 ## Estructura de carpetas
 
@@ -37,7 +37,7 @@ TechFixAI-frontend/
 │   └── shared/              # Reutilizable y sin estado
 │       ├── ui/              # ui.jsx, FormAlert, RichText, Logo, Eyebrow
 │       ├── api/baseUrl.js   # URL de la API (mismo origen en producción)
-│       └── styles/          # index, tokens, base, components y screens.css (portal, taller y acceso)
+│       └── styles/          # index, tokens, base, components, shell, auth, portal y workshop
 ├── tests/
 │   ├── unit/                # Dominio, clientes de API y regla de dependencias entre capas
 │   └── integration/         # Pantallas con Testing Library
@@ -53,12 +53,14 @@ TechFixAI-frontend/
 ## Estilos
 
 - Una pieza que usan varias pantallas (botón, etiqueta, campo de formulario, aviso…) va en
-  `src/shared/styles/components.css`; lo propio de la landing va en `src/features/landing/landing.css` y lo del
-  portal, el taller y el acceso en `src/shared/styles/screens.css`.
+  `src/shared/styles/components.css`; lo propio de la landing va en `src/features/landing/landing.css`, la
+  estructura común en `shell.css` y cada área en `auth.css`, `portal.css` y `workshop.css`.
 - Los colores, radios y sombras se toman de `src/shared/styles/tokens.css` con `var(--…)`; si un valor se repite,
   se agrega un token en lugar de escribirlo a mano.
-- El orden de carga (`main.jsx`) es `shared/styles/index.css`, `landing.css` y `screens.css`: los estilos de pantalla
+- El orden de carga (`main.jsx`) es `shared/styles/index.css`, `landing.css` y luego las áreas: los estilos de pantalla
   pueden ajustar a los generales sin subir la especificidad.
+- Sin preferencia guardada el tema sigue al sistema; el botón de tema guarda solo `techfix-theme` en `localStorage`.
+  Las decisiones del sistema están en `design/DESIGN.md`.
 
 ## Funcionalidad
 

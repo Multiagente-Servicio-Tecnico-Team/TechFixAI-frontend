@@ -99,14 +99,14 @@
 .exp__total { font-size: var(--size-lg); font-weight: 600; }
 
 /* ---------- Llamada a la acción ---------- */
-.cta { padding: 88px 0; background: var(--text); color: var(--bg); }
+.cta { padding: 88px 0; background: var(--band); color: var(--on-band); }
 .cta__grid { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); gap: 32px 64px; align-items: end; }
 .cta .eyebrow { color: var(--mark); }
-.cta__title { color: var(--bg); font: 800 clamp(30px, 4.6vw, 60px)/1.02 var(--font-display); letter-spacing: -0.03em; }
+.cta__title { color: var(--on-band); font: 800 clamp(30px, 4.6vw, 60px)/1.02 var(--font-display); letter-spacing: -0.03em; }
 .cta__side { display: grid; gap: 18px; }
 .cta__primary { background: var(--mark); border-color: var(--mark); color: var(--on-mark); }
 .cta__primary:hover:not(:disabled) { background: var(--mark); text-decoration: underline; }
-.cta__secondary { background: transparent; border-color: var(--bg); color: var(--bg); }
+.cta__secondary { background: transparent; border-color: var(--on-band); color: var(--on-band); }
 .cta__secondary:hover:not(:disabled) { background: transparent; text-decoration: underline; }
 .cta__note { font-size: var(--size-sm); }
 .cta :focus-visible { outline-color: var(--mark); }
@@ -125,6 +125,7 @@
 /* ---------- Responsive ---------- */
 @media (max-width: 1040px) {
   .nav__links { display: none; }
+  .nav__toggle { display: inline-grid; }
   .hero__grid, .split, .cta__grid { grid-template-columns: minmax(0, 1fr); }
   .route { grid-template-columns: repeat(3, minmax(0, 1fr)); row-gap: 36px; }
   .metrics__grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -134,7 +135,6 @@
 }
 @media (max-width: 760px) {
   .nav__wide { display: none; }
-  .nav__toggle { display: inline-grid; }
   .section, .cta { padding: 56px 0; }
   .metrics { padding: 56px 0; }
   .benefits, .exp { grid-template-columns: minmax(0, 1fr); }

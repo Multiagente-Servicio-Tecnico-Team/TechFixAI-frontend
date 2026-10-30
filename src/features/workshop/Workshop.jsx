@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { Bot, Eye, Mail, Search, Upload, UserRound } from "lucide-react";
 import { useStore } from "../../state/store.jsx";
@@ -27,6 +27,7 @@ export default function Workshop() {
   const [status, setStatus] = useState("");
   const [shown, setShown] = useState({});
   const [focus, setFocus] = useState(null);
+  const [moved, setMoved] = useState(null);
 
   const stats = useMemo(() => ({
     active: staffTickets.filter((t) => t.status !== "Entregado").length,
@@ -48,6 +49,17 @@ export default function Workshop() {
   const inStation = (s) => filtered.filter((t) => t.status === s);
   // En celular se ve una estación a la vez: la elegida o la primera con tickets.
   const focused = stations.includes(focus) ? focus : stations.find((s) => inStation(s).length > 0) || stations[0];
+
+  // El ticket cambia de columna y se remonta: el foco lo acompaña y se anuncia el movimiento.
+  useEffect(() => {
+    if (moved) document.getElementById(`tag-${moved.id}`)?.focus();
+  }, [moved]);
+
+  const move = (id, next) => {
+    dispatch({ type: "updateTicket", id, changes: { status: next } });
+    setFocus(next);
+    setMoved({ id, status: next });
+  };
 
   const resetPage = (fn) => (value) => {
     fn(value);
@@ -80,9 +92,9 @@ export default function Workshop() {
             aria-label="Buscar tickets"
           />
         </label>
-        <div className="toggle-group" role="tablist" aria-label="Categoría">
+        <div className="toggle-group" role="group" aria-label="Categoría">
           {["Todos", ...TICKET_CATEGORIES].map((c) => (
-            <button key={c} type="button" role="tab" aria-selected={category === c} className="toggle" onClick={() => resetPage(setCategory)(c)}>
+            <button key={c} type="button" aria-pressed={category === c} className="toggle" onClick={() => resetPage(setCategory)(c)}>
               {c}
             </button>
           ))}
@@ -93,6 +105,9 @@ export default function Workshop() {
         </select>
       </div>
 
+      <p className="vh" role="status">
+        {moved ? `Ticket ${moved.id} movido a ${moved.status}. ` : ""}{filtered.length} tickets
+      </p>
       {filtered.length === 0 && <p className="empty">No hay tickets con estos filtros.</p>}
 
       <label className="station__picker">
@@ -111,9 +126,9 @@ export default function Workshop() {
               <h2 className="station__head"><span>{s}</span><span className="mono">{all.length}</span></h2>
               <div className="station__list">
                 {all.length === 0 && <p className="empty small">Sin tickets.</p>}
-                {all.slice(0, limit).map((t) => <TicketTag key={t.id} ticket={t} dispatch={dispatch} />)}
+                {all.slice(0, limit).map((t) => <TicketTag key={t.id} ticket={t} onMove={move} />)}
                 {all.length > limit && (
-                  <button type="button" className="btn btn--sm" onClick={() => setShown((v) => ({ ...v, [s]: limit + PAGE_SIZE }))}>
+                  <button type="button" className="btn" onClick={() => setShown((v) => ({ ...v, [s]: limit + PAGE_SIZE }))}>
                     Mostrar más ({all.length - limit})
                   </button>
                 )}
@@ -126,9 +141,9 @@ export default function Workshop() {
   );
 }
 
-function TicketTag({ ticket: t, dispatch }) {
+function TicketTag({ ticket: t, onMove }) {
   return (
-    <article className="jobtag wtag">
+    <article id={`tag-${t.id}`} tabIndex={-1} className="jobtag wtag">
       <p className="wtag__id">
         <Link to={`/taller/tickets/${t.id}`}>#{t.id}</Link>
         <span className="small muted">{t.date}</span>
@@ -144,8 +159,8 @@ function TicketTag({ ticket: t, dispatch }) {
         Mover a
         <select
           value={t.status}
-          onChange={(e) => dispatch({ type: "updateTicket", id: t.id, changes: { status: e.target.value } })}
-          aria-label={`Estado de ${t.id}`}
+          onChange={(e) => onMove(t.id, e.target.value)}
+          aria-label={`Mover a, ticket ${t.id}`}
         >
           {STAFF_STATUSES.map((s) => <option key={s}>{s}</option>)}
         </select>

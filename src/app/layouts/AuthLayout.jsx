@@ -12,7 +12,7 @@ export default function AuthLayout() {
           <nav className="strip__actions" aria-label="Ayuda">
             <Link to="/ayuda" className="strip__link hide-xs">Soporte Técnico</Link>
             <Link to="/ayuda#faq" className="strip__link hide-xs">Preguntas Frecuentes</Link>
-            <span className="lang-badge" aria-label="Idioma: español">ES</span>
+            <span className="lang-badge"><span aria-hidden="true">ES</span><span className="vh">Idioma: español</span></span>
           </nav>
           <ThemeToggle />
           <Link to="/portal/acceso" className="avatar" aria-label="Acceder a mi cuenta">
@@ -20,7 +20,7 @@ export default function AuthLayout() {
           </Link>
         </div>
       </header>
-      <main className="app__main">
+      <main className="app__main" tabIndex={-1}>
         <Outlet />
       </main>
       <footer className="app-foot">

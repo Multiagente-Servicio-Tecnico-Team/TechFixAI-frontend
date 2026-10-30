@@ -32,7 +32,7 @@ export function UserMessage({ label, time, children }) {
 export function TypingIndicator() {
   return (
     <div className="msg msg--bot">
-      <div className="typing" aria-label="El agente está escribiendo"><span /><span /><span /></div>
+      <div className="typing" role="status"><span /><span /><span /><span className="vh">El agente está escribiendo</span></div>
     </div>
   );
 }

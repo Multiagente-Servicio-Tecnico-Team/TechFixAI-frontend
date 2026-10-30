@@ -23,6 +23,7 @@ input, select, textarea { font: inherit; color: inherit; }
 svg { flex: none; }
 ::selection { background: var(--mark); color: var(--on-mark); }
 :focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+main:focus { outline: none; }
 
 @keyframes spin { to { transform: rotate(360deg); } }
 @keyframes blink { 0%, 80%, 100% { opacity: 0.3; } 40% { opacity: 1; } }

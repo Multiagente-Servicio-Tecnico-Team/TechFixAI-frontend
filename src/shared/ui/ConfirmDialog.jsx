@@ -10,9 +10,16 @@ export function ConfirmDialog({ open, title, children, confirmLabel = "Eliminar"
   const bodyId = useId();
   const cancelRef = useRef(null);
   const confirmRef = useRef(null);
+  const returnRef = useRef(null);
 
   useEffect(() => {
-    if (open) cancelRef.current?.focus();
+    if (!open) return undefined;
+    returnRef.current = document.activeElement;
+    cancelRef.current?.focus();
+    // Al cerrar, el foco vuelve a quien abrió el diálogo si sigue en la página.
+    return () => {
+      if (returnRef.current?.isConnected) returnRef.current.focus();
+    };
   }, [open]);
 
   if (!open) return null;

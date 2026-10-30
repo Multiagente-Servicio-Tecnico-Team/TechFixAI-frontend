@@ -10,7 +10,7 @@ export function Field({ label, htmlFor, required, hint, error, aside, children, 
           {label && (
             <label htmlFor={htmlFor} className="field__label">
               {label}
-              {required && <span className="field__req" aria-hidden="true"> *</span>}
+              {required && <span className="field__req"> *<span className="vh"> (obligatorio)</span></span>}
             </label>
           )}
           {aside}

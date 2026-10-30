@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+﻿import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { Laptop, Pencil, PlusCircle, RotateCcw, Search, Trash2, TriangleAlert } from "lucide-react";
 import { ItemIcon, Pagination, Toast } from "../../shared/ui/ui.jsx";
@@ -104,18 +104,18 @@ export default function Inventory({ api }) {
           {Object.entries(sorters).map(([k, s]) => <option key={k} value={k}>{s.label}</option>)}
         </select>
       </div>
-      <div className="toggle-group" role="tablist" aria-label="Categoría">
-        <button type="button" role="tab" aria-selected={!category} className="toggle" onClick={() => reset(setCategory)("")}>
+      <div className="toggle-group" role="group" aria-label="Categoría">
+        <button type="button" aria-pressed={!category} className="toggle" onClick={() => reset(setCategory)("")}>
           Todos ({parts.length})
         </button>
         {PART_CATEGORIES.map((c) => (
-          <button key={c} type="button" role="tab" aria-selected={category === c} className="toggle" onClick={() => reset(setCategory)(c)}>
+          <button key={c} type="button" aria-pressed={category === c} className="toggle" onClick={() => reset(setCategory)(c)}>
             {c} ({parts.filter((p) => p.category === c).length})
           </button>
         ))}
       </div>
 
-      <p className="list-note"><span>Listado de componentes</span><span>Mostrando {rows.length} de {filtered.length} ítems</span></p>
+      <p className="list-note"><span>Listado de componentes</span><span aria-live="polite">Mostrando {rows.length} de {filtered.length} ítems</span></p>
 
       {status === "loading" && <p className="empty" role="status">Cargando inventario…</p>}
       {status === "error" && (

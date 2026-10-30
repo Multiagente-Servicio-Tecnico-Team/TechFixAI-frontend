@@ -28,7 +28,10 @@ export default function NewTicket() {
     const advance = form.advance.trim() ? parseMoney(form.advance) : null;
     if (form.advance.trim() && advance === null) next.advance = "Usa un importe como 30 o 30.00.";
     setErrors(next);
-    if (Object.keys(next).length) return;
+    if (Object.keys(next).length) {
+      document.getElementById(`nt-${{ client: "client", phone: "phone", email: "email", device: "device", issue: "issue", advance: "adv" }[Object.keys(next)[0]]}`)?.focus();
+      return;
+    }
 
     dispatch({
       type: "createTicket",
@@ -57,17 +60,17 @@ export default function NewTicket() {
           <section className="intake__section">
             <div className="intake__head"><h2 className="subtitle">1. Datos del Cliente</h2><p>Recepción rápida en mostrador</p></div>
             <Field label="Nombre Completo / Razón Social" htmlFor="nt-client" required error={errors.client}>
-              <input id="nt-client" className="input" placeholder="Valeria Marcela Gómez Rivas" value={form.client} onChange={set("client")} autoComplete="off" />
+              <input id="nt-client" className="input" placeholder="Valeria Marcela Gómez Rivas" value={form.client} onChange={set("client")} autoComplete="off" aria-invalid={!!errors.client || undefined} />
             </Field>
             <div className="grid-2">
               <Field label="WhatsApp / Celular" htmlFor="nt-phone" required error={errors.phone}>
                 <div className="input-prefix">
                   <span>+51</span>
-                  <input id="nt-phone" type="tel" inputMode="tel" className="input" placeholder="987 654 321" value={form.phone} onChange={set("phone")} autoComplete="off" />
+                  <input id="nt-phone" type="tel" inputMode="tel" className="input" placeholder="987 654 321" value={form.phone} onChange={set("phone")} autoComplete="off" aria-invalid={!!errors.phone || undefined} />
                 </div>
               </Field>
               <Field label={<>Correo Electrónico <span className="muted">(Opcional)</span></>} htmlFor="nt-email" error={errors.email}>
-                <input id="nt-email" type="email" className="input" placeholder="cliente@empresa.pe" value={form.email} onChange={set("email")} autoComplete="off" />
+                <input id="nt-email" type="email" className="input" placeholder="cliente@empresa.pe" value={form.email} onChange={set("email")} autoComplete="off" aria-invalid={!!errors.email || undefined} />
               </Field>
             </div>
           </section>
@@ -76,7 +79,7 @@ export default function NewTicket() {
             <div className="intake__head"><h2 className="subtitle">2. Detalle del Equipo y Falla</h2><p>Identificación y motivo de ingreso</p></div>
             <div className="grid-2">
               <Field label="Equipo / Marca y Modelo" htmlFor="nt-device" required error={errors.device}>
-                <input id="nt-device" className="input" placeholder="Laptop Lenovo Legion 5 15ACH6" value={form.device} onChange={set("device")} />
+                <input id="nt-device" className="input" placeholder="Laptop Lenovo Legion 5 15ACH6" value={form.device} onChange={set("device")} aria-invalid={!!errors.device || undefined} />
               </Field>
               <Field label="Categoría" htmlFor="nt-cat">
                 <select id="nt-cat" className="input" value={form.category} onChange={set("category")}>
@@ -85,7 +88,7 @@ export default function NewTicket() {
               </Field>
             </div>
             <Field label="Detalle de la Falla o Solicitud" htmlFor="nt-issue" required error={errors.issue}>
-              <textarea id="nt-issue" className="input textarea" rows={4} placeholder="Describe síntomas, accesorios recibidos y lo que solicita el cliente." value={form.issue} onChange={set("issue")} />
+              <textarea id="nt-issue" className="input textarea" rows={4} placeholder="Describe síntomas, accesorios recibidos y lo que solicita el cliente." value={form.issue} onChange={set("issue")} aria-invalid={!!errors.issue || undefined} />
             </Field>
           </section>
 
@@ -95,7 +98,7 @@ export default function NewTicket() {
               <Field label="Monto Cobrado / Adelanto" htmlFor="nt-adv" error={errors.advance}>
                 <div className="input-prefix">
                   <span>S/.</span>
-                  <input id="nt-adv" inputMode="decimal" className="input" placeholder="0.00" value={form.advance} onChange={set("advance")} />
+                  <input id="nt-adv" inputMode="decimal" className="input" placeholder="0.00" value={form.advance} onChange={set("advance")} aria-invalid={!!errors.advance || undefined} />
                 </div>
               </Field>
               <fieldset className="field">

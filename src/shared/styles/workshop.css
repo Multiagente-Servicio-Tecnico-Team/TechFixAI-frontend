@@ -4,13 +4,14 @@
 .summary .link { font-weight: 700; }
 
 /* ---------- Tablero ---------- */
-.board { display: grid; grid-template-columns: repeat(var(--stations, 6), minmax(196px, 1fr)); gap: 12px; overflow-x: auto; padding: 2px 2px 8px; }
+.board { display: grid; grid-template-columns: repeat(var(--stations, 6), minmax(196px, 1fr)); gap: 12px; overflow-x: auto; padding: 6px 6px 10px; margin: -6px; }
 .board:focus-visible { outline-offset: 4px; }
 .station { display: grid; gap: 8px; align-content: start; min-width: 0; }
 .station__head { display: flex; justify-content: space-between; align-items: flex-end; gap: 6px; min-height: 44px; padding-bottom: 6px; border-bottom: var(--rule) solid var(--text); font-size: var(--size-sm); font-weight: 700; }
 .station__list { display: grid; gap: 8px; }
 .station__picker { display: none; }
 .wtag { padding-top: 12px; }
+.wtag:focus { outline: 3px solid var(--focus); outline-offset: 2px; }
 .wtag__id { display: flex; flex-wrap: wrap; gap: 2px 8px; padding-right: 30px; }
 .wtag__id a { font: 600 var(--size-xs) var(--mono); color: var(--accent); text-decoration: underline; text-underline-offset: 2px; }
 .wtag__device { font-size: var(--size-base); font-weight: 700; line-height: 1.25; }
@@ -21,7 +22,7 @@
 .wtag__meta > span { display: inline-flex; align-items: center; gap: 4px; }
 .wtag__price { font: 600 var(--size-sm) var(--mono); color: var(--text); white-space: nowrap; }
 .wtag__move { display: grid; gap: 2px; font-size: var(--size-xs); font-weight: 700; }
-.wtag__move select { width: 100%; min-height: 36px; padding: 0 4px; border: var(--border) solid var(--text); border-radius: var(--radius); background: var(--surface); font-size: var(--size-sm); font-weight: 400; }
+.wtag__move select { width: 100%; min-height: var(--control); padding: 0 4px; border: var(--border) solid var(--text); border-radius: var(--radius); background: var(--surface); font-size: var(--size-sm); font-weight: 400; }
 .wtag__tools { display: flex; gap: 4px; }
 
 /* ---------- Detalle ---------- */
@@ -89,7 +90,6 @@
   .board { grid-template-columns: minmax(0, 1fr); overflow-x: visible; }
   .station { display: none; }
   .station.is-focus { display: grid; }
-  .wtag__move select { min-height: var(--control); }
   .detail__cols { grid-template-columns: minmax(0, 1fr); }
   .detail__top { padding-right: 24px; }
 }

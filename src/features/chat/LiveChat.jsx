@@ -31,7 +31,7 @@ function QuoteCard({ quote, busy, onAction }) {
   return (
     <div className="quote">
       <div>
-        <h2 className="subtitle">Cotización</h2>
+        <p className="subtitle">Cotización</p>
         <p className="small muted">Calculado por el agente de ventas</p>
       </div>
       {quote.lines.map((line) => (
@@ -54,7 +54,7 @@ function QuoteCard({ quote, busy, onAction }) {
           </button>
         </div>
       ) : (
-        <p className={`quote__note${quote.status === "rejected" || quote.status === "superseded" ? " quote__note--off" : ""}`}>
+        <p role="status" className={`quote__note${quote.status === "rejected" || quote.status === "superseded" ? " quote__note--off" : ""}`}>
           {{ saved: "Ticket y presupuesto guardados · pendiente de aceptación", confirmed: "Cotización aceptada y registrada", rejected: "Propuesta no guardada" }[quote.status]
             || "Reemplazado por un presupuesto más reciente"}
         </p>
@@ -80,7 +80,7 @@ export default function LiveChat({ api = defaultChatApi }) {
   const endRef = useRef(null);
 
   useEffect(() => {
-    endRef.current?.scrollIntoView({ block: "nearest", behavior: "smooth" });
+    endRef.current?.scrollIntoView({ block: "nearest", behavior: window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
   }, [messages, busy]);
 
   const call = async (payload) => {
@@ -138,7 +138,7 @@ export default function LiveChat({ api = defaultChatApi }) {
           <CopilotHeader subtitle="Agentes de atención, soporte técnico y ventas" />
         </div>
 
-        <div className="log" aria-live="polite">
+        <div className="log" role="log" aria-label="Conversación" tabIndex={0}>
           {messages.map((m) =>
             m.from === "user" ? (
               <UserMessage key={m.id} label="Tú" time={m.time}>{m.text}</UserMessage>
@@ -205,7 +205,7 @@ export default function LiveChat({ api = defaultChatApi }) {
       </section>
 
       <aside className="desk__side" aria-label="Etiqueta de la consulta">
-        <div className="jobtag jobtag--lg" aria-live="polite">
+        <div className="jobtag jobtag--lg">
           <p className="kicker">Etiqueta en preparación</p>
           <div className="pattern">
             <label htmlFor="chat-pattern">Patrón de agentes</label>

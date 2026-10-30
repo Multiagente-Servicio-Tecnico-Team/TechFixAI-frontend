@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Archive, Brain, CircleCheck, Clock, Cpu, Info, PhoneCall, ReceiptText, SendHorizontal, Ticket, Wrench } from "lucide-react";
+import { Archive, CircleCheck, Clock, Info, PhoneCall, SendHorizontal } from "lucide-react";
 import { Link, useSearchParams } from "react-router-dom";
 import { useStore } from "../../state/store.jsx";
 import { formatPEN } from "../../domain/money.js";
@@ -56,36 +56,27 @@ const figmaConversation = [
 
 function BudgetCard({ ticket, onApprove }) {
   const approved = ticket.status !== "approval";
-  const icons = [Wrench, Cpu];
   return (
     <div className="quote">
-      <div className="quote__head">
-        <span className="icon-tile icon-tile--solid icon-tile--sm"><ReceiptText size={18} aria-hidden="true" /></span>
-        <div>
-          <strong>Tarjeta de Presupuesto Técnico Detallada</strong>
-          <p className="mono-small">Cotización instantánea vinculada a inventario físico</p>
-        </div>
+      <div>
+        <h2 className="subtitle">Tarjeta de Presupuesto Técnico Detallada</h2>
+        <p className="small muted">Cotización instantánea vinculada a inventario físico</p>
       </div>
-      <div className="quote__body">
-        {ticket.lines.map((l, i) => {
-          const Icon = icons[i] || Cpu;
-          return (
-            <div key={l.label} className="quote__line">
-              <Icon size={18} aria-hidden="true" />
-              <span>{l.label}</span>
-              <span className="mono">{formatPEN(l.amount)}</span>
-            </div>
-          );
-        })}
-        <div className="quote__total">
-          <div className="quote__sub"><span>Subtotal bruto:</span><span>{formatPEN(ticket.total)} PEN</span></div>
-          <div className="quote__sum"><strong>Total Calculado:</strong><span>{formatPEN(ticket.total)}<small> PEN</small></span></div>
+      {ticket.lines.map((l) => (
+        <div key={l.label} className="quote__line">
+          <span>{l.label}</span>
+          <span className="mono">{formatPEN(l.amount)}</span>
         </div>
-        <button type="button" className={`btn btn--block btn--lg ${approved ? "btn--done" : "btn--primary"}`} onClick={onApprove} disabled={approved}>
-          <CircleCheck size={18} aria-hidden="true" />
-          {approved ? "Presupuesto aprobado · reparación autorizada" : "Aceptar Presupuesto y Autorizar Reparación"}
-        </button>
+      ))}
+      <div className="quote__total">
+        <span className="small muted">Subtotal bruto: {formatPEN(ticket.total)} PEN</span>
+        <strong>Total Calculado:</strong>
+        <span className="quote__sum">{formatPEN(ticket.total)}<small> PEN</small></span>
       </div>
+      <button type="button" className="btn btn--block btn--lg btn--primary" onClick={onApprove} disabled={approved}>
+        <CircleCheck size={18} aria-hidden="true" />
+        {approved ? "Presupuesto aprobado · reparación autorizada" : "Aceptar Presupuesto y Autorizar Reparación"}
+      </button>
     </div>
   );
 }
@@ -93,12 +84,11 @@ function BudgetCard({ ticket, onApprove }) {
 function CreatedCard({ id }) {
   return (
     <div className="created">
-      <span className="icon-tile icon-tile--sm"><Ticket size={18} aria-hidden="true" /></span>
       <div>
         <strong>Ticket #{id} registrado</strong>
         <p>Estado: Recibido · En triage. Presupuesto pendiente de validación técnica.</p>
       </div>
-      <Link to="/portal/tickets" className="btn btn--soft btn--sm">Ver en Mis Tickets</Link>
+      <Link to="/portal/tickets" className="btn btn--sm">Ver en Mis Tickets</Link>
     </div>
   );
 }
@@ -124,6 +114,7 @@ function Chat({ ticketId }) {
   // Consulta nueva: "device" → "issue" → "done". Ticket existente: siempre "ticket".
   const [step, setStep] = useState(existing ? "ticket" : "device");
   const [device, setDevice] = useState("");
+  const [issue, setIssue] = useState("");
   const [createdId, setCreatedId] = useState(null);
   const [draft, setDraft] = useState("");
   const [typing, setTyping] = useState(false);
@@ -161,6 +152,7 @@ function Chat({ ticketId }) {
       return;
     }
     if (step === "issue") {
+      setIssue(clean.slice(0, 280));
       const ids = [...staffTickets, ...clientTickets].map((t) => Number(t.id.split("-")[1]));
       const id = `TCK-${Math.max(...ids) + 1}`;
       dispatch({ type: "createConsultation", id, device, summary: clean.slice(0, 280), client: { name: session?.name || "Cliente", email: session?.email || "" } });
@@ -196,40 +188,35 @@ function Chat({ ticketId }) {
   }[step] || "Escribe tu consulta sobre la reparación o consulta detalles del presupuesto...";
 
   return (
-    <div className="container-chat">
-      <ChatTitle title={existing ? "Diagnóstico Asistido y Cotización Inteligente" : "Nueva Consulta de Diagnóstico"} />
+    <div className="desk">
+      <section className="desk__chat" aria-label="Conversación con TechFix Copilot">
+        <div>
+          <ChatTitle title={existing ? "Diagnóstico Asistido y Cotización Inteligente" : "Nueva Consulta de Diagnóstico"} />
+          <CopilotHeader subtitle={`Especialista en Diagnóstico y Presupuestos de Hardware${currentId ? ` · Ticket #${currentId}` : " · Nueva consulta"}`} />
+        </div>
 
-      <section className="copilot" aria-label="Conversación con TechFix Copilot">
-        <CopilotHeader subtitle={`Especialista en Diagnóstico y Presupuestos de Hardware${currentId ? ` · Ticket #${currentId}` : " · Nueva consulta"}`} />
-
-        <div className="copilot__log" aria-live="polite">
+        <div className="log" aria-live="polite">
           {messages.map((m) =>
             m.from === "user" ? (
               <UserMessage key={m.id} label="Tú (Cliente)" time={m.time}>{m.text}</UserMessage>
             ) : (
               <div key={m.id} className="msg msg--bot">
-                <span className="msg__avatar"><Brain size={16} aria-hidden="true" /></span>
-                <div className="msg__content">
-                  <p className="msg__meta"><strong>Agente Diagnóstico IA</strong> <time>{m.time}</time></p>
-                  <div className="msg__bubble">
-                    {m.paragraphs.map((p) => <p key={p}>{p}</p>)}
-                  </div>
-                  {m.budget && existing && <BudgetCard ticket={existing} onApprove={approve} />}
-                  {m.created && <CreatedCard id={m.created} />}
+                <p className="msg__meta"><strong>Agente Diagnóstico IA</strong> <time>{m.time}</time></p>
+                <div className="msg__bubble">
+                  {m.paragraphs.map((p) => <p key={p}>{p}</p>)}
                 </div>
+                {m.created && <CreatedCard id={m.created} />}
               </div>
             )
           )}
-          {typing && (
-            <TypingIndicator />
-          )}
+          {typing && <TypingIndicator />}
           <div ref={endRef} />
         </div>
 
-        <footer className="copilot__composer">
+        <footer className="desk__foot">
           {existing && (
             <div className="quick">
-              <span className="mono-label">Sugerencias rápidas:</span>
+              <span className="small muted">Sugerencias rápidas:</span>
               {ticketSuggestions.map(({ icon: Icon, label, reply: answer }) => (
                 <button key={label} type="button" className="quick__btn" onClick={() => send(label, answer(existing.id))}>
                   <Icon size={15} aria-hidden="true" /> {label}
@@ -253,16 +240,31 @@ function Chat({ ticketId }) {
               onKeyDown={onKey}
               aria-label="Mensaje"
             />
-            <button type="submit" className="btn btn--primary" disabled={!draft.trim()}>
+            <button type="submit" className="btn btn--primary btn--lg" disabled={!draft.trim()}>
               Enviar <SendHorizontal size={16} aria-hidden="true" />
             </button>
           </form>
-          <p className="mono-small composer__hint">
+          <p className="composer__hint">
             Presiona Shift + Enter para salto de línea · <Info size={12} aria-hidden="true" /> Respuestas de demostración.{" "}
             <Link to="/portal/tickets" className="link">Ver mis tickets</Link>
           </p>
         </footer>
       </section>
+
+      <aside className="desk__side" aria-label="Etiqueta de la consulta">
+        <div className="jobtag jobtag--lg">
+          <p className="kicker">{currentId ? `Ticket #${currentId}` : "Etiqueta en preparación"}</p>
+          {existing ? (
+            <BudgetCard ticket={existing} onApprove={approve} />
+          ) : (
+            <>
+              <div className={`tagfield${device ? "" : " tagfield--wait"}`}><span>Equipo</span>{device || "Por indicar"}</div>
+              <div className={`tagfield${issue ? "" : " tagfield--wait"}`}><span>Falla</span>{issue || "Por indicar"}</div>
+              <div className="tagfield tagfield--wait"><span>Presupuesto</span>Pendiente de validación técnica</div>
+            </>
+          )}
+        </div>
+      </aside>
     </div>
   );
 }

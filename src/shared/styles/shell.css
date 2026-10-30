@@ -1,0 +1,52 @@
+/* Estructura común: franja superior, navegación (barra inferior en celular) y contenido. */
+.app { display: flex; flex-direction: column; min-height: 100vh; }
+.app__main { flex: 1; width: 100%; max-width: var(--content); margin: 0 auto; padding: 24px; }
+
+.strip { position: sticky; top: 0; z-index: 40; display: flex; align-items: center; gap: 8px 20px; min-height: var(--strip-h); padding: 8px 24px; background: var(--mark); color: var(--on-mark); }
+.strip :focus-visible { outline-color: var(--on-mark); }
+.strip__actions { display: flex; align-items: center; gap: 8px; margin-left: auto; }
+.strip__link { display: inline-flex; align-items: center; min-height: var(--control); padding: 0 6px; font-size: var(--size-sm); font-weight: 700; }
+.strip__link:hover { text-decoration: underline; text-underline-offset: 3px; }
+.lang-badge { font: 600 var(--size-xs) var(--mono); }
+
+.logo { display: inline-flex; align-items: center; gap: 8px; min-height: var(--control); font: 800 var(--size-lg) var(--font-display); letter-spacing: -0.02em; white-space: nowrap; }
+
+.tabs { display: flex; align-items: center; gap: 2px; }
+.tabs__link { display: inline-flex; align-items: center; gap: 7px; min-height: var(--control); padding: 0 10px; border-bottom: var(--rule) solid transparent; font-weight: 700; white-space: nowrap; }
+.tabs__link:hover, .tabs__link.is-active { border-bottom-color: var(--on-mark); }
+.tabs__link--cta { margin-left: 8px; border: var(--border) solid var(--on-mark); background: var(--on-mark); color: var(--mark); }
+
+.avatar { display: inline-grid; place-items: center; width: var(--control); height: var(--control); border: var(--border) solid var(--on-mark); border-radius: 50%; background: transparent; color: var(--on-mark); }
+.user-menu { position: relative; }
+.user-menu__panel { position: absolute; top: calc(100% + 8px); right: 0; z-index: 60; display: grid; gap: 2px; min-width: 240px; padding: 8px; border: var(--border) solid var(--text); background: var(--surface); color: var(--text); animation: rise var(--fast) var(--ease); }
+.user-menu__panel :focus-visible { outline-color: var(--focus); }
+.user-menu__name { padding: 4px 8px 0; font-weight: 700; }
+.user-menu__mail { padding: 0 8px 6px; font-size: var(--size-sm); color: var(--text-2); overflow-wrap: anywhere; }
+.user-menu__item { display: flex; align-items: center; gap: 8px; width: 100%; min-height: var(--control); padding: 0 8px; border: 0; background: transparent; font-weight: 700; text-align: left; }
+.user-menu__item:hover { background: var(--surface-2); }
+
+.app-foot { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 4px 24px; padding: 14px 24px; border-top: var(--rule) solid var(--text); font-size: var(--size-sm); color: var(--text-2); }
+.app-foot nav { display: flex; flex-wrap: wrap; gap: 0 16px; }
+.app-foot a { display: inline-flex; align-items: center; min-height: var(--control-sm); }
+.app-foot a:hover { color: var(--text); text-decoration: underline; }
+
+.page { display: grid; gap: 20px; min-width: 0; }
+.page > * { min-width: 0; }
+.page-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: 12px 20px; }
+.page-head__actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.back-link { display: inline-flex; align-items: center; gap: 6px; width: fit-content; min-height: var(--control-sm); font-weight: 700; font-size: var(--size-sm); }
+.back-link:hover { text-decoration: underline; text-underline-offset: 3px; }
+
+@media (max-width: 760px) {
+  .app--nav { --tabbar-space: var(--tabbar-h); padding-bottom: var(--tabbar-h); }
+  .app--nav .tabs { position: fixed; left: 0; right: 0; bottom: 0; z-index: 50; gap: 0; background: var(--surface); color: var(--text); border-top: var(--rule) solid var(--text); padding-bottom: env(safe-area-inset-bottom, 0px); }
+  .app--nav .tabs__link { flex: 1 1 0; flex-direction: column; justify-content: center; gap: 2px; min-height: var(--tabbar-h); padding: 4px; border: 0; margin: 0; background: transparent; color: inherit; font-size: var(--size-xs); }
+  .app--nav .tabs__link.is-active { background: var(--mark); color: var(--on-mark); }
+  .app--nav .tabs :focus-visible { outline-color: var(--focus); outline-offset: -4px; }
+  .strip { padding: 8px 16px; }
+  .app__main { padding: 16px; }
+  .app-foot { padding: 12px 16px; }
+}
+@media (max-width: 480px) {
+  .strip__link.hide-xs { display: none; }
+}

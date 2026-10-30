@@ -4,10 +4,18 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content="TechFix.AI: sistema multiagente que conecta diagnóstico, triage, inventario y comunicación para talleres de servicio técnico." />
+    <meta name="color-scheme" content="light dark" />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,800&family=Martian+Mono:wght@400;600&display=swap" rel="stylesheet" />
+    <script>
+      // Aplica el tema guardado antes del primer pintado; sin preferencia, sigue al sistema.
+      try {
+        var saved = localStorage.getItem("techfix-theme");
+        if (saved === "dark" || (!saved && matchMedia("(prefers-color-scheme: dark)").matches)) document.documentElement.dataset.theme = "dark";
+      } catch (e) {}
+    </script>
     <title>TechFix.AI — Servicio técnico con inteligencia coordinada</title>
   </head>
   <body>

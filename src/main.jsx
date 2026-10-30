@@ -5,6 +5,7 @@ import App from "./app/App.jsx";
 import { StoreProvider } from "./state/store.jsx";
 import "./shared/styles/index.css";
 import "./features/landing/landing.css";
+import "./shared/styles/shell.css";
 import "./shared/styles/screens.css";
 
 ReactDOM.createRoot(document.getElementById("root")).render(

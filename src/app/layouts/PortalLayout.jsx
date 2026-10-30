@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
-import { LogOut, UserRound } from "lucide-react";
+import { LogOut, MessageSquareText, TicketCheck, UserRound } from "lucide-react";
 import Logo from "../../shared/ui/Logo.jsx";
+import ThemeToggle from "../../shared/ui/ThemeToggle.jsx";
 import { useStore } from "../../state/store.jsx";
 import { authApi } from "../../features/auth/authApi.js";
 
@@ -35,7 +36,7 @@ export function UserMenu({ extra }) {
     <div className="user-menu" ref={ref}>
       <button
         type="button"
-        className="avatar avatar--online"
+        className="avatar"
         aria-haspopup="menu"
         aria-expanded={open}
         aria-label="Menú de usuario"
@@ -57,27 +58,27 @@ export function UserMenu({ extra }) {
   );
 }
 
+const tabClass = ({ isActive }) => `tabs__link${isActive ? " is-active" : ""}`;
+
 export default function PortalLayout() {
   return (
-    <div className="portal">
-      <header className="portal-header">
+    <div className="app app--nav">
+      <header className="strip">
         <Logo />
-        <nav className="portal-header__nav" aria-label="Portal del cliente">
-          <NavLink to="/portal/asistente" className="tab-link">
-            <span className="hide-xs">Nuevo Ticket / </span>Chat IA
-          </NavLink>
-          <NavLink to="/portal/tickets" className="tab-link">Mis Tickets</NavLink>
+        <nav className="tabs" aria-label="Portal del cliente">
+          <NavLink to="/portal/tickets" className={tabClass}><TicketCheck size={17} aria-hidden="true" /> Mis Tickets</NavLink>
+          <NavLink to="/portal/asistente" className={tabClass}><MessageSquareText size={17} aria-hidden="true" /> Asistente</NavLink>
         </nav>
-        <UserMenu />
+        <div className="strip__actions">
+          <ThemeToggle />
+          <UserMenu />
+        </div>
       </header>
-      <main className="portal-main">
+      <main className="app__main">
         <Outlet />
       </main>
-      <footer className="portal-footer">
-        <p>
-          <strong>TechFix<span className="logo__ai">.AI</span></strong>
-          <span className="mono-small">Plataforma Inteligente de Servicio Técnico</span>
-        </p>
+      <footer className="app-foot">
+        <p>TechFix.AI · Plataforma Inteligente de Servicio Técnico</p>
         <p>© 2026 TechFix.AI. Diagnóstico autónomo y gestión de triage de hardware.</p>
       </footer>
     </div>

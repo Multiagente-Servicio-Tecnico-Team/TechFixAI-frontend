@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Banknote, CircleCheck, Laptop, ReceiptText, UserRound } from "lucide-react";
+import { CircleCheck } from "lucide-react";
 import { BackLink, Field } from "../../shared/ui/ui.jsx";
 import { useStore } from "../../state/store.jsx";
 import { EMAIL_RE } from "../../domain/validation.js";
@@ -48,44 +48,38 @@ export default function NewTicket() {
   };
 
   return (
-    <div className="staff-page">
+    <div className="page">
       <BackLink to="/taller">Volver a Gestión de Tickets</BackLink>
-      <h1 className="page-title page-title--sm">Crear Nuevo Ticket</h1>
+      <h1 className="title">Crear Nuevo Ticket</h1>
 
-      <form className="new-ticket" onSubmit={submit} noValidate>
-        <section className="panel">
-          <div className="panel__head">
-            <span className="icon-tile icon-tile--sm"><UserRound size={18} aria-hidden="true" /></span>
-            <div><h2>1. Datos del Cliente</h2><p>Recepción rápida en mostrador</p></div>
-          </div>
-          <Field label="Nombre Completo / Razón Social" htmlFor="nt-client" required error={errors.client}>
-            <input id="nt-client" className="input" placeholder="Valeria Marcela Gómez Rivas" value={form.client} onChange={set("client")} autoComplete="off" />
-          </Field>
-          <div className="grid-2">
-            <Field label="WhatsApp / Celular" htmlFor="nt-phone" required error={errors.phone}>
-              <div className="input-prefix">
-                <span>+51</span>
-                <input id="nt-phone" type="tel" inputMode="tel" className="input" placeholder="987 654 321" value={form.phone} onChange={set("phone")} autoComplete="off" />
-              </div>
+      <form className="intake" onSubmit={submit} noValidate>
+        <div className="intake__main">
+          <section className="intake__section">
+            <div className="intake__head"><h2 className="subtitle">1. Datos del Cliente</h2><p>Recepción rápida en mostrador</p></div>
+            <Field label="Nombre Completo / Razón Social" htmlFor="nt-client" required error={errors.client}>
+              <input id="nt-client" className="input" placeholder="Valeria Marcela Gómez Rivas" value={form.client} onChange={set("client")} autoComplete="off" />
             </Field>
-            <Field label={<>Correo Electrónico <span className="muted">(Opcional)</span></>} htmlFor="nt-email" error={errors.email}>
-              <input id="nt-email" type="email" className="input" placeholder="cliente@empresa.pe" value={form.email} onChange={set("email")} autoComplete="off" />
-            </Field>
-          </div>
-        </section>
-
-        <div className="new-ticket__col">
-          <section className="panel">
-            <div className="panel__head">
-              <span className="icon-tile icon-tile--sm"><Laptop size={18} aria-hidden="true" /></span>
-              <div><h2>2. Detalle del Equipo y Falla</h2><p>Identificación y motivo de ingreso</p></div>
+            <div className="grid-2">
+              <Field label="WhatsApp / Celular" htmlFor="nt-phone" required error={errors.phone}>
+                <div className="input-prefix">
+                  <span>+51</span>
+                  <input id="nt-phone" type="tel" inputMode="tel" className="input" placeholder="987 654 321" value={form.phone} onChange={set("phone")} autoComplete="off" />
+                </div>
+              </Field>
+              <Field label={<>Correo Electrónico <span className="muted">(Opcional)</span></>} htmlFor="nt-email" error={errors.email}>
+                <input id="nt-email" type="email" className="input" placeholder="cliente@empresa.pe" value={form.email} onChange={set("email")} autoComplete="off" />
+              </Field>
             </div>
+          </section>
+
+          <section className="intake__section">
+            <div className="intake__head"><h2 className="subtitle">2. Detalle del Equipo y Falla</h2><p>Identificación y motivo de ingreso</p></div>
             <div className="grid-2">
               <Field label="Equipo / Marca y Modelo" htmlFor="nt-device" required error={errors.device}>
                 <input id="nt-device" className="input" placeholder="Laptop Lenovo Legion 5 15ACH6" value={form.device} onChange={set("device")} />
               </Field>
               <Field label="Categoría" htmlFor="nt-cat">
-                <select id="nt-cat" className="input select" value={form.category} onChange={set("category")}>
+                <select id="nt-cat" className="input" value={form.category} onChange={set("category")}>
                   {TICKET_CATEGORIES.map((c) => <option key={c}>{c}</option>)}
                 </select>
               </Field>
@@ -95,23 +89,20 @@ export default function NewTicket() {
             </Field>
           </section>
 
-          <section className="panel">
-            <div className="panel__head">
-              <span className="icon-tile icon-tile--sm"><Banknote size={18} aria-hidden="true" /></span>
-              <div><h2>3. Costo y Adelanto</h2><p>Adelanto cobrado en ventanilla (el presupuesto lo emite el diagnóstico)</p></div>
-            </div>
-            <div className="grid-2 grid-2--end">
+          <section className="intake__section">
+            <div className="intake__head"><h2 className="subtitle">3. Costo y Adelanto</h2><p>Adelanto cobrado en ventanilla (el presupuesto lo emite el diagnóstico)</p></div>
+            <div className="grid-2">
               <Field label="Monto Cobrado / Adelanto" htmlFor="nt-adv" error={errors.advance}>
-                <div className="input-prefix input-prefix--money">
+                <div className="input-prefix">
                   <span>S/.</span>
                   <input id="nt-adv" inputMode="decimal" className="input" placeholder="0.00" value={form.advance} onChange={set("advance")} />
                 </div>
               </Field>
               <fieldset className="field">
                 <legend className="field__label">Método de Pago</legend>
-                <div className="radio-pills">
+                <div className="choice">
                   {methods.map((m) => (
-                    <label key={m} className={`radio-pill${form.method === m ? " is-active" : ""}`}>
+                    <label key={m} className={`choice__item${form.method === m ? " is-active" : ""}`}>
                       <input type="radio" name="method" value={m} checked={form.method === m} onChange={set("method")} />
                       {m}
                     </label>
@@ -122,15 +113,19 @@ export default function NewTicket() {
           </section>
         </div>
 
-        <div className="panel submit-bar">
-          <div className="submit-bar__info">
-            <span className="icon-tile icon-tile--sm"><ReceiptText size={18} aria-hidden="true" /></span>
-            <div><strong>Listo para Emisión Rápida</strong><p className="mono-small">Ticket #{nextId}</p></div>
+        <aside className="intake__side" aria-label="Etiqueta del ticket">
+          <div className="jobtag jobtag--lg">
+            <p className="kicker">Ticket #{nextId}</p>
+            <strong className="subtitle">Listo para Emisión Rápida</strong>
+            <div className={`tagfield${form.client ? "" : " tagfield--wait"}`}><span>Cliente</span>{form.client || "Por indicar"}</div>
+            <div className={`tagfield${form.device ? "" : " tagfield--wait"}`}><span>Equipo</span>{form.device || "Por indicar"}</div>
+            <div className="tagfield"><span>Categoría</span>{form.category}</div>
+            <div className={`tagfield${form.advance ? "" : " tagfield--wait"}`}><span>Adelanto</span>{form.advance ? `S/. ${form.advance} · ${form.method}` : "Sin adelanto"}</div>
+            <button type="submit" className="btn btn--primary btn--lg btn--block">
+              <CircleCheck size={19} aria-hidden="true" /> Generar Ticket
+            </button>
           </div>
-          <button type="submit" className="btn btn--primary btn--lg">
-            <CircleCheck size={19} aria-hidden="true" /> Generar Ticket
-          </button>
-        </div>
+        </aside>
       </form>
     </div>
   );

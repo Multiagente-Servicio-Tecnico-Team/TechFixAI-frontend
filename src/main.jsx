@@ -7,7 +7,8 @@ import "./shared/styles/index.css";
 import "./features/landing/landing.css";
 import "./shared/styles/shell.css";
 import "./shared/styles/auth.css";
-import "./shared/styles/screens.css";
+import "./shared/styles/portal.css";
+import "./shared/styles/workshop.css";
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>

@@ -37,7 +37,7 @@ export function ConfirmDialog({ open, title, children, confirmLabel = "Eliminar"
         <div id={bodyId} className="dialog__body">{children}</div>
         {error && <p className="dialog__error" role="alert">{error}</p>}
         <div className="dialog__actions">
-          <button ref={cancelRef} type="button" className="btn btn--ghost" onClick={close} disabled={busy}>Cancelar</button>
+          <button ref={cancelRef} type="button" className="btn" onClick={close} disabled={busy}>Cancelar</button>
           <button ref={confirmRef} type="button" className="btn btn--danger" onClick={onConfirm} disabled={busy}>
             {busy ? "Eliminando…" : confirmLabel}
           </button>

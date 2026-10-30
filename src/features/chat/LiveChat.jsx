@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Brain, CircleCheck, CircleX, Info, ReceiptText, RotateCcw, SendHorizontal, Ticket, TriangleAlert } from "lucide-react";
+import { CircleCheck, CircleX, Info, RotateCcw, SendHorizontal, TriangleAlert } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useStore } from "../../state/store.jsx";
 import { formatPEN, parseMoney } from "../../domain/money.js";
@@ -30,40 +30,35 @@ function QuoteCard({ quote, busy, onAction }) {
   const pending = quote.status === "proposed";
   return (
     <div className="quote">
-      <div className="quote__head">
-        <span className="icon-tile icon-tile--solid icon-tile--sm"><ReceiptText size={18} aria-hidden="true" /></span>
-        <div>
-          <strong>Cotización</strong>
-          <p className="mono-small">Calculado por el agente de ventas</p>
-        </div>
+      <div>
+        <p className="subtitle">Cotización</p>
+        <p className="small muted">Calculado por el agente de ventas</p>
       </div>
-      <div className="quote__body">
-        {quote.lines.map((line) => (
-          <div key={line.label} className="quote__line">
-            <ReceiptText size={18} aria-hidden="true" />
-            <span>{line.label}</span>
-            <span className="mono">{money(line.amount)}</span>
-          </div>
-        ))}
-        <div className="quote__total">
-          <div className="quote__sum"><strong>Total:</strong><span>{money(quote.total)}<small> {quote.currency}</small></span></div>
+      {quote.lines.map((line) => (
+        <div key={line.label} className="quote__line">
+          <span>{line.label}</span>
+          <span className="mono">{money(line.amount)}</span>
         </div>
-        {pending ? (
-          <div className="btn-row btn-row--start">
-            <button type="button" className="btn btn--primary" disabled={busy} onClick={() => onAction("accept_quote")}>
+      ))}
+      <div className="quote__total">
+        <strong>Total:</strong>
+        <span className="quote__sum">{money(quote.total)}<small> {quote.currency}</small></span>
+      </div>
+      {pending ? (
+        <div className="btn-row">
+          <button type="button" className="btn btn--primary" disabled={busy} onClick={() => onAction("accept_quote")}>
             <CircleCheck size={18} aria-hidden="true" /> Confirmar y guardar
-            </button>
-            <button type="button" className="btn btn--ghost" disabled={busy} onClick={() => onAction("reject_quote")}>
+          </button>
+          <button type="button" className="btn" disabled={busy} onClick={() => onAction("reject_quote")}>
             <CircleX size={18} aria-hidden="true" /> No guardar
-            </button>
-          </div>
-        ) : (
-          <p className={`ok-text${quote.status === "rejected" ? " muted" : ""}`}>
-            {{ saved: "Ticket y presupuesto guardados · pendiente de aceptación", confirmed: "Cotización aceptada y registrada", rejected: "Propuesta no guardada" }[quote.status]
-              || "Reemplazado por un presupuesto más reciente"}
-          </p>
-        )}
-      </div>
+          </button>
+        </div>
+      ) : (
+        <p role="status" className={`quote__note${quote.status === "rejected" || quote.status === "superseded" ? " quote__note--off" : ""}`}>
+          {{ saved: "Ticket y presupuesto guardados · pendiente de aceptación", confirmed: "Cotización aceptada y registrada", rejected: "Propuesta no guardada" }[quote.status]
+            || "Reemplazado por un presupuesto más reciente"}
+        </p>
+      )}
     </div>
   );
 }
@@ -85,7 +80,7 @@ export default function LiveChat({ api = defaultChatApi }) {
   const endRef = useRef(null);
 
   useEffect(() => {
-    endRef.current?.scrollIntoView({ block: "nearest", behavior: "smooth" });
+    endRef.current?.scrollIntoView({ block: "nearest", behavior: window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
   }, [messages, busy]);
 
   const call = async (payload) => {
@@ -131,84 +126,57 @@ export default function LiveChat({ api = defaultChatApi }) {
     setError(null);
   };
 
-  // Solo la última tarjeta de presupuesto reacciona a los botones.
-  const lastQuoteId = [...messages].reverse().find((m) => m.quote)?.id;
+  // Solo la última tarjeta de presupuesto reacciona a los botones y va en la etiqueta lateral.
+  const lastQuoteMessage = [...messages].reverse().find((m) => m.quote);
+  const lastQuoteId = lastQuoteMessage?.id;
 
   return (
-    <div className="container-chat">
-      <ChatTitle title="Diagnóstico Asistido y Cotización Inteligente" />
-
-      <section className="copilot" aria-label="Conversación con TechFix Copilot">
-        <CopilotHeader subtitle="Agentes de atención, soporte técnico y ventas" />
-
-        <div className="pattern-picker">
-          <label htmlFor="chat-pattern">Patrón de agentes</label>
-          <select
-            id="chat-pattern"
-            value={pattern}
-            disabled={busy || Boolean(conversationId)}
-            onChange={(event) => setPattern(event.target.value)}
-          >
-            {PATTERNS.map((item) => (
-              <option key={item.id} value={item.id}>{item.name}</option>
-            ))}
-          </select>
-          {conversationId && (
-            <button
-              type="button"
-              className="btn btn--ghost btn--sm"
-              disabled={busy}
-              onClick={startNewConversation}
-            >
-              <RotateCcw size={14} aria-hidden="true" /> Nueva conversación
-            </button>
-          )}
-          <span className="mono-small" role="status">{PATTERN_DESCRIPTIONS[pattern]}</span>
+    <div className="desk">
+      <section className="desk__chat" aria-label="Conversación con TechFix Copilot">
+        <div>
+          <ChatTitle title="Diagnóstico Asistido y Cotización Inteligente" />
+          <CopilotHeader subtitle="Agentes de atención, soporte técnico y ventas" />
         </div>
 
-        <div className="copilot__log" aria-live="polite">
+        <div className="log" role="log" aria-label="Conversación" tabIndex={0}>
           {messages.map((m) =>
             m.from === "user" ? (
               <UserMessage key={m.id} label="Tú" time={m.time}>{m.text}</UserMessage>
             ) : (
-              <div key={m.id} className="msg msg--bot">
-                <span className="msg__avatar"><Brain size={16} aria-hidden="true" /></span>
-                <div className="msg__content">
-                  <p className="msg__meta"><strong>Agente TechFix</strong> <time>{m.time}</time></p>
-                  <div className="msg__bubble"><p><RichText text={m.text} /></p></div>
-                  {m.quote && (
+              <div key={m.id} className="msg">
+                <p className="msg__meta"><strong>Agente TechFix</strong> <time>{m.time}</time></p>
+                <div className="msg__bubble"><p><RichText text={m.text} /></p></div>
+                {m.quote && m.id !== lastQuoteId && (
+                  <div className="jobtag">
                     <QuoteCard
-                      quote={m.id === lastQuoteId ? m.quote : { ...m.quote, status: m.quote.status === "proposed" ? "superseded" : m.quote.status }}
-                      busy={busy || m.id !== lastQuoteId}
-                      onAction={(action) => call({ action })}
+                      quote={{ ...m.quote, status: m.quote.status === "proposed" ? "superseded" : m.quote.status }}
+                      busy
+                      onAction={() => {}}
                     />
-                  )}
-                  {m.ticket && (
-                    <div className="created">
-                      <span className="icon-tile icon-tile--sm"><Ticket size={18} aria-hidden="true" /></span>
-                      <div>
-                        <strong>Ticket {m.ticket.code}</strong>
-                        <p>Estado: {TICKET_STATUS_LABEL[m.ticket.status] || m.ticket.status}</p>
-                      </div>
+                  </div>
+                )}
+                {m.ticket && (
+                  <div className="created">
+                    <div>
+                      <strong>Ticket {m.ticket.code}</strong>
+                      <p>Estado: {TICKET_STATUS_LABEL[m.ticket.status] || m.ticket.status}</p>
                     </div>
-                  )}
-                </div>
+                  </div>
+                )}
               </div>
             )
           )}
-          {busy && (
-            <TypingIndicator />
-          )}
+          {busy && <TypingIndicator />}
           <div ref={endRef} />
         </div>
 
-        <footer className="copilot__composer">
+        <footer className="desk__foot">
           {error && (
             <div className="form-alert" role="alert">
               <TriangleAlert size={16} aria-hidden="true" />
               <span>{error.message}</span>
               {error.payload && (
-                <button type="button" className="btn btn--ghost btn--sm" onClick={() => call(error.payload)}>
+                <button type="button" className="btn btn--sm" onClick={() => call(error.payload)}>
                   <RotateCcw size={14} aria-hidden="true" /> Reintentar
                 </button>
               )}
@@ -225,16 +193,47 @@ export default function LiveChat({ api = defaultChatApi }) {
               onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) send(e); }}
               aria-label="Mensaje"
             />
-            <button type="submit" className="btn btn--primary" disabled={!draft.trim() || busy}>
+            <button type="submit" className="btn btn--primary btn--lg" disabled={!draft.trim() || busy}>
               Enviar <SendHorizontal size={16} aria-hidden="true" />
             </button>
           </form>
-          <p className="mono-small composer__hint">
+          <p className="composer__hint">
             Presiona Shift + Enter para salto de línea · <Info size={12} aria-hidden="true" /> No compartas contraseñas en el chat.{" "}
             <Link to="/portal/tickets" className="link">Ver mis tickets</Link>
           </p>
         </footer>
       </section>
+
+      <aside className="desk__side" aria-label="Etiqueta de la consulta">
+        <div className="jobtag jobtag--lg">
+          <p className="kicker">Etiqueta en preparación</p>
+          <div className="pattern">
+            <label htmlFor="chat-pattern">Patrón de agentes</label>
+            <select
+              id="chat-pattern"
+              className="input"
+              value={pattern}
+              disabled={busy || Boolean(conversationId)}
+              onChange={(event) => setPattern(event.target.value)}
+            >
+              {PATTERNS.map((item) => (
+                <option key={item.id} value={item.id}>{item.name}</option>
+              ))}
+            </select>
+            <span className="small muted" role="status">{PATTERN_DESCRIPTIONS[pattern]}</span>
+          </div>
+          {conversationId && (
+            <button type="button" className="btn btn--sm" disabled={busy} onClick={startNewConversation}>
+              <RotateCcw size={14} aria-hidden="true" /> Nueva conversación
+            </button>
+          )}
+          {lastQuoteMessage ? (
+            <QuoteCard quote={lastQuoteMessage.quote} busy={busy} onAction={(action) => call({ action })} />
+          ) : (
+            <p className="tagfield tagfield--wait">El presupuesto aparecerá aquí en cuanto esté listo.</p>
+          )}
+        </div>
+      </aside>
     </div>
   );
 }

@@ -10,7 +10,7 @@ export function Field({ label, htmlFor, required, hint, error, aside, children, 
           {label && (
             <label htmlFor={htmlFor} className="field__label">
               {label}
-              {required && <span className="field__req" aria-hidden="true"> *</span>}
+              {required && <span className="field__req"> *<span className="vh"> (obligatorio)</span></span>}
             </label>
           )}
           {aside}
@@ -62,9 +62,9 @@ export function PasswordInput({ id, value, onChange, icon, autoComplete = "curre
   );
 }
 
-export function BackLink({ to, children, mono = false }) {
+export function BackLink({ to, children }) {
   return (
-    <Link to={to} className={`back-link${mono ? " back-link--mono" : ""}`}>
+    <Link to={to} className="back-link">
       <ArrowLeft size={16} aria-hidden="true" /> {children}
     </Link>
   );

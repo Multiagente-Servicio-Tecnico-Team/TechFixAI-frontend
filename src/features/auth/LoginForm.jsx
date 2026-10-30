@@ -59,15 +59,17 @@ export function LoginForm({ role, badge, title, subtitle, defaultTo, footer, api
   };
 
   return (
-    <div className="auth-card">
-      <div className="auth-card__body">
-        <span className="badge"><span className="pill__dot" />{badge}</span>
-        <h1 className="auth-title">{title}</h1>
-        <p className="auth-sub">{subtitle}</p>
-
+    <div className="auth">
+      <div className="auth__intro">
+        <span className="stamp stamp--info">{badge}</span>
+        <h1 className="auth__title">{title}</h1>
+        <p className="auth__lead">{subtitle}</p>
+        <div className="auth__links">{footer}</div>
+      </div>
+      <div className="jobtag jobtag--lg">
         <form className="form" onSubmit={submit} noValidate aria-busy={loading}>
           <FormAlert>{formError}</FormAlert>
-          <Field label="Correo electrónico" htmlFor="email" error={errors.email} className="field--mono-label">
+          <Field label="Correo electrónico" htmlFor="email" error={errors.email}>
             <InputIcon icon={AtSign}>
               <input
                 id="email"
@@ -81,7 +83,7 @@ export function LoginForm({ role, badge, title, subtitle, defaultTo, footer, api
               />
             </InputIcon>
           </Field>
-          <Field label="Contraseña" htmlFor="password" error={errors.password} className="field--mono-label">
+          <Field label="Contraseña" htmlFor="password" error={errors.password}>
             <PasswordInput
               id="password"
               icon={Lock}
@@ -91,7 +93,7 @@ export function LoginForm({ role, badge, title, subtitle, defaultTo, footer, api
               invalid={!!errors.password}
             />
           </Field>
-          <Link to="/portal/recuperar" className="link link--sm form__right">¿Olvidaste tu contraseña?</Link>
+          <Link to="/portal/recuperar" className="link form__right">¿Olvidaste tu contraseña?</Link>
           <button type="submit" className="btn btn--primary btn--block btn--lg" disabled={loading}>
             {loading ? (
               <><LoaderCircle size={18} className="spin" aria-hidden="true" /> Ingresando…</>
@@ -104,7 +106,6 @@ export function LoginForm({ role, badge, title, subtitle, defaultTo, footer, api
           )}
         </form>
       </div>
-      <div className="auth-card__foot">{footer}</div>
     </div>
   );
 }

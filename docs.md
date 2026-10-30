@@ -10,8 +10,9 @@ Dónde está explicado cada tema. Antes de documentar algo nuevo, revisa si ya e
 | `AGENTS.md` | Reglas para trabajar en el repositorio (personas y agentes de código) |
 | `features.md` | Pantallas, estado, responsables, pendientes y código que no hay que duplicar |
 | `memory.md` | Historial de decisiones y limitaciones del frontend |
+| `design/` | Sistema de diseño «Banco»: decisiones y mapa por pantalla (`DESIGN.md`), tokens y vista previa |
 | `public/_redirects` | Proxy `/backend/*` y rutas de la SPA para Netlify |
-| `tests/unit/`, `tests/integration/` | Pruebas Vitest: dominio, contrato de API y capas (unit); pantallas de acceso, registro, recuperación, chat y consulta (integration) |
+| `tests/unit/`, `tests/integration/` | Pruebas Vitest: dominio, contrato de API y capas (unit); pantallas de acceso, registro, recuperación, chat, consulta, inventario, tablero y tema (integration) |
 
 ## En el backend ([TechFixAI-backend](https://github.com/Multiagente-Servicio-Tecnico-Team/TechFixAI-backend))
 

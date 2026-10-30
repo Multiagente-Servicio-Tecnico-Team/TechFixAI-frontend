@@ -10,37 +10,30 @@ const agents = [
 
 export default function Agents() {
   return (
-    <section className="section section--tint section--flush-top" id="agentes">
+    <section className="section" id="agentes">
       <div className="container">
-        <div className="split-head">
-          <div>
-            <Eyebrow dot={false}>Especialización que escala</Eyebrow>
-            <h2 className="h2">Cada agente domina una decisión crítica</h2>
-          </div>
-          <p className="split-head__aside">
-            Activa las capacidades que necesita tu operación y conserva reglas específicas por sede,
-            categoría o nivel técnico.
-          </p>
-        </div>
-        <div className="agents">
+        <Eyebrow>Especialización que escala</Eyebrow>
+        <h2 className="h2">Cada agente domina una decisión crítica</h2>
+        <p className="lead">
+          Activa las capacidades que necesita tu operación y conserva reglas específicas por sede,
+          categoría o nivel técnico.
+        </p>
+        <ul className="agents">
           {agents.map(({ icon: Icon, name, chain, items }) => (
-            <article key={name} className="card agent">
-              <div className="agent__head">
-                <span className="icon-tile icon-tile--solid"><Icon size={22} aria-hidden="true" /></span>
-                <div className="agent__title">
-                  <h3>{name}</h3>
-                  <p className="mono-label">{chain.join(" → ")}</p>
-                </div>
-                <span className="pill pill--green"><span className="pill__dot" />Activo</span>
+            <li key={name} className="agent">
+              <div className="agent__name">
+                <Icon size={26} aria-hidden="true" />
+                <h3 className="subtitle">{name}</h3>
               </div>
-              <ul className="checklist">
+              <p className="kicker agent__chain">{chain.join(" → ")}</p>
+              <ul className="agent__items">
                 {items.map((it) => (
                   <li key={it}><Check size={16} aria-hidden="true" />{it}</li>
                 ))}
               </ul>
-            </article>
+            </li>
           ))}
-        </div>
+        </ul>
       </div>
     </section>
   );

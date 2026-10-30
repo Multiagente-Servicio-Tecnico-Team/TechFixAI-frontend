@@ -1,4 +1,4 @@
-import { RefreshCw, GitBranch, UserCheck, Stethoscope, Filter, PackageSearch, MessageSquareText, Sparkles, Timer, BadgeCheck, BellRing, CircleCheck } from "lucide-react";
+import { RefreshCw, GitBranch, UserCheck, Stethoscope, Filter, PackageSearch, MessageSquareText, Timer, BadgeCheck, BellRing } from "lucide-react";
 import Eyebrow from "../../../shared/ui/Eyebrow.jsx";
 
 const points = [
@@ -8,10 +8,10 @@ const points = [
 ];
 
 const nodes = [
-  { pos: "tl", icon: Stethoscope, title: "Diagnóstico y cotización", text: "Hipótesis, piezas y presupuesto" },
-  { pos: "tr", icon: Filter, title: "Triage y tickets", text: "Prioridad, SLA y asignación" },
-  { pos: "bl", icon: PackageSearch, title: "Inventario y reserva", text: "Disponibilidad y reposición" },
-  { pos: "br", icon: MessageSquareText, title: "Seguimiento al cliente", text: "Estados, aprobaciones y avisos" },
+  { icon: Stethoscope, title: "Diagnóstico y cotización", text: "Hipótesis, piezas y presupuesto" },
+  { icon: Filter, title: "Triage y tickets", text: "Prioridad, SLA y asignación" },
+  { icon: PackageSearch, title: "Inventario y reserva", text: "Disponibilidad y reposición" },
+  { icon: MessageSquareText, title: "Seguimiento al cliente", text: "Estados, aprobaciones y avisos" },
 ];
 
 const benefits = [
@@ -22,9 +22,9 @@ const benefits = [
 
 export default function Team() {
   return (
-    <section className="section team">
+    <section className="section">
       <div className="container">
-        <div className="team__grid">
+        <div className="split">
           <div>
             <Eyebrow>Una operación, múltiples especialistas</Eyebrow>
             <h2 className="h2">No es un chatbot. Es un equipo digital coordinado.</h2>
@@ -33,12 +33,12 @@ export default function Team() {
               asigna tareas y valida dependencias para que diagnóstico, stock y comunicación avancen
               como un solo sistema.
             </p>
-            <ul className="points">
+            <ul className="ruled">
               {points.map(({ icon: Icon, title, text }) => (
-                <li key={title}>
-                  <span className="icon-tile icon-tile--sm"><Icon size={17} aria-hidden="true" /></span>
+                <li key={title} className="ruled__item">
+                  <Icon size={20} aria-hidden="true" />
                   <div>
-                    <strong>{title}</strong>
+                    <h3>{title}</h3>
                     <p>{text}</p>
                   </div>
                 </li>
@@ -46,47 +46,30 @@ export default function Team() {
             </ul>
           </div>
 
-          <div className="orch" aria-label="Diagrama: el orquestador TechFix coordina cuatro agentes">
-            <svg className="orch__lines" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
-              <line x1="50" y1="6" x2="50" y2="94" className="orch__axis" />
-              <line x1="8" y1="50" x2="92" y2="50" className="orch__axis" />
-              <line x1="30" y1="24" x2="44" y2="44" className="orch__link" />
-              <line x1="70" y1="24" x2="56" y2="44" className="orch__link" />
-              <line x1="30" y1="76" x2="44" y2="56" className="orch__link" />
-              <line x1="70" y1="76" x2="56" y2="56" className="orch__link" />
-            </svg>
-            {nodes.map(({ pos, icon: Icon, title, text }) => (
-              <div key={pos} className={`orch__node orch__node--${pos}`}>
-                <span className="orch__icon"><Icon size={18} aria-hidden="true" /></span>
-                <div>
-                  <strong>{title}</strong>
-                  <p>{text}</p>
-                </div>
-              </div>
-            ))}
-            <div className="orch__center">
-              <div className="orch__hub">
-                <span className="orch__hubicon"><Sparkles size={18} aria-hidden="true" /></span>
-                <div>
-                  <strong>Orquestador TechFix</strong>
-                  <p>Coordina contexto, prioridades y reglas</p>
-                </div>
-              </div>
-              <div className="orch__sync">
-                <span className="pill pill--green"><span className="pill__dot" />Sincronizado</span>
-                <span className="orch__latency">1.8 s</span>
-              </div>
+          <div className="orch" role="group" aria-label="Diagrama: el orquestador TechFix coordina cuatro agentes">
+            <div className="orch__hub">
+              <strong>Orquestador TechFix</strong>
+              <p>Coordina contexto, prioridades y reglas</p>
             </div>
+            <ul className="orch__nodes">
+              {nodes.map(({ icon: Icon, title, text }) => (
+                <li key={title} className="jobtag">
+                  <Icon size={20} aria-hidden="true" />
+                  <strong>{title}</strong>
+                  <p className="muted small">{text}</p>
+                </li>
+              ))}
+            </ul>
           </div>
         </div>
 
         <div className="benefits">
           {benefits.map(({ icon: Icon, title, text, tag }) => (
-            <article key={title} className="card benefit">
-              <span className="icon-tile"><Icon size={20} aria-hidden="true" /></span>
-              <h3>{title}</h3>
+            <article key={title} className="benefit">
+              <Icon size={24} aria-hidden="true" />
+              <h3 className="subtitle">{title}</h3>
               <p>{text}</p>
-              <span className="benefit__tag"><CircleCheck size={15} aria-hidden="true" />{tag}</span>
+              <span className="stamp stamp--info">{tag}</span>
             </article>
           ))}
         </div>

@@ -1,0 +1,637 @@
+<!doctype html>
+<html lang="es" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TechFix.AI · Sistema de diseño «Circuito»</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ---------- Tokens (mismos valores que design-tokens.json) ---------- */
+:root {
+  --font-sans: "Geist", "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "Geist Mono", "JetBrains Mono", ui-monospace, "SFMono-Regular", Consolas, monospace;
+  --size-xs: 12px; --size-sm: 13px; --size-base: 14px; --size-md: 16px; --size-lg: 18px;
+  --size-xl: 22px; --size-2xl: 28px; --size-3xl: 36px; --size-4xl: 48px;
+  --space-1: 4px; --space-2: 8px; --space-3: 12px; --space-4: 16px; --space-5: 20px;
+  --space-6: 24px; --space-8: 32px; --space-10: 40px; --space-12: 48px; --space-16: 64px;
+  --radius-sm: 4px; --radius-md: 6px; --radius-lg: 8px; --radius-xl: 12px; --radius-full: 999px;
+  --motion-fast: 120ms; --motion-base: 180ms; --ease: cubic-bezier(0.2, 0, 0, 1);
+  --control-h: 36px; --control-h-lg: 44px; --sidebar: 248px; --topbar: 56px;
+}
+:root, [data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #0A0E13; --surface-1: #10151C; --surface-2: #161D26; --surface-3: #1D2531;
+  --border: #232C38; --border-strong: #303B4A;
+  --text: #E7EDF4; --text-2: #A3AFBD; --text-3: #7F8B9A;
+  --accent: #2EE6C5; --accent-hover: #5CF0D6; --accent-press: #1FC9AA; --on-accent: #04201B;
+  --accent-subtle: rgba(46, 230, 197, 0.12);
+  --info: #5AA9FF; --success: #3DDC97; --warning: #F5B83D; --danger: #FF6B6B;
+  --info-subtle: rgba(90, 169, 255, 0.12); --success-subtle: rgba(61, 220, 151, 0.12);
+  --warning-subtle: rgba(245, 184, 61, 0.12); --danger-subtle: rgba(255, 107, 107, 0.12);
+  --overlay: rgba(3, 6, 10, 0.72); --focus: #5CF0D6;
+  --shadow-1: 0 1px 0 rgba(255,255,255,0.03) inset; --shadow-2: 0 8px 24px rgba(0,0,0,0.45); --shadow-3: 0 24px 64px rgba(0,0,0,0.6);
+}
+[data-theme="light"] {
+  color-scheme: light;
+  --bg: #F5F7FA; --surface-1: #FFFFFF; --surface-2: #F0F3F7; --surface-3: #E5EAF0;
+  --border: #D8DFE7; --border-strong: #C2CCD7;
+  --text: #0E141B; --text-2: #465261; --text-3: #5F6B79;
+  --accent: #0B7F6C; --accent-hover: #096C5C; --accent-press: #075A4C; --on-accent: #FFFFFF;
+  --accent-subtle: rgba(11, 127, 108, 0.10);
+  --info: #1F6FD1; --success: #12805A; --warning: #9A6200; --danger: #C93434;
+  --info-subtle: rgba(31, 111, 209, 0.10); --success-subtle: rgba(18, 128, 90, 0.10);
+  --warning-subtle: rgba(154, 98, 0, 0.10); --danger-subtle: rgba(201, 52, 52, 0.10);
+  --overlay: rgba(14, 20, 27, 0.45); --focus: #0B7F6C;
+  --shadow-1: 0 1px 2px rgba(14,20,27,0.06); --shadow-2: 0 8px 24px rgba(14,20,27,0.08); --shadow-3: 0 24px 64px rgba(14,20,27,0.14);
+}
+
+/* ---------- Base ---------- */
+*, *::before, *::after { box-sizing: border-box; }
+html, body { margin: 0; }
+body { background: var(--bg); color: var(--text); font: var(--size-base)/1.55 var(--font-sans); -webkit-font-smoothing: antialiased; }
+h1, h2, h3, h4, p { margin: 0; }
+button, input, select, textarea { font: inherit; color: inherit; }
+a { color: var(--accent); text-decoration: none; }
+a:hover { text-decoration: underline; }
+:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; border-radius: var(--radius-md); }
+.mono { font-family: var(--font-mono); font-feature-settings: "tnum"; }
+.muted { color: var(--text-2); }
+.subtle { color: var(--text-3); }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition: none !important; animation: none !important; } }
+
+/* ---------- Página de muestra ---------- */
+.doc { max-width: 1200px; margin: 0 auto; padding: var(--space-8) var(--space-4) var(--space-16); }
+.doc-head { position: sticky; top: 0; z-index: 20; display: flex; align-items: center; justify-content: space-between; gap: var(--space-4); padding: var(--space-3) var(--space-4); background: color-mix(in srgb, var(--bg) 88%, transparent); backdrop-filter: blur(8px); border-bottom: 1px solid var(--border); }
+.doc-head__title { display: flex; align-items: center; gap: var(--space-3); font-weight: 600; }
+.doc-nav { display: flex; gap: var(--space-1); overflow-x: auto; }
+.doc-nav a { padding: 6px 10px; border-radius: var(--radius-md); color: var(--text-2); font-size: var(--size-sm); white-space: nowrap; }
+.doc-nav a:hover { background: var(--surface-2); color: var(--text); text-decoration: none; }
+.section { padding-top: var(--space-12); scroll-margin-top: 72px; }
+.section__eyebrow { font: 500 var(--size-xs)/1 var(--font-mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent); }
+.section__title { margin-top: var(--space-2); font-size: var(--size-2xl); font-weight: 600; letter-spacing: -0.01em; }
+.section__lead { margin-top: var(--space-2); max-width: 68ch; color: var(--text-2); font-size: var(--size-md); }
+.grid { display: grid; gap: var(--space-4); margin-top: var(--space-6); }
+.grid--2 { grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); }
+.panel { background: var(--surface-1); border: 1px solid var(--border); border-radius: var(--radius-xl); padding: var(--space-6); box-shadow: var(--shadow-1); }
+.panel__label { font: 500 var(--size-xs)/1 var(--font-mono); letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-3); margin-bottom: var(--space-4); }
+.hero { padding: var(--space-12) 0 var(--space-4); }
+.hero h1 { font-size: var(--size-4xl); line-height: 1.1; letter-spacing: -0.02em; font-weight: 600; max-width: 18ch; }
+.hero p { margin-top: var(--space-4); max-width: 62ch; color: var(--text-2); font-size: var(--size-lg); }
+.principles { list-style: none; padding: 0; margin: var(--space-6) 0 0; display: grid; gap: var(--space-4); grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
+.principles li { padding: var(--space-5); border: 1px solid var(--border); border-radius: var(--radius-xl); background: var(--surface-1); }
+.principles strong { display: block; margin-bottom: var(--space-1); }
+
+/* Paleta */
+.swatches { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: var(--space-3); }
+.swatch { border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; background: var(--surface-1); }
+.swatch__chip { height: 64px; border-bottom: 1px solid var(--border); }
+.swatch__body { padding: var(--space-3); display: grid; gap: 2px; font-size: var(--size-sm); }
+.swatch__hex { font-family: var(--font-mono); color: var(--text-2); font-size: var(--size-xs); }
+.contrast { font-family: var(--font-mono); font-size: var(--size-xs); }
+.contrast.ok { color: var(--success); } .contrast.warn { color: var(--warning); } .contrast.bad { color: var(--danger); }
+
+/* Tipografía */
+.type-row { display: grid; grid-template-columns: 160px 1fr; gap: var(--space-4); align-items: baseline; padding: var(--space-3) 0; border-bottom: 1px solid var(--border); }
+.type-row:last-child { border-bottom: 0; }
+.type-row .subtle { font-family: var(--font-mono); font-size: var(--size-xs); }
+
+/* Espaciado */
+.space-row { display: flex; align-items: center; gap: var(--space-3); font: var(--size-xs) var(--font-mono); color: var(--text-2); }
+.space-bar { height: 10px; background: var(--accent); border-radius: 2px; }
+
+/* ---------- Componentes ---------- */
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: var(--space-2); height: var(--control-h); padding: 0 var(--space-4); border-radius: var(--radius-md); border: 1px solid transparent; font-weight: 500; font-size: var(--size-base); cursor: pointer; white-space: nowrap; transition: background var(--motion-fast) var(--ease), border-color var(--motion-fast) var(--ease), color var(--motion-fast) var(--ease); }
+.btn svg { width: 16px; height: 16px; flex: none; }
+.btn--lg { height: var(--control-h-lg); padding: 0 var(--space-5); font-size: var(--size-md); }
+.btn--sm { height: 30px; padding: 0 var(--space-3); font-size: var(--size-sm); }
+.btn--primary { background: var(--accent); color: var(--on-accent); }
+.btn--primary:hover { background: var(--accent-hover); }
+.btn--primary:active { background: var(--accent-press); }
+.btn--secondary { background: var(--surface-2); border-color: var(--border-strong); color: var(--text); }
+.btn--secondary:hover { background: var(--surface-3); }
+.btn--ghost { background: transparent; color: var(--text-2); }
+.btn--ghost:hover { background: var(--surface-2); color: var(--text); }
+.btn--danger { background: var(--danger); color: #1A0505; }
+[data-theme="light"] .btn--danger { color: #fff; }
+.btn--danger:hover { filter: brightness(1.08); }
+.btn--danger-ghost { background: transparent; border-color: color-mix(in srgb, var(--danger) 45%, transparent); color: var(--danger); }
+.btn--danger-ghost:hover { background: var(--danger-subtle); }
+.btn:disabled { opacity: 0.45; cursor: not-allowed; }
+.btn--block { width: 100%; }
+.icon-btn { display: inline-grid; place-items: center; width: var(--control-h); height: var(--control-h); border-radius: var(--radius-md); border: 1px solid transparent; background: transparent; color: var(--text-2); cursor: pointer; }
+.icon-btn svg { width: 16px; height: 16px; }
+.icon-btn:hover { background: var(--surface-2); color: var(--text); }
+.icon-btn--danger:hover { background: var(--danger-subtle); color: var(--danger); }
+.icon-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-3); }
+
+.field { display: grid; gap: 6px; }
+.field__label { font-size: var(--size-sm); font-weight: 500; }
+.field__label .req { color: var(--danger); margin-left: 2px; }
+.field__error { font-size: var(--size-xs); color: var(--danger); display: flex; gap: 6px; align-items: center; }
+.input, .select { height: var(--control-h); width: 100%; padding: 0 var(--space-3); border-radius: var(--radius-md); border: 1px solid var(--border-strong); background: var(--surface-2); color: var(--text); transition: border-color var(--motion-fast) var(--ease), box-shadow var(--motion-fast) var(--ease); }
+.input::placeholder { color: var(--text-3); }
+.input:focus, .select:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-subtle); }
+.input[aria-invalid="true"] { border-color: var(--danger); }
+.input[aria-invalid="true"]:focus { box-shadow: 0 0 0 3px var(--danger-subtle); }
+.input--mono { font-family: var(--font-mono); }
+.input-group { position: relative; display: block; }
+.input-group .input { padding-left: 36px; }
+.input-group > svg { position: absolute; left: 11px; top: 50%; width: 16px; height: 16px; transform: translateY(-50%); color: var(--text-3); pointer-events: none; }
+.input-group--suffix .input { padding-left: var(--space-3); padding-right: 48px; }
+.input-group__suffix { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); font: var(--size-xs) var(--font-mono); color: var(--text-3); }
+.check { display: inline-flex; gap: var(--space-2); align-items: center; font-size: var(--size-sm); cursor: pointer; }
+.check input { width: 16px; height: 16px; accent-color: var(--accent); }
+
+.badge { display: inline-flex; align-items: center; gap: 6px; height: 22px; padding: 0 8px; border-radius: var(--radius-full); font: 500 var(--size-xs)/1 var(--font-sans); white-space: nowrap; }
+.badge::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+.badge--neutral { background: var(--surface-3); color: var(--text-2); }
+.badge--accent { background: var(--accent-subtle); color: var(--accent); }
+.badge--info { background: var(--info-subtle); color: var(--info); }
+.badge--success { background: var(--success-subtle); color: var(--success); }
+.badge--warning { background: var(--warning-subtle); color: var(--warning); }
+.badge--danger { background: var(--danger-subtle); color: var(--danger); }
+.kbd { font: var(--size-xs) var(--font-mono); padding: 2px 6px; border: 1px solid var(--border-strong); border-bottom-width: 2px; border-radius: var(--radius-sm); background: var(--surface-2); color: var(--text-2); }
+.code-chip { font: var(--size-xs) var(--font-mono); padding: 2px 6px; border-radius: var(--radius-sm); background: var(--surface-3); color: var(--text-2); }
+
+.alert { display: flex; gap: var(--space-3); padding: var(--space-3) var(--space-4); border-radius: var(--radius-lg); border: 1px solid; font-size: var(--size-sm); }
+.alert svg { width: 18px; height: 18px; flex: none; margin-top: 1px; }
+.alert strong { display: block; color: var(--text); }
+.alert--info { background: var(--info-subtle); border-color: color-mix(in srgb, var(--info) 35%, transparent); color: var(--text-2); } .alert--info svg { color: var(--info); }
+.alert--danger { background: var(--danger-subtle); border-color: color-mix(in srgb, var(--danger) 35%, transparent); color: var(--text-2); } .alert--danger svg { color: var(--danger); }
+
+.stat { padding: var(--space-5); border: 1px solid var(--border); border-radius: var(--radius-xl); background: var(--surface-1); display: grid; gap: var(--space-2); }
+.stat__label { font-size: var(--size-sm); color: var(--text-2); display: flex; justify-content: space-between; align-items: center; }
+.stat__label svg { width: 16px; height: 16px; color: var(--text-3); }
+.stat__value { font: 600 var(--size-2xl)/1.1 var(--font-mono); letter-spacing: -0.02em; }
+.stat__meta { font-size: var(--size-xs); color: var(--text-3); }
+.stat--danger .stat__value { color: var(--danger); }
+
+.tabs { display: flex; gap: var(--space-1); border-bottom: 1px solid var(--border); overflow-x: auto; }
+.tab { padding: var(--space-2) var(--space-3); border: 0; background: none; color: var(--text-2); font-size: var(--size-sm); font-weight: 500; border-bottom: 2px solid transparent; margin-bottom: -1px; cursor: pointer; white-space: nowrap; }
+.tab:hover { color: var(--text); }
+.tab[aria-selected="true"] { color: var(--text); border-bottom-color: var(--accent); }
+.tab .count { margin-left: 6px; font-family: var(--font-mono); color: var(--text-3); }
+
+.table-wrap { border: 1px solid var(--border); border-radius: var(--radius-xl); overflow: hidden; background: var(--surface-1); }
+.table { width: 100%; border-collapse: collapse; font-size: var(--size-sm); }
+.table th { text-align: left; font-weight: 500; color: var(--text-3); font-size: var(--size-xs); text-transform: uppercase; letter-spacing: 0.05em; padding: 10px var(--space-4); background: var(--surface-2); border-bottom: 1px solid var(--border); white-space: nowrap; }
+.table td { padding: 12px var(--space-4); border-bottom: 1px solid var(--border); vertical-align: middle; }
+.table tr:last-child td { border-bottom: 0; }
+.table tbody tr:hover { background: var(--surface-2); }
+.table .num { text-align: right; font-family: var(--font-mono); font-feature-settings: "tnum"; }
+.table .actions { text-align: right; white-space: nowrap; width: 1%; }
+.cell-title { font-weight: 500; color: var(--text); }
+.cell-sub { font-size: var(--size-xs); color: var(--text-3); margin-top: 2px; }
+.table-foot { display: flex; justify-content: space-between; align-items: center; padding: 10px var(--space-4); border-top: 1px solid var(--border); font-size: var(--size-xs); color: var(--text-3); }
+.pager { display: flex; gap: var(--space-1); }
+.pager .icon-btn { width: 28px; height: 28px; }
+.skeleton { height: 12px; border-radius: var(--radius-sm); background: linear-gradient(90deg, var(--surface-2), var(--surface-3), var(--surface-2)); background-size: 200% 100%; animation: shimmer 1.4s infinite linear; }
+@keyframes shimmer { to { background-position: -200% 0; } }
+
+.dialog-backdrop { position: fixed; inset: 0; z-index: 50; display: grid; place-items: center; padding: var(--space-4); background: var(--overlay); }
+.dialog-backdrop[hidden] { display: none; }
+.dialog { width: min(440px, 100%); background: var(--surface-1); border: 1px solid var(--border-strong); border-radius: var(--radius-xl); box-shadow: var(--shadow-3); padding: var(--space-6); display: grid; gap: var(--space-3); }
+.dialog__title { font-size: var(--size-lg); font-weight: 600; }
+.dialog__body { color: var(--text-2); }
+.dialog__actions { display: flex; justify-content: flex-end; gap: var(--space-2); margin-top: var(--space-2); }
+.toast { position: fixed; right: var(--space-6); bottom: var(--space-6); z-index: 60; display: flex; gap: var(--space-3); align-items: center; padding: var(--space-3) var(--space-4); background: var(--surface-3); border: 1px solid var(--border-strong); border-radius: var(--radius-lg); box-shadow: var(--shadow-2); font-size: var(--size-sm); }
+.toast svg { width: 16px; height: 16px; color: var(--success); }
+.toast[hidden] { display: none; }
+
+/* ---------- Pantallas de ejemplo ---------- */
+.screen { border: 1px solid var(--border-strong); border-radius: var(--radius-xl); overflow: hidden; background: var(--bg); box-shadow: var(--shadow-2); }
+.screen__bar { display: flex; align-items: center; gap: 6px; padding: 10px 12px; background: var(--surface-2); border-bottom: 1px solid var(--border); font: var(--size-xs) var(--font-mono); color: var(--text-3); }
+.screen__bar i { width: 10px; height: 10px; border-radius: 50%; background: var(--surface-3); display: inline-block; }
+.screen__bar span { margin-left: var(--space-2); }
+
+.app { display: grid; grid-template-columns: var(--sidebar) 1fr; min-height: 640px; }
+.sidebar { background: var(--surface-1); border-right: 1px solid var(--border); padding: var(--space-4) var(--space-3); display: flex; flex-direction: column; gap: var(--space-1); }
+.brand { display: flex; align-items: center; gap: 10px; padding: 6px var(--space-2) var(--space-4); font-weight: 600; letter-spacing: -0.01em; }
+.brand__mark { width: 28px; height: 28px; border-radius: var(--radius-md); display: grid; place-items: center; background: var(--accent); color: var(--on-accent); flex: none; }
+.brand__mark svg { width: 16px; height: 16px; }
+.brand small { font: 500 10px var(--font-mono); color: var(--text-3); letter-spacing: 0.06em; display: block; }
+.nav-group { font: 500 10px/1 var(--font-mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-3); padding: var(--space-4) var(--space-2) var(--space-2); }
+.nav-item { display: flex; align-items: center; gap: 10px; height: 34px; padding: 0 var(--space-2); border-radius: var(--radius-md); color: var(--text-2); font-size: var(--size-sm); }
+.nav-item svg { width: 16px; height: 16px; }
+.nav-item:hover { background: var(--surface-2); color: var(--text); text-decoration: none; }
+.nav-item[aria-current="page"] { background: var(--accent-subtle); color: var(--accent); }
+.nav-item .count { margin-left: auto; font: var(--size-xs) var(--font-mono); color: var(--text-3); }
+.sidebar__foot { margin-top: auto; display: flex; align-items: center; gap: 10px; padding: var(--space-3) var(--space-2) 0; border-top: 1px solid var(--border); font-size: var(--size-sm); }
+.avatar { width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; background: var(--surface-3); font: 600 var(--size-xs) var(--font-mono); color: var(--text-2); flex: none; }
+.main { min-width: 0; display: flex; flex-direction: column; }
+.topbar { height: var(--topbar); display: flex; align-items: center; gap: var(--space-3); padding: 0 var(--space-6); border-bottom: 1px solid var(--border); background: var(--surface-1); }
+.crumbs { font-size: var(--size-sm); color: var(--text-3); display: flex; gap: 6px; align-items: center; }
+.crumbs b { color: var(--text); font-weight: 500; }
+.topbar__spacer { flex: 1; }
+.search-cmd { display: flex; align-items: center; gap: var(--space-2); height: 32px; padding: 0 10px; border-radius: var(--radius-md); border: 1px solid var(--border); background: var(--surface-2); color: var(--text-3); font-size: var(--size-sm); min-width: 220px; }
+.search-cmd svg { width: 14px; height: 14px; }
+.search-cmd .kbd { margin-left: auto; }
+.content { padding: var(--space-6); display: grid; gap: var(--space-5); }
+.page-head { display: flex; justify-content: space-between; align-items: flex-end; gap: var(--space-4); flex-wrap: wrap; }
+.page-head h2 { font-size: var(--size-xl); font-weight: 600; letter-spacing: -0.01em; }
+.page-head p { color: var(--text-2); margin-top: 2px; font-size: var(--size-sm); }
+.toolbar { display: flex; gap: var(--space-2); flex-wrap: wrap; align-items: center; }
+.toolbar .input-group { flex: 1 1 240px; }
+.toolbar .select { width: auto; min-width: 150px; }
+.stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--space-3); }
+.row-low td:first-child { box-shadow: inset 3px 0 0 var(--danger); }
+.stock-low { color: var(--danger); }
+
+/* Acceso */
+.auth { display: grid; grid-template-columns: 1.05fr 1fr; min-height: 600px; }
+.auth__aside { padding: var(--space-10); background: radial-gradient(600px 300px at 0% 0%, var(--accent-subtle), transparent 60%), var(--surface-1); border-right: 1px solid var(--border); display: flex; flex-direction: column; justify-content: space-between; gap: var(--space-8); }
+.auth__aside h3 { font-size: var(--size-2xl); line-height: 1.2; letter-spacing: -0.01em; font-weight: 600; max-width: 18ch; }
+.auth__aside p { color: var(--text-2); margin-top: var(--space-3); max-width: 44ch; }
+.auth__list { display: grid; gap: var(--space-3); list-style: none; padding: 0; margin: 0; }
+.auth__list li { display: flex; gap: var(--space-3); color: var(--text-2); font-size: var(--size-sm); }
+.auth__list svg { width: 18px; height: 18px; color: var(--accent); flex: none; }
+.auth__form { padding: var(--space-10); display: flex; align-items: center; justify-content: center; }
+.auth__card { width: min(380px, 100%); display: grid; gap: var(--space-4); }
+.auth__card h3 { font-size: var(--size-xl); font-weight: 600; }
+.divider { display: flex; align-items: center; gap: var(--space-3); color: var(--text-3); font-size: var(--size-xs); }
+.divider::before, .divider::after { content: ""; flex: 1; height: 1px; background: var(--border); }
+.demo-note { display: flex; gap: var(--space-2); align-items: flex-start; font-size: var(--size-xs); color: var(--text-3); }
+.demo-note svg { width: 14px; height: 14px; flex: none; margin-top: 2px; }
+
+/* Asistente */
+.chat { display: grid; grid-template-columns: 1fr 300px; min-height: 640px; }
+.chat__main { display: flex; flex-direction: column; min-width: 0; }
+.chat__head { display: flex; align-items: center; gap: var(--space-3); padding: var(--space-3) var(--space-5); border-bottom: 1px solid var(--border); background: var(--surface-1); flex-wrap: wrap; }
+.chat__head h3 { font-size: var(--size-md); font-weight: 600; }
+.pattern { display: inline-flex; align-items: center; gap: var(--space-2); margin-left: auto; }
+.pattern .select { height: 30px; width: auto; font-size: var(--size-sm); }
+.chat__log { flex: 1; padding: var(--space-6) var(--space-5); display: grid; gap: var(--space-5); align-content: start; }
+.msg { display: grid; grid-template-columns: 32px 1fr; gap: var(--space-3); max-width: 720px; }
+.msg__who { font-size: var(--size-xs); color: var(--text-3); margin-bottom: 4px; }
+.msg__who b { color: var(--text-2); font-weight: 500; }
+.msg__body { color: var(--text); line-height: 1.6; }
+.msg--user { justify-self: end; grid-template-columns: 1fr; }
+.msg--user .msg__body { background: var(--surface-3); border: 1px solid var(--border-strong); padding: var(--space-3) var(--space-4); border-radius: var(--radius-xl) var(--radius-xl) var(--radius-sm) var(--radius-xl); }
+.bot-mark { width: 32px; height: 32px; border-radius: var(--radius-md); display: grid; place-items: center; background: var(--accent-subtle); color: var(--accent); flex: none; }
+.bot-mark svg { width: 16px; height: 16px; }
+.quote { margin-top: var(--space-3); border: 1px solid var(--border-strong); border-radius: var(--radius-lg); background: var(--surface-1); overflow: hidden; }
+.quote__head { display: flex; justify-content: space-between; align-items: center; padding: var(--space-3) var(--space-4); border-bottom: 1px solid var(--border); }
+.quote__line { display: flex; justify-content: space-between; padding: 8px var(--space-4); font-size: var(--size-sm); color: var(--text-2); }
+.quote__total { display: flex; justify-content: space-between; align-items: baseline; padding: var(--space-3) var(--space-4); border-top: 1px solid var(--border); background: var(--surface-2); }
+.quote__total b { font: 600 var(--size-xl) var(--font-mono); }
+.quote__actions { display: flex; gap: var(--space-2); padding: var(--space-3) var(--space-4); border-top: 1px solid var(--border); flex-wrap: wrap; }
+.typing { display: inline-flex; gap: 4px; padding: var(--space-2) 0; }
+.typing i { width: 6px; height: 6px; border-radius: 50%; background: var(--text-3); animation: blink 1.2s infinite; }
+.typing i:nth-child(2) { animation-delay: 0.2s; } .typing i:nth-child(3) { animation-delay: 0.4s; }
+@keyframes blink { 0%, 80%, 100% { opacity: 0.3; } 40% { opacity: 1; } }
+.composer { border-top: 1px solid var(--border); padding: var(--space-4) var(--space-5); background: var(--surface-1); }
+.composer__box { display: flex; gap: var(--space-2); align-items: flex-end; border: 1px solid var(--border-strong); border-radius: var(--radius-lg); background: var(--surface-2); padding: var(--space-2); }
+.composer__box textarea { flex: 1; border: 0; background: none; resize: none; min-height: 40px; padding: 8px; outline: none; }
+.composer__hint { margin-top: var(--space-2); font-size: var(--size-xs); color: var(--text-3); display: flex; gap: var(--space-3); flex-wrap: wrap; }
+.chat__side { border-left: 1px solid var(--border); background: var(--surface-1); padding: var(--space-5); display: grid; gap: var(--space-5); align-content: start; }
+.side-title { font: 500 10px/1 var(--font-mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-3); margin-bottom: var(--space-3); }
+.timeline { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--space-3); }
+.timeline li { display: grid; grid-template-columns: 14px 1fr; gap: var(--space-3); font-size: var(--size-sm); color: var(--text-2); }
+.timeline .dot { width: 10px; height: 10px; border-radius: 50%; border: 2px solid var(--border-strong); margin-top: 5px; }
+.timeline .done .dot { background: var(--success); border-color: var(--success); }
+.timeline .now .dot { background: var(--accent); border-color: var(--accent); box-shadow: 0 0 0 4px var(--accent-subtle); }
+.timeline .now { color: var(--text); }
+
+/* ---------- Responsivo ---------- */
+@media (max-width: 1024px) {
+  .stats { grid-template-columns: repeat(2, 1fr); }
+  .chat { grid-template-columns: 1fr; }
+  .chat__side { border-left: 0; border-top: 1px solid var(--border); }
+}
+@media (max-width: 768px) {
+  .app { grid-template-columns: 1fr; }
+  .sidebar, .search-cmd, .doc-nav { display: none; }
+  .auth { grid-template-columns: 1fr; }
+  .auth__aside { display: none; }
+  /* Tabla → tarjetas: nombre y acciones arriba, stock y precio abajo. */
+  .table thead { display: none; }
+  .table, .table tbody, .table tr, .table td { display: block; }
+  .table tr { display: grid; grid-template-columns: 1fr auto; grid-template-areas: "title actions" "stock price"; gap: 6px var(--space-3); padding: var(--space-4); border-bottom: 1px solid var(--border); }
+  .table tr:last-child { border-bottom: 0; }
+  .table td { padding: 0; border: 0; }
+  .table td:first-child { grid-area: title; }
+  .table .actions { grid-area: actions; width: auto; }
+  .table td.num:nth-of-type(4) { grid-area: stock; text-align: left; }
+  .table td.num:nth-of-type(4)::before { content: "Stock "; color: var(--text-3); font-family: var(--font-sans); }
+  .table td.num:nth-of-type(5) { grid-area: price; }
+  .table td.num:nth-of-type(5)::before { content: "S/ "; color: var(--text-3); }
+  .table .hide-sm { display: none; }
+  .row-low td:first-child { box-shadow: none; }
+  .row-low { box-shadow: inset 3px 0 0 var(--danger); }
+  .toolbar .select { flex: 1 1 140px; }
+  .hero h1 { font-size: var(--size-3xl); }
+  .type-row { grid-template-columns: 1fr; gap: 4px; }
+}
+@media (max-width: 480px) {
+  .content, .auth__form { padding: var(--space-4); }
+  .topbar { padding: 0 var(--space-4); }
+  .stats { grid-template-columns: 1fr 1fr; }
+  .dialog__actions .btn { flex: 1; }
+  .doc-head__title span.title { display: none; }
+}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-chip" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="5" width="14" height="14" rx="2"/><path d="M9 1v4M15 1v4M9 19v4M15 19v4M1 9h4M1 15h4M19 9h4M19 15h4"/></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></symbol>
+  <symbol id="i-edit" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></symbol>
+  <symbol id="i-trash" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/></symbol>
+  <symbol id="i-alert" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/><path d="M12 9v4M12 17h.01"/></symbol>
+  <symbol id="i-info" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 5 5L20 7"/></symbol>
+  <symbol id="i-box" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8 12 3 3 8v8l9 5 9-5Z"/><path d="m3 8 9 5 9-5M12 13v8"/></symbol>
+  <symbol id="i-ticket" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8a2 2 0 0 0 0 4v4a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-4a2 2 0 0 0 0-4V6a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2Z"/><path d="M13 4v14"/></symbol>
+  <symbol id="i-chat" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12Z"/></symbol>
+  <symbol id="i-grid" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></symbol>
+  <symbol id="i-send" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></symbol>
+  <symbol id="i-lock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></symbol>
+  <symbol id="i-mail" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></symbol>
+  <symbol id="i-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></symbol>
+  <symbol id="i-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z"/></symbol>
+  <symbol id="i-left" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="m15 18-6-6 6-6"/></symbol>
+  <symbol id="i-right" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="m9 18 6-6-6-6"/></symbol>
+</svg>
+
+<header class="doc-head">
+  <div class="doc-head__title">
+    <span class="brand__mark"><svg><use href="#i-chip"/></svg></span>
+    <span class="title">TechFix.AI · Sistema de diseño «Circuito»</span>
+  </div>
+  <nav class="doc-nav" aria-label="Secciones">
+    <a href="#principios">Principios</a><a href="#color">Color</a><a href="#tipografia">Tipografía</a><a href="#espaciado">Espaciado</a><a href="#componentes">Componentes</a><a href="#pantallas">Pantallas</a>
+  </nav>
+  <button class="btn btn--secondary btn--sm" id="theme" type="button"><svg><use href="#i-sun"/></svg><span>Tema claro</span></button>
+</header>
+
+<main class="doc">
+  <section class="hero">
+    <p class="section__eyebrow">Fase 1 · Propuesta para aprobar</p>
+    <h1>Una interfaz técnica, clara y rápida para el taller y sus clientes</h1>
+    <p>Tema oscuro por defecto con tema claro opcional, un único acento de marca —el verde señal— y colores de estado reservados para significado. Las pantallas muestran funcionalidades que ya existen; ninguna cambia su comportamiento.</p>
+  </section>
+
+  <section class="section" id="principios">
+    <p class="section__eyebrow">01</p>
+    <h2 class="section__title">Principios</h2>
+    <ul class="principles">
+      <li><strong>Los datos primero</strong><span class="muted">SKU, importes, stock, códigos de ticket y horas en tipografía monoespaciada con cifras tabulares: se comparan de un vistazo.</span></li>
+      <li><strong>Un solo acento</strong><span class="muted">El verde señal marca la acción principal y la selección. Rojo, ámbar, azul y verde de estado solo comunican significado.</span></li>
+      <li><strong>Superficies, no sombras</strong><span class="muted">En oscuro la profundidad se da con 3 niveles de superficie y bordes finos; las sombras quedan para diálogos y avisos.</span></li>
+      <li><strong>Accesible por defecto</strong><span class="muted">Contraste AA en el texto, foco siempre visible, áreas táctiles de 40 px y respeto a «reducir movimiento».</span></li>
+    </ul>
+  </section>
+
+  <section class="section" id="color">
+    <p class="section__eyebrow">02</p>
+    <h2 class="section__title">Color</h2>
+    <p class="section__lead">El contraste se calcula en vivo contra el fondo del tema activo (AA: 4.5 para texto, 3 para texto grande y controles). Cambia el tema arriba a la derecha para ver ambos.</p>
+    <div class="grid">
+      <div class="panel"><p class="panel__label">Superficies y texto</p><div class="swatches" data-swatches="bg surface-1 surface-2 surface-3 border border-strong text text-2 text-3"></div></div>
+      <div class="panel"><p class="panel__label">Marca y estados</p><div class="swatches" data-swatches="accent accent-hover on-accent info success warning danger"></div></div>
+    </div>
+  </section>
+
+  <section class="section" id="tipografia">
+    <p class="section__eyebrow">03</p>
+    <h2 class="section__title">Tipografía</h2>
+    <p class="section__lead">Geist para la interfaz y Geist Mono para datos (SKU, importes, códigos de ticket, horas). Escala de 9 tamaños.</p>
+    <div class="panel grid" style="gap:0">
+      <div class="type-row"><span class="subtle">4xl · 48 / 600</span><span style="font-size:48px;font-weight:600;letter-spacing:-.02em;line-height:1.1">Inventario</span></div>
+      <div class="type-row"><span class="subtle">2xl · 28 / 600</span><span style="font-size:28px;font-weight:600">Mis tickets de atención</span></div>
+      <div class="type-row"><span class="subtle">xl · 22 / 600</span><span style="font-size:22px;font-weight:600">Registrar nuevo repuesto</span></div>
+      <div class="type-row"><span class="subtle">md · 16 / 400</span><span style="font-size:16px">Diagnóstico asistido y cotización con agentes especializados.</span></div>
+      <div class="type-row"><span class="subtle">base · 14 / 400</span><span>Texto de la interfaz, tablas y formularios.</span></div>
+      <div class="type-row"><span class="subtle">xs · 12 / 500</span><span style="font-size:12px;color:var(--text-2)">Ayudas, metadatos y pies de tabla.</span></div>
+      <div class="type-row"><span class="subtle">mono · 14 / 500</span><span class="mono">SSD-NVME-2TB-KC · TCK-2041 · S/ 1,114.75</span></div>
+    </div>
+  </section>
+
+  <section class="section" id="espaciado">
+    <p class="section__eyebrow">04</p>
+    <h2 class="section__title">Espaciado, radios y movimiento</h2>
+    <div class="grid grid--2">
+      <div class="panel"><p class="panel__label">Escala de 4 px</p><div class="grid" style="gap:10px;margin-top:0" id="spaces"></div></div>
+      <div class="panel"><p class="panel__label">Radios</p>
+        <div class="row">
+          <div style="width:64px;height:48px;border:1px solid var(--border-strong);background:var(--surface-2);border-radius:4px"></div>
+          <div style="width:64px;height:48px;border:1px solid var(--border-strong);background:var(--surface-2);border-radius:6px"></div>
+          <div style="width:64px;height:48px;border:1px solid var(--border-strong);background:var(--surface-2);border-radius:8px"></div>
+          <div style="width:64px;height:48px;border:1px solid var(--border-strong);background:var(--surface-2);border-radius:12px"></div>
+        </div>
+        <p class="muted" style="margin-top:12px;font-size:13px">4 etiquetas · 6 controles · 8 menús y avisos · 12 tarjetas y diálogos.</p>
+        <p class="panel__label" style="margin-top:24px">Movimiento</p>
+        <p class="muted" style="font-size:13px">120 ms en estados (hover, foco), 180 ms en paneles, 260 ms en diálogos. Curva <span class="code-chip">cubic-bezier(0.2, 0, 0, 1)</span>. Sin animaciones al desplazar.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="componentes">
+    <p class="section__eyebrow">05</p>
+    <h2 class="section__title">Componentes</h2>
+    <div class="grid grid--2">
+      <div class="panel"><p class="panel__label">Botones</p>
+        <div class="row"><button class="btn btn--primary" type="button"><svg><use href="#i-plus"/></svg>Nuevo repuesto</button><button class="btn btn--secondary" type="button">Cancelar</button><button class="btn btn--ghost" type="button">Ver detalle</button></div>
+        <div class="row" style="margin-top:12px"><button class="btn btn--danger" type="button" data-open-dialog><svg><use href="#i-trash"/></svg>Eliminar</button><button class="btn btn--danger-ghost" type="button">Eliminar repuesto</button><button class="btn btn--primary" type="button" disabled>Guardando…</button></div>
+        <div class="row" style="margin-top:12px"><button class="icon-btn" type="button" aria-label="Editar"><svg><use href="#i-edit"/></svg></button><button class="icon-btn icon-btn--danger" type="button" aria-label="Eliminar"><svg><use href="#i-trash"/></svg></button><button class="btn btn--primary btn--sm" type="button">Pequeño</button><button class="btn btn--primary btn--lg" type="button">Grande</button></div>
+      </div>
+      <div class="panel"><p class="panel__label">Campos</p>
+        <div class="grid" style="margin-top:0;gap:14px">
+          <label class="field"><span class="field__label">Correo electrónico<span class="req">*</span></span><span class="input-group"><svg><use href="#i-mail"/></svg><input class="input" placeholder="tu.correo@ejemplo.com"></span></label>
+          <label class="field"><span class="field__label">Código SKU<span class="req">*</span></span><input class="input input--mono" value="SSD-NVME-2TB-KC" aria-invalid="true"><span class="field__error"><svg width="14" height="14"><use href="#i-alert"/></svg>Este SKU ya existe en el inventario.</span></label>
+          <div class="row" style="align-items:flex-start;gap:12px">
+            <label class="field" style="flex:1 1 120px"><span class="field__label">Stock</span><span class="input-group input-group--suffix"><input class="input input--mono" value="12"><span class="input-group__suffix">unid.</span></span></label>
+            <label class="field" style="flex:1 1 120px"><span class="field__label">Categoría</span><select class="select"><option>Almacenamiento</option><option>Memorias RAM</option></select></label>
+          </div>
+          <label class="check"><input type="checkbox" checked> Acepto los términos y la política de privacidad</label>
+        </div>
+      </div>
+      <div class="panel"><p class="panel__label">Estados</p>
+        <div class="row"><span class="badge badge--neutral">Nuevo</span><span class="badge badge--info">En diagnóstico</span><span class="badge badge--warning">Esperando repuesto</span><span class="badge badge--accent">Presupuesto enviado</span><span class="badge badge--success">Listo para retiro</span><span class="badge badge--danger">Stock crítico</span></div>
+        <p class="panel__label" style="margin-top:24px">Avisos</p>
+        <div class="grid" style="margin-top:0;gap:10px">
+          <div class="alert alert--info"><svg><use href="#i-info"/></svg><div><strong>Modo demostración</strong>Sin backend: cualquier correo válido y contraseña permiten ingresar.</div></div>
+          <div class="alert alert--danger"><svg><use href="#i-alert"/></svg><div><strong>No se pudo eliminar</strong>El repuesto figura en presupuestos registrados.</div></div>
+        </div>
+      </div>
+      <div class="panel"><p class="panel__label">Métricas, pestañas y carga</p>
+        <div class="stats" style="grid-template-columns:1fr 1fr"><div class="stat"><span class="stat__label">Stock total<svg><use href="#i-box"/></svg></span><span class="stat__value">117</span><span class="stat__meta">4 SKU activos</span></div><div class="stat stat--danger"><span class="stat__label">Stock crítico<svg><use href="#i-alert"/></svg></span><span class="stat__value">1</span><span class="stat__meta">Reponer urgente</span></div></div>
+        <div class="tabs" role="tablist" style="margin-top:20px"><button class="tab" role="tab" aria-selected="true">Todos<span class="count">4</span></button><button class="tab" role="tab" aria-selected="false">RAM<span class="count">1</span></button><button class="tab" role="tab" aria-selected="false">Almacenamiento<span class="count">1</span></button><button class="tab" role="tab" aria-selected="false">Pantallas<span class="count">1</span></button></div>
+        <div class="grid" style="gap:10px;margin-top:20px"><div class="skeleton" style="width:60%"></div><div class="skeleton" style="width:85%"></div><div class="skeleton" style="width:40%"></div></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="pantallas">
+    <p class="section__eyebrow">06</p>
+    <h2 class="section__title">Pantallas de ejemplo</h2>
+    <p class="section__lead">Tres pantallas con datos de demostración. Mismas funciones que hoy; cambia solo la presentación. En celular la barra lateral se pliega, la tabla oculta columnas secundarias y el acceso muestra solo el formulario.</p>
+
+    <h3 style="margin:32px 0 12px;font-size:16px">Panel del taller · Inventario</h3>
+    <div class="screen">
+      <div class="screen__bar"><i></i><i></i><i></i><span>techfixai.vercel.app/taller/inventario</span></div>
+      <div class="app">
+        <aside class="sidebar" aria-label="Navegación del taller">
+          <div class="brand"><span class="brand__mark"><svg><use href="#i-chip"/></svg></span><span>TechFix.AI<small>TALLER</small></span></div>
+          <a class="nav-item" href="#pantallas"><svg><use href="#i-grid"/></svg>Cola de triage<span class="count">6</span></a>
+          <a class="nav-item" href="#pantallas"><svg><use href="#i-plus"/></svg>Ticket presencial</a>
+          <a class="nav-item" href="#pantallas" aria-current="page"><svg><use href="#i-box"/></svg>Inventario<span class="count">4</span></a>
+          <p class="nav-group">Sistema</p>
+          <span class="nav-item"><span class="badge badge--success">4 agentes activos</span></span>
+          <div class="sidebar__foot"><span class="avatar">CQ</span><span>Carlos Quispe<br><span class="subtle" style="font-size:12px">Técnico</span></span></div>
+        </aside>
+        <div class="main">
+          <div class="topbar"><div class="crumbs">Taller <span>/</span> <b>Inventario</b></div><div class="topbar__spacer"></div><div class="search-cmd"><svg><use href="#i-search"/></svg>Buscar…<span class="kbd">Ctrl K</span></div></div>
+          <div class="content">
+            <div class="page-head"><div><h2>Inventario de repuestos</h2><p>Stock, precios y alertas de reposición.</p></div><button class="btn btn--primary" type="button"><svg><use href="#i-plus"/></svg>Nuevo repuesto</button></div>
+            <div class="stats">
+              <div class="stat"><span class="stat__label">Stock total<svg><use href="#i-box"/></svg></span><span class="stat__value">117</span><span class="stat__meta">unidades libres</span></div>
+              <div class="stat"><span class="stat__label">SKU activos<svg><use href="#i-chip"/></svg></span><span class="stat__value">4</span><span class="stat__meta">5 categorías</span></div>
+              <div class="stat stat--danger"><span class="stat__label">Stock crítico<svg><use href="#i-alert"/></svg></span><span class="stat__value">1</span><span class="stat__meta">Reponer urgente</span></div>
+              <div class="stat"><span class="stat__label">Valor del stock<svg><use href="#i-ticket"/></svg></span><span class="stat__value">S/ 8.6k</span><span class="stat__meta">a precio de venta</span></div>
+            </div>
+            <div class="toolbar">
+              <span class="input-group"><svg><use href="#i-search"/></svg><input class="input" placeholder="Buscar por SKU, nombre o equipo compatible" aria-label="Buscar repuestos"></span>
+              <select class="select" aria-label="Estado"><option>Todos los estados</option><option>Solo stock crítico</option></select>
+              <select class="select" aria-label="Ordenar"><option>Relevancia</option><option>Stock: menor a mayor</option></select>
+            </div>
+            <div class="tabs" role="tablist"><button class="tab" role="tab" aria-selected="true">Todos<span class="count">4</span></button><button class="tab" role="tab" aria-selected="false">Memorias RAM<span class="count">1</span></button><button class="tab" role="tab" aria-selected="false">Almacenamiento<span class="count">1</span></button><button class="tab" role="tab" aria-selected="false">Pantallas<span class="count">1</span></button><button class="tab" role="tab" aria-selected="false">Baterías<span class="count">1</span></button></div>
+            <div class="table-wrap">
+              <table class="table">
+                <thead><tr><th>Repuesto</th><th class="hide-sm">SKU</th><th class="hide-sm">Estado</th><th class="num">Stock</th><th class="num">Precio</th><th class="actions"><span style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)">Acciones</span></th></tr></thead>
+                <tbody>
+                  <tr><td><div class="cell-title">SSD NVMe M.2 2TB Kingston KC3000</div><div class="cell-sub">Dell XPS · ThinkPad T · Gaming</div></td><td class="hide-sm"><span class="code-chip">SSD-NVME-2TB-KC</span></td><td class="hide-sm"><span class="badge badge--success">En stock</span></td><td class="num">34</td><td class="num">114.75</td><td class="actions"><button class="icon-btn" aria-label="Editar SSD-NVME-2TB-KC"><svg><use href="#i-edit"/></svg></button><button class="icon-btn icon-btn--danger" aria-label="Eliminar SSD-NVME-2TB-KC" data-open-dialog><svg><use href="#i-trash"/></svg></button></td></tr>
+                  <tr class="row-low"><td><div class="cell-title">Display FHD 15.6" IPS 144Hz 40-pin</div><div class="cell-sub">Acer Nitro 5 · ASUS TUF · HP Omen</div></td><td class="hide-sm"><span class="code-chip">LCD-156-FHD144-40P</span></td><td class="hide-sm"><span class="badge badge--danger">Stock crítico</span></td><td class="num stock-low">2</td><td class="num">98.00</td><td class="actions"><button class="icon-btn" aria-label="Editar LCD-156-FHD144-40P"><svg><use href="#i-edit"/></svg></button><button class="icon-btn icon-btn--danger" aria-label="Eliminar LCD-156-FHD144-40P" data-open-dialog><svg><use href="#i-trash"/></svg></button></td></tr>
+                  <tr><td><div class="cell-title">Batería A2337 original 49.9Wh</div><div class="cell-sub">MacBook Air M1 (2020)</div></td><td class="hide-sm"><span class="code-chip">BAT-APL-A2337</span></td><td class="hide-sm"><span class="badge badge--success">En stock</span></td><td class="num">19</td><td class="num">80.10</td><td class="actions"><button class="icon-btn" aria-label="Editar BAT-APL-A2337"><svg><use href="#i-edit"/></svg></button><button class="icon-btn icon-btn--danger" aria-label="Eliminar BAT-APL-A2337" data-open-dialog><svg><use href="#i-trash"/></svg></button></td></tr>
+                  <tr><td><div class="cell-title">RAM SODIMM Crucial 16GB DDR5 4800</div><div class="cell-sub">Lenovo Legion · Dell Latitude 5530</div></td><td class="hide-sm"><span class="code-chip">RAM-CRU-16G-D5</span></td><td class="hide-sm"><span class="badge badge--success">En stock</span></td><td class="num">62</td><td class="num">52.00</td><td class="actions"><button class="icon-btn" aria-label="Editar RAM-CRU-16G-D5"><svg><use href="#i-edit"/></svg></button><button class="icon-btn icon-btn--danger" aria-label="Eliminar RAM-CRU-16G-D5" data-open-dialog><svg><use href="#i-trash"/></svg></button></td></tr>
+                </tbody>
+              </table>
+              <div class="table-foot"><span>Mostrando 4 de 4 · precios en S/</span><div class="pager"><button class="icon-btn" aria-label="Anterior" disabled><svg><use href="#i-left"/></svg></button><button class="icon-btn" aria-label="Siguiente" disabled><svg><use href="#i-right"/></svg></button></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <h3 style="margin:40px 0 12px;font-size:16px">Acceso del cliente</h3>
+    <div class="screen">
+      <div class="screen__bar"><i></i><i></i><i></i><span>techfixai.vercel.app/portal/acceso</span></div>
+      <div class="auth">
+        <div class="auth__aside">
+          <div class="brand" style="padding:0"><span class="brand__mark"><svg><use href="#i-chip"/></svg></span><span>TechFix.AI</span></div>
+          <div><h3>Tu equipo en buenas manos, de la consulta al retiro</h3><p>Diagnóstico asistido por agentes, presupuesto al instante y seguimiento de cada ticket en un solo lugar.</p></div>
+          <ul class="auth__list">
+            <li><svg><use href="#i-chat"/></svg>Describe la falla y recibe un presupuesto sugerido.</li>
+            <li><svg><use href="#i-ticket"/></svg>Sigue el estado de tus tickets.</li>
+            <li><svg><use href="#i-lock"/></svg>Sesión protegida: nunca guardamos tu contraseña en el navegador.</li>
+          </ul>
+        </div>
+        <div class="auth__form">
+          <form class="auth__card" onsubmit="return false">
+            <div><span class="badge badge--accent">Portal de clientes</span><h3 style="margin-top:12px">Inicia sesión</h3><p class="muted" style="margin-top:4px;font-size:13px">Accede a tus tickets y al asistente.</p></div>
+            <label class="field"><span class="field__label">Correo electrónico</span><span class="input-group"><svg><use href="#i-mail"/></svg><input class="input" type="email" placeholder="tu.correo@ejemplo.com" autocomplete="email"></span></label>
+            <div class="field"><span class="field__label" style="display:flex;justify-content:space-between"><label for="pv-pass">Contraseña</label><a href="#pantallas" style="font-weight:400;font-size:12px">¿Olvidaste tu contraseña?</a></span><span class="input-group"><svg><use href="#i-lock"/></svg><input class="input" id="pv-pass" type="password" placeholder="••••••••••" autocomplete="current-password"></span></div>
+            <button class="btn btn--primary btn--lg btn--block" type="submit">Iniciar sesión</button>
+            <div class="divider">¿Nuevo en TechFix.AI?</div>
+            <button class="btn btn--secondary btn--block" type="button">Crear una cuenta</button>
+            <p class="demo-note"><svg><use href="#i-info"/></svg>Modo demostración sin backend: cualquier correo válido y contraseña permiten ingresar.</p>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <h3 style="margin:40px 0 12px;font-size:16px">Portal del cliente · Asistente</h3>
+    <div class="screen">
+      <div class="screen__bar"><i></i><i></i><i></i><span>techfixai.vercel.app/portal/asistente</span></div>
+      <div class="chat">
+        <div class="chat__main">
+          <div class="chat__head"><span class="bot-mark"><svg><use href="#i-chat"/></svg></span><div><h3>Asistente TechFix</h3><span class="subtle" style="font-size:12px">Soporte técnico y ventas</span></div>
+            <label class="pattern"><span class="subtle" style="font-size:12px">Patrón</span><select class="select" disabled aria-label="Patrón de agentes"><option>Orquestador</option></select></label>
+            <button class="btn btn--ghost btn--sm" type="button">Nueva conversación</button></div>
+          <div class="chat__log">
+            <div class="msg msg--user"><div><div class="msg__who" style="text-align:right">Tú · <span class="mono">10:42</span></div><div class="msg__body">Mi laptop HP Pavilion 15 no detecta el SSD de 480 GB desde ayer; en el BIOS tampoco aparece.</div></div></div>
+            <div class="msg"><span class="bot-mark"><svg><use href="#i-chip"/></svg></span><div><div class="msg__who"><b>Agente de soporte</b> · <span class="mono">10:42</span></div><div class="msg__body">Probablemente es un fallo del controlador o del conector M.2. Te propongo un diagnóstico técnico; si confirmas, guardo el ticket. Responde <b>Sí, confirmo</b> o <b>No</b>.</div>
+              <div class="quote"><div class="quote__head"><b>Presupuesto sugerido</b><span class="badge badge--accent">Pendiente</span></div>
+                <div class="quote__line"><span>Diagnóstico técnico</span><span class="mono">S/ 50.00</span></div>
+                <div class="quote__line"><span>Repuestos</span><span class="mono">S/ 0.00</span></div>
+                <div class="quote__total"><span class="muted">Total</span><b>S/ 50.00</b></div>
+                <div class="quote__actions"><button class="btn btn--primary btn--sm" type="button"><svg><use href="#i-check"/></svg>Confirmar y guardar</button><button class="btn btn--secondary btn--sm" type="button">No guardar</button></div></div>
+            </div></div>
+            <div class="msg"><span class="bot-mark"><svg><use href="#i-chip"/></svg></span><div><div class="msg__who"><b>Agente de soporte</b></div><span class="typing" aria-label="El agente está escribiendo"><i></i><i></i><i></i></span></div></div>
+          </div>
+          <div class="composer"><div class="composer__box"><textarea rows="1" placeholder="Describe la falla de tu equipo…" aria-label="Mensaje"></textarea><button class="btn btn--primary" type="button" aria-label="Enviar"><svg><use href="#i-send"/></svg></button></div>
+            <div class="composer__hint"><span><span class="kbd">Enter</span> enviar</span><span><span class="kbd">Shift</span> + <span class="kbd">Enter</span> nueva línea</span><span>No compartas contraseñas en el chat.</span></div></div>
+        </div>
+        <aside class="chat__side">
+          <div><p class="side-title">Ticket</p><div class="row" style="justify-content:space-between"><span class="mono" style="font-weight:600">TCK-2042</span><span class="badge badge--info">En diagnóstico</span></div><p class="muted" style="margin-top:8px;font-size:13px">HP Pavilion 15 · SSD no detectado</p></div>
+          <div><p class="side-title">Seguimiento</p>
+            <ol class="timeline"><li class="done"><span class="dot"></span><span>Consulta recibida</span></li><li class="now"><span class="dot"></span><span>Presupuesto por confirmar</span></li><li><span class="dot"></span><span>Reparación en taller</span></li><li><span class="dot"></span><span>Listo para retiro</span></li></ol></div>
+          <a class="btn btn--secondary btn--block" href="#pantallas">Ver mis tickets</a>
+        </aside>
+      </div>
+    </div>
+  </section>
+</main>
+
+<div class="dialog-backdrop" id="dialog" hidden>
+  <div class="dialog" role="alertdialog" aria-modal="true" aria-labelledby="dlg-t" aria-describedby="dlg-b">
+    <h2 class="dialog__title" id="dlg-t">¿Eliminar este repuesto?</h2>
+    <p class="dialog__body" id="dlg-b">Se quitará <b>SSD NVMe M.2 2TB Kingston KC3000</b> (<span class="mono">SSD-NVME-2TB-KC</span>) del inventario. Esta acción no se puede deshacer.</p>
+    <div class="dialog__actions"><button class="btn btn--secondary" type="button" data-close>Cancelar</button><button class="btn btn--danger" type="button" data-confirm>Eliminar</button></div>
+  </div>
+</div>
+<div class="toast" id="toast" hidden role="status"><svg><use href="#i-check"/></svg>Repuesto eliminado del inventario.</div>
+
+<script>
+// Contraste WCAG calculado en vivo para cada muestra de color.
+const css = (name) => getComputedStyle(document.documentElement).getPropertyValue(`--${name}`).trim();
+function lum(hex) {
+  const n = hex.replace("#", "");
+  const [r, g, b] = [0, 2, 4].map((i) => parseInt(n.slice(i, i + 2), 16) / 255).map((c) => (c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4));
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+}
+const ratio = (a, b) => { const [x, y] = [lum(a), lum(b)].sort((m, n) => n - m); return (x + 0.05) / (y + 0.05); };
+const SURFACES = ["bg", "surface-1", "surface-2", "surface-3", "border", "border-strong"];
+function renderSwatches() {
+  const bg = css("bg");
+  document.querySelectorAll("[data-swatches]").forEach((box) => {
+    box.innerHTML = box.dataset.swatches.split(" ").map((name) => {
+      const value = css(name);
+      const isHex = /^#[0-9a-f]{6}$/i.test(value);
+      const r = isHex && !SURFACES.includes(name) ? ratio(value, name === "on-accent" ? css("accent") : bg) : null;
+      const cls = r === null ? "" : r >= 4.5 ? "ok" : r >= 3 ? "warn" : "bad";
+      const vs = name === "on-accent" ? "sobre acento" : "sobre fondo";
+      const label = r === null ? "" : `<span class="contrast ${cls}">${r.toFixed(1)}:1 ${vs}${r >= 4.5 ? " · AA" : r >= 3 ? " · AA grande" : " · no AA"}</span>`;
+      return `<div class="swatch"><div class="swatch__chip" style="background:${value}"></div><div class="swatch__body"><b>${name}</b><span class="swatch__hex">${value}</span>${label}</div></div>`;
+    }).join("");
+  });
+}
+document.getElementById("spaces").innerHTML = [4, 8, 12, 16, 20, 24, 32, 40, 48, 64].map((n) => `<div class="space-row"><span style="width:44px">${n}px</span><span class="space-bar" style="width:${n * 2}px"></span></div>`).join("");
+
+const themeBtn = document.getElementById("theme");
+themeBtn.addEventListener("click", () => {
+  const next = document.documentElement.dataset.theme === "dark" ? "light" : "dark";
+  document.documentElement.dataset.theme = next;
+  themeBtn.querySelector("span").textContent = next === "dark" ? "Tema claro" : "Tema oscuro";
+  themeBtn.querySelector("use").setAttribute("href", next === "dark" ? "#i-sun" : "#i-moon");
+  renderSwatches();
+});
+renderSwatches();
+
+// Diálogo y aviso de ejemplo: foco en «Cancelar», Esc y clic fuera cierran.
+const dialog = document.getElementById("dialog");
+const toast = document.getElementById("toast");
+let opener = null;
+document.querySelectorAll("[data-open-dialog]").forEach((b) => b.addEventListener("click", () => { opener = b; dialog.hidden = false; dialog.querySelector("[data-close]").focus(); }));
+const closeDialog = () => { dialog.hidden = true; opener?.focus(); };
+dialog.querySelector("[data-close]").addEventListener("click", closeDialog);
+dialog.querySelector("[data-confirm]").addEventListener("click", () => { closeDialog(); toast.hidden = false; setTimeout(() => (toast.hidden = true), 2600); });
+dialog.addEventListener("click", (e) => { if (e.target === dialog) closeDialog(); });
+document.addEventListener("keydown", (e) => { if (e.key === "Escape" && !dialog.hidden) closeDialog(); });
+</script>
+</body>
+</html>

@@ -1,51 +1,143 @@
 /* =========================================================
-   Tokens de diseño: colores, radios, sombras y tipografías.
-   Un solo :root para la landing y las pantallas de la aplicación.
+   Tokens del sistema de diseño «Circuito» (ver design/DESIGN.md).
+   Tema oscuro por defecto; el claro se activa con [data-theme="light"] en <html>.
    ========================================================= */
 
 :root {
+  --font: "Geist", "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: "Geist Mono", "JetBrains Mono", ui-monospace, "SFMono-Regular", Consolas, monospace;
 
-  --blue-700: #0b47c8;
-  --blue-600: #0f52d9;
-  --blue-500: #1f5be0;
-  --blue-100: #e3ebfc;
-  --blue-50: #f1f5fe;
-  --cyan-400: #4fd8ea;
-  --cyan-100: #d8f6fb;
-  --green-700: #08744f;
-  --green-100: #daf5e8;
-  --navy-950: #071422;
-  --navy-900: #0b1b2d;
-  --navy-800: #13263b;
-  --ink: #0d1b2e;
-  --text: #33404f;
-  --muted: #5c6878;
-  --line: #e2e8f2;
-  --tint: #f5f7fc;
-  --white: #fff;
-  --radius: 14px;
-  --radius-lg: 22px;
-  --shadow: 0 1px 2px rgba(13, 27, 46, 0.04), 0 6px 24px rgba(13, 27, 46, 0.05);
-  --shadow-lg: 0 24px 60px rgba(13, 27, 46, 0.1);
-  --font: "Hanken Grotesk", system-ui, -apple-system, "Segoe UI", sans-serif;
-  --mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", Consolas, monospace;
-  --teal-700: #0b6b5c;
-  --teal-100: #d5f3ee;
-  --red-700: #b42318;
-  --red-100: #fde4e1;
-  --red-50: #fff6f5;
-  --field: #eef3fd;
-  --app-bg: #f5f7fc;
+  --size-xs: 12px;
+  --size-sm: 13px;
+  --size-base: 14px;
+  --size-md: 16px;
+  --size-lg: 18px;
+  --size-xl: 22px;
+  --size-2xl: 28px;
+  --size-3xl: 36px;
+  --size-4xl: 48px;
 
-  /* Colores que antes estaban escritos a mano en varios archivos */
-  --teal-600: #0d8a73;
-  --cyan-700: #0b7184;
-  --blue-150: #d4e0fa;
-  --slate-100: #eef1f6;
-  --line-strong: #c5d2e6;
-  --focus-ring: 0 0 0 3px rgba(31, 91, 224, 0.15);
+  --r-xs: 4px;
+  --r-sm: 6px;
+  --r-md: 8px;
+  --r-lg: 12px;
+  --r-full: 999px;
 
-  /* Acciones destructivas y diálogos */
-  --red-800: #912018;
-  --overlay: rgba(13, 27, 46, 0.45);
+  --control-h: 36px;
+  --control-h-lg: 44px;
+  --touch-min: 40px;
+  --sidebar-w: 248px;
+  --topbar-h: 56px;
+  --content-max: 1200px;
+
+  --motion-fast: 120ms;
+  --motion-base: 180ms;
+  --motion-slow: 260ms;
+  --ease: cubic-bezier(0.2, 0, 0, 1);
+}
+
+:root,
+[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #0a0e13;
+  --surface-1: #10151c;
+  --surface-2: #161d26;
+  --surface-3: #1d2531;
+  --border: #232c38;
+  --border-strong: #303b4a;
+  --text: #e7edf4;
+  --text-2: #a3afbd;
+  --text-3: #7f8b9a;
+  --accent: #2ee6c5;
+  --accent-hover: #5cf0d6;
+  --accent-press: #1fc9aa;
+  --on-accent: #04201b;
+  --accent-subtle: rgba(46, 230, 197, 0.12);
+  --info: #5aa9ff;
+  --success: #3ddc97;
+  --warning: #f5b83d;
+  --danger: #ff6b6b;
+  --on-danger: #1a0505;
+  --info-subtle: rgba(90, 169, 255, 0.12);
+  --success-subtle: rgba(61, 220, 151, 0.12);
+  --warning-subtle: rgba(245, 184, 61, 0.12);
+  --danger-subtle: rgba(255, 107, 107, 0.12);
+  --overlay: rgba(3, 6, 10, 0.72);
+  --focus: #5cf0d6;
+  --shadow-1: 0 1px 0 rgba(255, 255, 255, 0.03) inset;
+  --shadow-2: 0 8px 24px rgba(0, 0, 0, 0.45);
+  --shadow-3: 0 24px 64px rgba(0, 0, 0, 0.6);
+  --glow: radial-gradient(640px 320px at 15% 0%, rgba(46, 230, 197, 0.1), transparent 60%);
+}
+
+[data-theme="light"] {
+  color-scheme: light;
+  --bg: #f5f7fa;
+  --surface-1: #ffffff;
+  --surface-2: #f0f3f7;
+  --surface-3: #e5eaf0;
+  --border: #d8dfe7;
+  --border-strong: #c2ccd7;
+  --text: #0e141b;
+  --text-2: #465261;
+  --text-3: #5f6b79;
+  --accent: #0b7f6c;
+  --accent-hover: #096c5c;
+  --accent-press: #075a4c;
+  --on-accent: #ffffff;
+  --accent-subtle: rgba(11, 127, 108, 0.1);
+  --info: #1f6fd1;
+  --success: #12805a;
+  --warning: #9a6200;
+  --danger: #c93434;
+  --on-danger: #ffffff;
+  --info-subtle: rgba(31, 111, 209, 0.1);
+  --success-subtle: rgba(18, 128, 90, 0.1);
+  --warning-subtle: rgba(154, 98, 0, 0.1);
+  --danger-subtle: rgba(201, 52, 52, 0.1);
+  --overlay: rgba(14, 20, 27, 0.45);
+  --focus: #0b7f6c;
+  --shadow-1: 0 1px 2px rgba(14, 20, 27, 0.06);
+  --shadow-2: 0 8px 24px rgba(14, 20, 27, 0.08);
+  --shadow-3: 0 24px 64px rgba(14, 20, 27, 0.14);
+  --glow: radial-gradient(640px 320px at 15% 0%, rgba(11, 127, 108, 0.08), transparent 60%);
+}
+
+/* Nombres anteriores, apuntando al sistema nuevo para que ninguna regla quede sin color. */
+:root {
+  --blue-700: var(--accent-hover);
+  --blue-600: var(--accent);
+  --blue-500: var(--focus);
+  --blue-150: var(--surface-3);
+  --blue-100: var(--accent-subtle);
+  --blue-50: var(--surface-2);
+  --cyan-700: var(--accent);
+  --cyan-400: var(--accent);
+  --cyan-100: var(--accent-subtle);
+  --green-700: var(--success);
+  --green-100: var(--success-subtle);
+  --teal-700: var(--success);
+  --teal-600: var(--success);
+  --teal-100: var(--success-subtle);
+  --red-800: var(--danger);
+  --red-700: var(--danger);
+  --red-100: var(--danger-subtle);
+  --red-50: var(--danger-subtle);
+  --navy-950: var(--bg);
+  --navy-900: var(--surface-1);
+  --navy-800: var(--surface-2);
+  --slate-100: var(--surface-3);
+  --ink: var(--text);
+  --muted: var(--text-2);
+  --line: var(--border);
+  --line-strong: var(--border-strong);
+  --tint: var(--surface-1);
+  --white: var(--surface-1);
+  --field: var(--surface-2);
+  --app-bg: var(--bg);
+  --radius: var(--r-lg);
+  --radius-lg: var(--r-lg);
+  --shadow: var(--shadow-1);
+  --shadow-lg: var(--shadow-3);
+  --focus-ring: 0 0 0 2px var(--bg), 0 0 0 4px var(--focus);
 }

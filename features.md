@@ -60,4 +60,5 @@ demostración.
 | Llamadas al chat y tickets | `src/features/chat/chatApi.js` |
 | Formato de importes en soles | `formatPEN`, `parseMoney` y `centsToInput` en `src/domain/money.js` |
 | Estados y categorías de ticket | `src/domain/tickets.js` |
-| Colores, radios, sombras, foco | variables de `src/shared/styles/tokens.css` |
+| Colores, radios, sombras, foco | variables de `src/shared/styles/tokens.css` (sistema «Circuito», ver `design/DESIGN.md`) |
+| Tema oscuro o claro | `src/shared/ui/ThemeToggle.jsx`; `index.html` aplica la preferencia guardada antes de pintar |

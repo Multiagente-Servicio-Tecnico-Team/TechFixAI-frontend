@@ -14,7 +14,7 @@ Producción: https://techfixai.vercel.app
 | Rutas | React Router | 6 |
 | Iconos | lucide-react | 0.460 |
 | Pruebas | Vitest + Testing Library + jsdom | 2.1 / 16 / 25 |
-| Estilos | CSS propio con variables (sin framework); tipografías Hanken Grotesk y JetBrains Mono | — |
+| Estilos | CSS propio con variables (sin framework), sistema de diseño «Circuito» con tema oscuro y claro; tipografías Geist y Geist Mono | — |
 
 ## Estructura de carpetas
 
@@ -57,6 +57,8 @@ TechFixAI-frontend/
   portal, el taller y el acceso en `src/shared/styles/screens.css`.
 - Los colores, radios y sombras se toman de `src/shared/styles/tokens.css` con `var(--…)`; si un valor se repite,
   se agrega un token en lugar de escribirlo a mano.
+- El tema oscuro es el predeterminado; el claro se activa con `data-theme="light"` en `<html>` desde el botón de
+  tema (`ThemeToggle`). Solo se guarda esa preferencia visual en `localStorage` (`techfix-theme`).
 - El orden de carga (`main.jsx`) es `shared/styles/index.css`, `landing.css` y `screens.css`: los estilos de pantalla
   pueden ajustar a los generales sin subir la especificidad.
 

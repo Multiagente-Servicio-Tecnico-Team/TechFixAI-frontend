@@ -70,17 +70,19 @@ export default function Register({ api = defaultApi }) {
   };
 
   return (
-    <div className="auth-card auth-card--wide">
-      <div className="auth-card__body">
-        <div className="auth-head-center">
-          <h1 className="auth-title">Crear Cuenta de Cliente</h1>
-          <p className="auth-sub">
-            Únete a TechFix.AI para registrar tus dispositivos, solicitar triage inteligente y gestionar garantías en tiempo real.
-          </p>
-        </div>
-
+    <div className="auth auth--wide">
+      <div className="auth__intro">
+        <h1 className="auth__title">Crear Cuenta de Cliente</h1>
+        <p className="auth__lead">
+          Únete a TechFix.AI para registrar tus dispositivos, solicitar triage inteligente y gestionar garantías en tiempo real.
+        </p>
+        <p className="auth__links">¿Ya tienes una cuenta registrada? <Link to="/portal/acceso" className="link">Inicia sesión aquí</Link></p>
+      </div>
+      <div className="jobtag jobtag--lg">
         <form className="form" onSubmit={submit} noValidate aria-busy={loading}>
           <FormAlert>{formError}</FormAlert>
+          <div className="reg-grid">
+          <div className="reg-grid__col">
           <Field label="Nombre y Apellido" htmlFor="name" error={errors.name}>
             <InputIcon icon={Contact}>
               <input id="name" className="input input--icon" placeholder="Martín Gómez" autoComplete="name" value={form.name} onChange={set("name")} aria-invalid={!!errors.name || undefined} />
@@ -97,14 +99,14 @@ export default function Register({ api = defaultApi }) {
             label="Teléfono Móvil"
             htmlFor="phone"
             error={errors.phone}
-            hint={<span className="hint-teal"><BellRing size={13} aria-hidden="true" /> Utilizado exclusivamente para avisos de retiro y actualizaciones de triage.</span>}
+            hint={<span className="hint-ok"><BellRing size={13} aria-hidden="true" /> Utilizado exclusivamente para avisos de retiro y actualizaciones de triage.</span>}
           >
             <div className="phone-row">
               <select className="input select phone-row__prefix" value={form.prefix} onChange={set("prefix")} aria-label="Código de país">
-                <option value="+51">🇵🇪 +51</option>
-                <option value="+56">🇨🇱 +56</option>
-                <option value="+57">🇨🇴 +57</option>
-                <option value="+52">🇲🇽 +52</option>
+                <option value="+51">PE +51</option>
+                <option value="+56">CL +56</option>
+                <option value="+57">CO +57</option>
+                <option value="+52">MX +52</option>
               </select>
               <InputIcon icon={Smartphone}>
                 <input id="phone" type="tel" inputMode="tel" className="input input--icon" placeholder="987 654 321" autoComplete="tel-national" value={form.phone} onChange={set("phone")} aria-invalid={!!errors.phone || undefined} />
@@ -112,6 +114,8 @@ export default function Register({ api = defaultApi }) {
             </div>
           </Field>
 
+          </div>
+          <div className="reg-grid__col">
           <PasswordFields
             password={form.password}
             confirm={form.confirm}
@@ -119,6 +123,8 @@ export default function Register({ api = defaultApi }) {
             onConfirm={set("confirm")}
             errors={errors}
           />
+          </div>
+          </div>
 
           <div className="field">
             <label className="check">
@@ -138,7 +144,6 @@ export default function Register({ api = defaultApi }) {
               <>Crear Mi Cuenta <ArrowRight size={18} aria-hidden="true" /></>
             )}
           </button>
-          <p className="auth-alt">¿Ya tienes una cuenta registrada? <Link to="/portal/acceso" className="link">Inicia sesión aquí</Link></p>
         </form>
       </div>
     </div>

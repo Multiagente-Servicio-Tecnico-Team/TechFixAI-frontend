@@ -52,30 +52,28 @@ function ResetForm({ token, api }) {
   };
 
   return (
-    <div className="auth-stack">
-      <BackLink to="/portal/acceso" mono>Volver a iniciar sesión</BackLink>
-      <div className="auth-card auth-card--accent auth-card--left">
-        <div className="auth-card__body">
-          <span className="badge"><ShieldCheck size={14} aria-hidden="true" />Seguridad de cuenta · Nueva contraseña</span>
-
+    <div className="auth">
+      <div className="auth__intro">
+        <BackLink to="/portal/acceso">Volver a iniciar sesión</BackLink>
+        <span className="stamp stamp--info"><ShieldCheck size={14} aria-hidden="true" />Seguridad de cuenta · Nueva contraseña</span>
+        <h1 className="auth__title">{done ? "Contraseña actualizada" : tokenError ? "Enlace no válido" : "Crea una nueva contraseña"}</h1>
+      </div>
+      <div className="jobtag jobtag--lg">
           {done ? (
-            <div className="success-state">
-              <span className="success-state__icon"><CircleCheck size={26} aria-hidden="true" /></span>
-              <h1 className="auth-title">Contraseña actualizada</h1>
-              <p className="auth-sub">Ya puedes ingresar a tu portal con la nueva contraseña. Por seguridad, el enlace dejó de ser válido.</p>
+            <div className="result">
+              <span className="result__seal"><CircleCheck size={26} aria-hidden="true" /></span>
+              <p>Ya puedes ingresar a tu portal con la nueva contraseña. Por seguridad, el enlace dejó de ser válido.</p>
               <Link to="/portal/acceso" className="btn btn--primary">Iniciar sesión <ArrowRight size={18} aria-hidden="true" /></Link>
             </div>
           ) : tokenError ? (
-            <div className="success-state">
-              <span className="success-state__icon success-state__icon--warn"><LinkIcon size={24} aria-hidden="true" /></span>
-              <h1 className="auth-title">Enlace no válido</h1>
-              <p className="auth-sub">{tokenError} Los enlaces de restablecimiento duran 15 minutos y solo pueden usarse una vez.</p>
+            <div className="result">
+              <span className="result__seal result__seal--warn"><LinkIcon size={24} aria-hidden="true" /></span>
+              <p>{tokenError} Los enlaces de restablecimiento duran 15 minutos y solo pueden usarse una vez.</p>
               <Link to="/portal/recuperar" className="btn btn--primary">Solicitar un nuevo enlace <ArrowRight size={18} aria-hidden="true" /></Link>
             </div>
           ) : (
             <>
-              <h1 className="auth-title">Crea una nueva contraseña</h1>
-              <p className="auth-sub">Elige una contraseña segura que no hayas usado antes en TechFix.AI.</p>
+              <p>Elige una contraseña segura que no hayas usado antes en TechFix.AI.</p>
               <form className="form" onSubmit={submit} noValidate aria-busy={loading}>
                 <FormAlert>{formError}</FormAlert>
                 <PasswordFields
@@ -97,7 +95,6 @@ function ResetForm({ token, api }) {
               </form>
             </>
           )}
-        </div>
       </div>
     </div>
   );

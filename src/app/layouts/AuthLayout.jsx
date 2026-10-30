@@ -1,6 +1,7 @@
 import { Link, Outlet } from "react-router-dom";
 import { UserRound } from "lucide-react";
 import Logo from "../../shared/ui/Logo.jsx";
+import ThemeToggle from "../../shared/ui/ThemeToggle.jsx";
 
 function AppFooterLegal() {
   return (
@@ -25,6 +26,7 @@ export default function AuthLayout() {
           <Link to="/ayuda" className="hide-xs">Soporte Técnico</Link>
           <Link to="/ayuda#faq">Preguntas Frecuentes</Link>
           <span className="lang-badge" aria-label="Idioma: español">ES</span>
+          <ThemeToggle />
           <Link to="/portal/acceso" className="avatar" aria-label="Acceder a mi cuenta">
             <UserRound size={18} />
           </Link>

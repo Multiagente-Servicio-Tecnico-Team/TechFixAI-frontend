@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, NavLink, Outlet, useLocation } from "react-router-dom";
 import { Archive, Menu, PlusCircle, Wrench, X, ExternalLink } from "lucide-react";
 import Logo from "../../shared/ui/Logo.jsx";
+import ThemeToggle from "../../shared/ui/ThemeToggle.jsx";
 import { UserMenu } from "./PortalLayout.jsx";
 
 const links = [
@@ -55,6 +56,7 @@ export default function StaffLayout() {
             <Link to="/" className="top-link hide-sm">
               <ExternalLink size={16} aria-hidden="true" /> Sitio web
             </Link>
+            <ThemeToggle />
             <UserMenu />
           </div>
         </header>

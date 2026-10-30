@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { ArrowRight, Menu, X } from "lucide-react";
 import Logo from "../../../shared/ui/Logo.jsx";
+import ThemeToggle from "../../../shared/ui/ThemeToggle.jsx";
 import { useStore } from "../../../state/store.jsx";
 
 const links = [
@@ -40,11 +41,13 @@ export default function Navbar() {
           ))}
         </nav>
         <div className="nav__actions">
+          <ThemeToggle />
           <Link to={account.to} className="nav__login">{account.label}</Link>
           <a href="#demo" className="btn btn--primary">
             <ArrowRight size={18} aria-hidden="true" /> Solicitar demo
           </a>
         </div>
+        <ThemeToggle className="nav__theme" />
         <button
           type="button"
           className="nav__toggle"

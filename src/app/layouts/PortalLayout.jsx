@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import { LogOut, UserRound } from "lucide-react";
 import Logo from "../../shared/ui/Logo.jsx";
+import ThemeToggle from "../../shared/ui/ThemeToggle.jsx";
 import { useStore } from "../../state/store.jsx";
 import { authApi } from "../../features/auth/authApi.js";
 
@@ -68,7 +69,10 @@ export default function PortalLayout() {
           </NavLink>
           <NavLink to="/portal/tickets" className="tab-link">Mis Tickets</NavLink>
         </nav>
-        <UserMenu />
+        <div className="portal-header__actions">
+          <ThemeToggle />
+          <UserMenu />
+        </div>
       </header>
       <main className="portal-main">
         <Outlet />

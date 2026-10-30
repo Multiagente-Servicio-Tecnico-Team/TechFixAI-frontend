@@ -52,13 +52,15 @@ export default function Workshop() {
 
   // El ticket cambia de columna y se remonta: el foco lo acompaña y se anuncia el movimiento.
   useEffect(() => {
-    if (moved) document.getElementById(`tag-${moved.id}`)?.focus();
+    if (moved) (document.getElementById(`tag-${moved.id}`) ?? document.getElementById("tablero"))?.focus();
   }, [moved]);
 
   const move = (id, next) => {
     dispatch({ type: "updateTicket", id, changes: { status: next } });
     setFocus(next);
-    setMoved({ id, status: next });
+    // La estación destino se abre completa para que la tarjeta no quede tras «Mostrar más».
+    setShown((v) => ({ ...v, [next]: Number.MAX_SAFE_INTEGER }));
+    setMoved({ id, status: next, hidden: Boolean(status) && next !== status });
   };
 
   const resetPage = (fn) => (value) => {
@@ -106,7 +108,7 @@ export default function Workshop() {
       </div>
 
       <p className="vh" role="status">
-        {moved ? `Ticket ${moved.id} movido a ${moved.status}. ` : ""}{filtered.length} tickets
+        {moved ? `Ticket ${moved.id} movido a ${moved.status}${moved.hidden ? " (no se muestra con el filtro de estado actual)" : ""}. ` : ""}{filtered.length} tickets
       </p>
       {filtered.length === 0 && <p className="empty">No hay tickets con estos filtros.</p>}
 
@@ -117,7 +119,7 @@ export default function Workshop() {
         </select>
       </label>
 
-      <div className="board" style={{ "--stations": stations.length }} role="region" aria-label="Tablero por estado" tabIndex={0}>
+      <div id="tablero" className="board" style={{ "--stations": stations.length }} role="region" aria-label="Tablero por estado" tabIndex={0}>
         {stations.map((s) => {
           const all = inStation(s);
           const limit = shown[s] || PAGE_SIZE;

@@ -143,7 +143,7 @@ export default function LiveChat({ api = defaultChatApi }) {
             m.from === "user" ? (
               <UserMessage key={m.id} label="Tú" time={m.time}>{m.text}</UserMessage>
             ) : (
-              <div key={m.id} className="msg msg--bot">
+              <div key={m.id} className="msg">
                 <p className="msg__meta"><strong>Agente TechFix</strong> <time>{m.time}</time></p>
                 <div className="msg__bubble"><p><RichText text={m.text} /></p></div>
                 {m.quote && m.id !== lastQuoteId && (

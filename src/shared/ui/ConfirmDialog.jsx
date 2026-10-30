@@ -18,7 +18,7 @@ export function ConfirmDialog({ open, title, children, confirmLabel = "Eliminar"
     cancelRef.current?.focus();
     // Al cerrar, el foco vuelve a quien abrió el diálogo si sigue en la página.
     return () => {
-      if (returnRef.current?.isConnected) returnRef.current.focus();
+      (returnRef.current?.isConnected ? returnRef.current : document.querySelector("main"))?.focus();
     };
   }, [open]);
 
@@ -41,7 +41,7 @@ export function ConfirmDialog({ open, title, children, confirmLabel = "Eliminar"
       <div className="dialog" role="alertdialog" aria-modal="true" aria-labelledby={titleId} aria-describedby={bodyId} onKeyDown={onKeyDown}>
         <span className="dialog__icon"><TriangleAlert size={22} aria-hidden="true" /></span>
         <h2 id={titleId} className="dialog__title">{title}</h2>
-        <div id={bodyId} className="dialog__body">{children}</div>
+        <div id={bodyId}>{children}</div>
         {error && <p className="dialog__error" role="alert">{error}</p>}
         <div className="dialog__actions">
           <button ref={cancelRef} type="button" className="btn" onClick={close} disabled={busy}>Cancelar</button>

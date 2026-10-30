@@ -65,11 +65,13 @@ export default function Inventory({ api }) {
   const rows = filtered.slice((current - 1) * PAGE_SIZE, current * PAGE_SIZE);
   const reset = (fn) => (v) => { fn(v); setPage(1); };
 
-  // La página actual se ordena en estantes por categoría, respetando el orden elegido.
-  const shelves = [...new Set(rows.map((p) => p.category || "Sin categoría"))].map((name) => ({
-    name,
-    parts: rows.filter((p) => (p.category || "Sin categoría") === name),
-  }));
+  // Con el orden por defecto se muestran estantes por categoría; con otro orden, una sola lista para que se note.
+  const shelves = sort === "relevance"
+    ? [...new Set(rows.map((p) => p.category || "Sin categoría"))].map((name) => ({
+        name,
+        parts: rows.filter((p) => (p.category || "Sin categoría") === name),
+      }))
+    : rows.length ? [{ name: sorters[sort].label, parts: rows }] : [];
 
   return (
     <div className="page">

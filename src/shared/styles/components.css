@@ -4,7 +4,6 @@
 .mono { font-family: var(--mono); font-variant-numeric: tabular-nums; }
 .muted { color: var(--text-2); }
 .small { font-size: var(--size-sm); }
-.nowrap { white-space: nowrap; }
 .vh { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 .spin { animation: spin 0.9s linear infinite; }
 .link { color: var(--accent); font-weight: 700; text-decoration: underline; text-underline-offset: 3px; }
@@ -38,7 +37,6 @@
 .btn--danger { background: var(--danger); border-color: var(--danger); color: var(--on-danger); }
 .btn--danger:hover:not(:disabled) { background: var(--danger); opacity: 0.9; }
 .btn--danger-ghost { border-color: var(--danger); color: var(--danger); background: transparent; }
-.btn--quiet { border-color: transparent; background: transparent; }
 .btn--lg { min-height: var(--control-lg); padding: 0 20px; }
 .btn--sm { min-height: var(--control-sm); padding: 0 10px; font-size: var(--size-sm); }
 .btn--block { width: 100%; }
@@ -161,6 +159,5 @@
 
 @media (max-width: 640px) {
   .grid-2, .grid-3 { grid-template-columns: minmax(0, 1fr); }
-  .hide-sm { display: none; }
   .rail { grid-template-columns: repeat(3, minmax(0, 1fr)); row-gap: 10px; }
 }

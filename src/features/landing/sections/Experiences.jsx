@@ -67,13 +67,13 @@ export default function Experiences() {
           <article className="exp__side">
             <p className="kicker">Para el cliente</p>
             <h3 className="subtitle">Entender, aprobar y seguir</h3>
-            <div className="exp__sample exp__chat">
+            <div className="exp__sample">
               <p className="bubble bubble--me">¿Ya confirmaron si el SSD necesita reemplazo?</p>
               <p className="bubble">
                 Sí. El diagnóstico fue validado y reservamos una unidad compatible. La
                 cotización está lista para tu aprobación.
               </p>
-              <div className="jobtag exp__quote">
+              <div className="jobtag">
                 <span className="small muted">Total calculado</span>
                 <strong className="mono exp__total">S/. 395.00</strong>
                 <button type="button" className="btn btn--primary btn--block" onClick={() => setApproved(true)} disabled={approved}>

@@ -102,7 +102,7 @@ export default function Register({ api = defaultApi }) {
             hint={<span className="hint-ok"><BellRing size={13} aria-hidden="true" /> Utilizado exclusivamente para avisos de retiro y actualizaciones de triage.</span>}
           >
             <div className="phone-row">
-              <select className="input select phone-row__prefix" value={form.prefix} onChange={set("prefix")} aria-label="Código de país">
+              <select className="input" value={form.prefix} onChange={set("prefix")} aria-label="Código de país">
                 <option value="+51">PE +51</option>
                 <option value="+56">CL +56</option>
                 <option value="+57">CO +57</option>

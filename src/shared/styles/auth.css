@@ -6,7 +6,6 @@
 .auth__lead { max-width: 46ch; font-size: var(--size-md); color: var(--text-2); }
 .auth__links { display: grid; gap: 4px; padding-top: 12px; border-top: var(--rule) solid var(--text); width: 100%; }
 .auth__links a { display: inline-flex; min-height: 24px; }
-.auth__right { align-self: end; justify-self: end; }
 
 .reg-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px 24px; align-items: start; }
 .reg-grid__col { display: grid; gap: 16px; min-width: 0; }
@@ -55,7 +54,6 @@
   .auth, .auth--wide, .help { grid-template-columns: minmax(0, 1fr); padding: 8px 0; }
   .auth__intro, .help__index { position: static; }
   .auth__title { font-size: clamp(28px, 8vw, 40px); }
-  .auth__right { justify-self: stretch; }
 }
 @media (max-width: 640px) {
   .reg-grid { grid-template-columns: minmax(0, 1fr); }

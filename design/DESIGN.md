@@ -19,7 +19,7 @@ Propuesta de la Fase 2. Valores exactos en [`design-tokens.json`](design-tokens.
 | Bordes | 2 px en controles, 3 px en reglas de columna, radio de 2 px | Aspecto de herramienta; sin sombras salvo diálogos |
 | Estado | Posición, texto e icono; el color nunca va solo | Accesible sin percepción de color |
 | Movimiento | 120 a 180 ms al cambiar de estado; se respeta «reducir movimiento» | Orienta sin adornar |
-| Iconos | `lucide-react` con trazo 2.25, ya instalada, más los símbolos propios | No agrega dependencias |
+| Iconos | `lucide-react` con su trazo por defecto, ya instalada, más los símbolos propios | No agrega dependencias |
 
 ## Patrones de la experiencia
 

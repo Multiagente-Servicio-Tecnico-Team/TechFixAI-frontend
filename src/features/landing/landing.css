@@ -79,9 +79,10 @@
 .metrics { padding: 72px 0; background: var(--mark); color: var(--on-mark); }
 .metrics .h2, .metrics .eyebrow { color: var(--on-mark); }
 .metrics__grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 24px; margin: 40px 0 0; }
-.metrics__grid dd { margin: 0; }
-.metrics__grid dt { font-weight: 700; }
-.metrics__value { font: 800 clamp(44px, 6vw, var(--size-4xl))/1 var(--font-display); letter-spacing: -0.03em; }
+.metrics__grid > div { display: flex; flex-direction: column; }
+.metrics__grid dd { margin: 0; order: 3; }
+.metrics__grid dt { font-weight: 700; order: 2; }
+.metrics__value { order: 1; font: 800 clamp(44px, 6vw, var(--size-4xl))/1 var(--font-display); letter-spacing: -0.03em; }
 .metrics__source { margin-top: 32px; font-size: var(--size-sm); }
 
 /* ---------- Experiencias ---------- */

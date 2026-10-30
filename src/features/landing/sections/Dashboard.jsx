@@ -64,7 +64,7 @@ export default function Dashboard() {
         ))}
       </dl>
 
-      <article className="jobtag jobtag--lg dash__tag">
+      <article className="jobtag jobtag--lg">
         <p className="kicker">#TCK-2041</p>
         <h2 className="subtitle">MacBook Pro 14”</h2>
         <ol className="rail" style={{ "--rail-steps": stations.length }}>

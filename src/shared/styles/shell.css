@@ -33,7 +33,6 @@
 .page { display: grid; gap: 20px; min-width: 0; }
 .page > * { min-width: 0; }
 .page-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: 12px 20px; }
-.page-head__actions { display: flex; flex-wrap: wrap; gap: 8px; }
 .back-link { display: inline-flex; align-items: center; gap: 6px; width: fit-content; min-height: var(--control-sm); font-weight: 700; font-size: var(--size-sm); }
 .back-link:hover { text-decoration: underline; text-underline-offset: 3px; }
 

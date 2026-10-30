@@ -12,14 +12,15 @@ export function ScrollManager() {
     if (signedOut && pathname === "/") dispatch({ type: "clearSignedOut" });
   }, [signedOut, pathname, dispatch]);
 
-  const firstRender = useRef(true);
+  const lastKey = useRef(null);
 
   useEffect(() => {
     // Cada pantalla se anuncia con su título y el foco pasa al contenido nuevo.
     const heading = document.querySelector("main h1")?.textContent;
     document.title = heading ? `${heading} · TechFix.AI` : "TechFix.AI";
-    const isFirst = firstRender.current;
-    firstRender.current = false;
+    const key = `${pathname}${hash}`;
+    const isFirst = lastKey.current === null || lastKey.current === key;
+    lastKey.current = key;
 
     if (hash) {
       const el = document.getElementById(hash.slice(1));

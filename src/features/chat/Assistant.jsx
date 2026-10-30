@@ -200,7 +200,7 @@ function Chat({ ticketId }) {
             m.from === "user" ? (
               <UserMessage key={m.id} label="Tú (Cliente)" time={m.time}>{m.text}</UserMessage>
             ) : (
-              <div key={m.id} className="msg msg--bot">
+              <div key={m.id} className="msg">
                 <p className="msg__meta"><strong>Agente Diagnóstico IA</strong> <time>{m.time}</time></p>
                 <div className="msg__bubble">
                   {m.paragraphs.map((p) => <p key={p}>{p}</p>)}

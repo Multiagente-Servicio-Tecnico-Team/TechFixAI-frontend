@@ -16,8 +16,8 @@ export default function Metrics() {
         <dl className="metrics__grid">
           {metrics.map(({ label, value, note }) => (
             <div key={label}>
-              <dd className="metrics__value">{value}</dd>
               <dt>{label}</dt>
+              <dd className="metrics__value">{value}</dd>
               <dd>{note}</dd>
             </div>
           ))}

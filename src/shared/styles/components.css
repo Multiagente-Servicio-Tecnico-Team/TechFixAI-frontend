@@ -1,4 +1,4 @@
-/* Componentes que comparten varias pantallas. Lo propio de cada área va en shell, auth, portal, workshop y landing. */
+﻿/* Componentes que comparten varias pantallas. Lo propio de cada área va en shell, auth, portal, workshop y landing. */
 
 /* ---------- Utilidades ---------- */
 .mono { font-family: var(--mono); font-variant-numeric: tabular-nums; }
@@ -162,4 +162,5 @@
 @media (max-width: 640px) {
   .grid-2, .grid-3 { grid-template-columns: minmax(0, 1fr); }
   .hide-sm { display: none; }
+  .rail { grid-template-columns: repeat(3, minmax(0, 1fr)); row-gap: 10px; }
 }

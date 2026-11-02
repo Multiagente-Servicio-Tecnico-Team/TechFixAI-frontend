@@ -28,29 +28,32 @@ const faqs = [
 export default function Help() {
   return (
     <div className="help">
-      <div className="auth-card auth-card--wide auth-card--left">
-        <div className="auth-card__body">
-          <span className="badge"><LifeBuoy size={14} aria-hidden="true" />Soporte técnico</span>
-          <h1 className="auth-title">¿En qué podemos ayudarte?</h1>
-          <p className="auth-sub">Elige el canal que prefieras. El asistente IA atiende tus consultas sobre tickets y presupuestos en todo momento.</p>
-          <div className="help-cards">
-            <Link to="/portal/asistente" className="help-card">
+      <nav className="help__index" aria-label="Contenido de la ayuda">
+        <a href="#faq">Preguntas Frecuentes</a>
+        <a href="#estado">Estado del sistema</a>
+        <a href="#legal">Términos, privacidad y certificaciones</a>
+      </nav>
+      <div className="help__content">
+        <div className="help__head">
+          <span className="stamp stamp--info"><LifeBuoy size={14} aria-hidden="true" />Soporte técnico</span>
+          <h1 className="auth__title">¿En qué podemos ayudarte?</h1>
+          <p className="auth__lead">Elige el canal que prefieras. El asistente IA atiende tus consultas sobre tickets y presupuestos en todo momento.</p>
+          <div className="help-channels">
+            <Link to="/portal/asistente" className="jobtag help-channel">
               <MessageSquareText size={20} aria-hidden="true" />
               <strong>Chat con el asistente IA</strong>
               <span>Diagnóstico y presupuestos</span>
             </Link>
-            <a href="mailto:hola@techfix.ai" className="help-card">
+            <a href="mailto:hola@techfix.ai" className="jobtag help-channel">
               <Mail size={20} aria-hidden="true" />
               <strong>hola@techfix.ai</strong>
               <span>Respuesta en menos de 1 día hábil</span>
             </a>
           </div>
         </div>
-      </div>
 
-      <section id="faq" className="auth-card auth-card--wide auth-card--left">
-        <div className="auth-card__body">
-          <h2 className="section-title">Preguntas Frecuentes</h2>
+      <section id="faq">
+          <h2 className="subtitle">Preguntas Frecuentes</h2>
           <div className="faq">
             {faqs.map((f) => (
               <details key={f.q}>
@@ -59,22 +62,18 @@ export default function Help() {
               </details>
             ))}
           </div>
-        </div>
       </section>
 
-      <section id="estado" className="auth-card auth-card--wide auth-card--left">
-        <div className="auth-card__body">
-          <h2 className="section-title"><Activity size={18} aria-hidden="true" /> Estado del sistema</h2>
-          <p className="auth-sub">Esta versión es un entorno de demostración: los datos se guardan solo en tu navegador mientras la pestaña está abierta.</p>
-        </div>
+      <section id="estado">
+          <h2 className="subtitle"><Activity size={18} aria-hidden="true" /> Estado del sistema</h2>
+          <p>Esta versión es un entorno de demostración: los datos se guardan solo en tu navegador mientras la pestaña está abierta.</p>
       </section>
 
-      <section id="legal" className="auth-card auth-card--wide auth-card--left">
-        <div className="auth-card__body">
-          <h2 className="section-title"><Scale size={18} aria-hidden="true" /> Términos, privacidad y certificaciones</h2>
-          <p className="auth-sub">Los documentos legales definitivos están pendientes de publicación. Para consultas escribe a <a className="link" href="mailto:hola@techfix.ai">hola@techfix.ai</a>.</p>
-        </div>
+      <section id="legal">
+          <h2 className="subtitle"><Scale size={18} aria-hidden="true" /> Términos, privacidad y certificaciones</h2>
+          <p>Los documentos legales definitivos están pendientes de publicación. Para consultas escribe a <a className="link" href="mailto:hola@techfix.ai">hola@techfix.ai</a>.</p>
       </section>
+      </div>
     </div>
   );
 }

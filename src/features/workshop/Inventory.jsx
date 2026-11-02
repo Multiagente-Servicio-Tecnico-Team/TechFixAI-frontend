@@ -1,6 +1,6 @@
-import { useMemo, useState } from "react";
+﻿import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { ArrowUpDown, ClipboardCheck, Laptop, Pencil, PlusCircle, RotateCcw, Search, SlidersHorizontal, Trash2, TriangleAlert } from "lucide-react";
+import { Laptop, Pencil, PlusCircle, RotateCcw, Search, Trash2, TriangleAlert } from "lucide-react";
 import { ItemIcon, Pagination, Toast } from "../../shared/ui/ui.jsx";
 import { ConfirmDialog } from "../../shared/ui/ConfirmDialog.jsx";
 import { FormAlert } from "../../shared/ui/FormAlert.jsx";
@@ -65,113 +65,117 @@ export default function Inventory({ api }) {
   const rows = filtered.slice((current - 1) * PAGE_SIZE, current * PAGE_SIZE);
   const reset = (fn) => (v) => { fn(v); setPage(1); };
 
+  // Con el orden por defecto se muestran estantes por categoría; con otro orden, una sola lista para que se note.
+  const shelves = sort === "relevance"
+    ? [...new Set(rows.map((p) => p.category || "Sin categoría"))].map((name) => ({
+        name,
+        parts: rows.filter((p) => (p.category || "Sin categoría") === name),
+      }))
+    : rows.length ? [{ name: sorters[sort].label, parts: rows }] : [];
+
   return (
-    <div className="staff-page">
+    <div className="page">
       <div className="page-head">
-        <h1 className="page-title">Inventario de Repuestos</h1>
+        <h1 className="title">Inventario de Repuestos</h1>
         <Link to="/taller/inventario/nuevo" className="btn btn--primary">
           <PlusCircle size={17} aria-hidden="true" /> Nuevo Repuesto (SKU)
         </Link>
       </div>
 
-      <div className="kpis kpis--2">
-        <div className="kpi kpi--bubble">
-          <div>
-            <p className="mono-label">Stock total de repuestos</p>
-            <p className="kpi__value">{totalUnits.toLocaleString("en-US")} <span className="kpi__delta kpi__delta--teal">{parts.length} SKU activos</span></p>
-          </div>
-          <span className="kpi__bubble"><ClipboardCheck size={22} aria-hidden="true" /></span>
-        </div>
-        <button type="button" className={`kpi kpi--bubble kpi--danger${onlyCritical ? " is-on" : ""}`} onClick={() => reset(setOnlyCritical)(!onlyCritical)} aria-pressed={onlyCritical}>
-          <div>
-            <p className="mono-label">Alertas de stock crítico</p>
-            <p className="kpi__value">{critical.length} <span className="badge-danger">{onlyCritical ? "Mostrando críticos" : "Reponer urgente"}</span></p>
-          </div>
-          <span className="kpi__bubble"><TriangleAlert size={22} aria-hidden="true" /></span>
+      <div className="alerts">
+        <button type="button" className="alert-btn" onClick={() => reset(setOnlyCritical)(!onlyCritical)} aria-pressed={onlyCritical}>
+          <span><TriangleAlert size={18} aria-hidden="true" /> Alertas de stock crítico<br /><small>{onlyCritical ? "Mostrando críticos" : "Reponer urgente"}</small></span>
+          <strong>{critical.length}</strong>
         </button>
+        <div className="total-box">
+          <span>Stock total de repuestos<span>{parts.length} SKU activos</span></span>
+          <strong>{totalUnits.toLocaleString("en-US")}</strong>
+        </div>
       </div>
 
-      <div className="panel panel--tight">
-        <div className="toolbar toolbar--plain">
-          <label className="search search--grow">
-            <Search size={18} aria-hidden="true" />
-            <input type="search" placeholder="Buscar por SKU (ej. SSD-NVME-2TB), descripción o marca..." value={query} onChange={(e) => reset(setQuery)(e.target.value)} aria-label="Buscar repuestos" />
-          </label>
-          <label className="select-chip">
-            <SlidersHorizontal size={16} aria-hidden="true" />
-            <select value={onlyCritical ? "critical" : "all"} onChange={(e) => reset(setOnlyCritical)(e.target.value === "critical")} aria-label="Filtros">
-              <option value="all">Todos los estados</option>
-              <option value="critical">Solo stock crítico</option>
-            </select>
-          </label>
-          <label className="select-chip">
-            <ArrowUpDown size={16} aria-hidden="true" />
-            <select value={sort} onChange={(e) => setSort(e.target.value)} aria-label="Ordenar">
-              {Object.entries(sorters).map(([k, s]) => <option key={k} value={k}>{s.label}</option>)}
-            </select>
-          </label>
-        </div>
-        <div className="chips chips--scroll" role="tablist" aria-label="Categoría">
-          <button type="button" role="tab" aria-selected={!category} className={`chip chip--mono${!category ? " is-active" : ""}`} onClick={() => reset(setCategory)("")}>
-            Todos ({parts.length})
+      <div className="tools">
+        <label className="search">
+          <Search size={18} aria-hidden="true" />
+          <input type="search" placeholder="Buscar por SKU (ej. SSD-NVME-2TB), descripción o marca..." value={query} onChange={(e) => reset(setQuery)(e.target.value)} aria-label="Buscar repuestos" />
+        </label>
+        <select className="select-tool" value={onlyCritical ? "critical" : "all"} onChange={(e) => reset(setOnlyCritical)(e.target.value === "critical")} aria-label="Filtros">
+          <option value="all">Todos los estados</option>
+          <option value="critical">Solo stock crítico</option>
+        </select>
+        <select className="select-tool" value={sort} onChange={(e) => setSort(e.target.value)} aria-label="Ordenar">
+          {Object.entries(sorters).map(([k, s]) => <option key={k} value={k}>{s.label}</option>)}
+        </select>
+      </div>
+      <div className="toggle-group" role="group" aria-label="Categoría">
+        <button type="button" aria-pressed={!category} className="toggle" onClick={() => reset(setCategory)("")}>
+          Todos ({parts.length})
+        </button>
+        {PART_CATEGORIES.map((c) => (
+          <button key={c} type="button" aria-pressed={category === c} className="toggle" onClick={() => reset(setCategory)(c)}>
+            {c} ({parts.filter((p) => p.category === c).length})
           </button>
-          {PART_CATEGORIES.map((c) => (
-            <button key={c} type="button" role="tab" aria-selected={category === c} className={`chip chip--mono${category === c ? " is-active" : ""}`} onClick={() => reset(setCategory)(c)}>
-              {c} ({parts.filter((p) => p.category === c).length})
-            </button>
-          ))}
-        </div>
+        ))}
       </div>
 
-      <div className="table-card">
-        <div className="list-head">
-          <span className="mono-label">Listado de componentes</span>
-          <span className="mono-label">Mostrando {rows.length} de {filtered.length} ítems</span>
+      <p className="list-note"><span>Listado de componentes</span><span aria-live="polite">Mostrando {rows.length} de {filtered.length} ítems</span></p>
+
+      {status === "loading" && <p className="empty" role="status">Cargando inventario…</p>}
+      {status === "error" && (
+        <div className="retry">
+          <FormAlert>{error}</FormAlert>
+          <button type="button" className="btn btn--sm" onClick={reload}><RotateCcw size={14} aria-hidden="true" /> Reintentar</button>
         </div>
-        {status === "loading" && <p className="empty" role="status">Cargando inventario…</p>}
-        {status === "error" && (
-          <div className="list-error">
-            <FormAlert>{error}</FormAlert>
-            <button type="button" className="btn btn--ghost btn--sm" onClick={reload}><RotateCcw size={14} aria-hidden="true" /> Reintentar</button>
-          </div>
-        )}
-        {status === "ready" && rows.length === 0 && (
-          <p className="empty">{parts.length ? "No hay repuestos con estos filtros." : "Todavía no hay repuestos registrados."}</p>
-        )}
-        <ul className="parts">
-          {rows.map((p) => {
-            const low = isLowStock(p);
-            return (
-              <li key={p.sku} className={`part${low ? " part--low" : ""}`}>
-                <span className="part__icon"><ItemIcon name={p.icon} size={22} /></span>
-                <div className="part__main">
-                  <p className="part__name">
-                    {p.name}
-                    <span className={`stock-badge${low ? " stock-badge--low" : ""}`}>{low ? "Stock crítico" : "En stock"}</span>
-                  </p>
-                  <p className="part__meta">
-                    <span className="sku">SKU: {p.sku}</span>
-                    <span className="part__compat"><Laptop size={14} aria-hidden="true" /> {p.compat}</span>
-                  </p>
-                </div>
-                <p className={`part__stock${low ? " is-low" : ""}`}><strong>{p.stock} u.</strong> libres</p>
-                <p className={`part__price${low ? " is-low" : ""}`}>{formatPEN(p.price)}</p>
-                <div className="part__actions">
-                  <Link to={`/taller/inventario/${encodeURIComponent(p.sku)}/editar`} className="icon-btn icon-btn--soft" aria-label={`Editar ${p.sku}`} title="Editar">
-                    <Pencil size={17} />
-                  </Link>
-                  <button type="button" className="icon-btn icon-btn--danger" aria-label={`Eliminar ${p.sku}`} title="Eliminar" onClick={() => askDelete(p)}>
-                    <Trash2 size={17} />
-                  </button>
-                </div>
-              </li>
-            );
-          })}
-        </ul>
-        <div className="table-card__foot">
-          <Pagination page={current} pages={pages} onChange={setPage} label={`Página ${current} de ${pages}`} />
-        </div>
-      </div>
+      )}
+      {status === "ready" && rows.length === 0 && (
+        <p className="empty">{parts.length ? "No hay repuestos con estos filtros." : "Todavía no hay repuestos registrados."}</p>
+      )}
+
+      {shelves.map((shelf) => (
+        <section key={shelf.name} className="shelf" aria-label={`Estante ${shelf.name}`}>
+          <h2 className="shelf__title">{shelf.name}</h2>
+          <ul className="bins">
+            {shelf.parts.map((p) => {
+              const low = isLowStock(p);
+              const scale = Math.max(p.min * 4, p.stock, 1);
+              return (
+                <li key={p.sku} className={`jobtag bin${low ? " jobtag--alert" : ""}`}>
+                  <div className="bin__top">
+                    <ItemIcon name={p.icon} size={20} />
+                    <div>
+                      <p className="bin__name">{p.name}</p>
+                      <p className="bin__sku">SKU: {p.sku}</p>
+                    </div>
+                  </div>
+                  {p.compat && <p className="bin__compat"><Laptop size={14} aria-hidden="true" /> {p.compat}</p>}
+                  <div className={`gauge${low ? " gauge--low" : ""}`}>
+                    <div className="gauge__bar" aria-hidden="true">
+                      <span className="gauge__fill" style={{ width: `${(p.stock / scale) * 100}%` }} />
+                      <span className="gauge__min" style={{ left: `${(p.min / scale) * 100}%` }} />
+                    </div>
+                    <div className="gauge__row">
+                      <span><strong>{p.stock} u.</strong> libres · mínimo {p.min}</span>
+                      <span className={`stamp ${low ? "stamp--danger" : "stamp--ok"}`}>{low ? "Stock crítico" : "En stock"}</span>
+                    </div>
+                  </div>
+                  <div className="bin__foot">
+                    <span className="bin__price">{formatPEN(p.price)}</span>
+                    <div className="bin__tools">
+                      <Link to={`/taller/inventario/${encodeURIComponent(p.sku)}/editar`} className="icon-btn" aria-label={`Editar ${p.sku}`} title="Editar">
+                        <Pencil size={17} />
+                      </Link>
+                      <button type="button" className="icon-btn icon-btn--danger" aria-label={`Eliminar ${p.sku}`} title="Eliminar" onClick={() => askDelete(p)}>
+                        <Trash2 size={17} />
+                      </button>
+                    </div>
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
+        </section>
+      ))}
+
+      <Pagination page={current} pages={pages} onChange={setPage} label={`Página ${current} de ${pages}`} />
 
       <ConfirmDialog
         open={Boolean(pending)}

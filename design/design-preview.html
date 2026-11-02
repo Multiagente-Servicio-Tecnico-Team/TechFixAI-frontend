@@ -1,0 +1,175 @@
+<title>Sistema Banco</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,800&family=Martian+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: página de referencia del sistema; franja amarilla, secciones por familia de componentes. */
+:root { --bg:#E9EDF5; --surface:#FFFFFF; --surface2:#DDE3EF; --line:#B7C1D6; --text:#101B3B; --text2:#46527A; --accent:#1F3FBF; --onAccent:#FFFFFF; --accentHover:#18329A; --mark:#FFC91F; --onMark:#101B3B; --danger:#B3261E; --onDanger:#FFFFFF; --ok:#0E7043; --warn:#7A5200; --focus:#1F3FBF; --overlay:rgba(16,27,59,.55);
+  --fd:"Bricolage Grotesque",system-ui,sans-serif; --fb:"Atkinson Hyperlegible",system-ui,sans-serif; --fm:"Martian Mono",ui-monospace,monospace; }
+@media (prefers-color-scheme:dark) { :root:not([data-theme="light"]) { --bg:#0E1530; --surface:#18224A; --surface2:#222E5E; --line:#3A4883; --text:#F2F4FB; --text2:#B6BEDC; --accent:#FFC91F; --onAccent:#101B3B; --accentHover:#FFD755; --danger:#FF8A80; --onDanger:#101B3B; --ok:#5FD7A1; --warn:#FFD755; --focus:#FFC91F; --overlay:rgba(5,9,24,.72); color-scheme:dark; } }
+:root[data-theme="dark"] { --bg:#0E1530; --surface:#18224A; --surface2:#222E5E; --line:#3A4883; --text:#F2F4FB; --text2:#B6BEDC; --accent:#FFC91F; --onAccent:#101B3B; --accentHover:#FFD755; --danger:#FF8A80; --onDanger:#101B3B; --ok:#5FD7A1; --warn:#FFD755; --focus:#FFC91F; --overlay:rgba(5,9,24,.72); color-scheme:dark; }
+* { box-sizing:border-box; }
+body { margin:0; background:var(--bg); color:var(--text); font:15px/1.5 var(--fb); padding-block:0 64px; }
+h1,h2,h3,h4,p { margin:0; }
+button,input,select,textarea { font:inherit; color:inherit; }
+:focus-visible,.f { outline:3px solid var(--focus); outline-offset:2px; }
+.strip { background:var(--mark); color:var(--onMark); display:flex; flex-wrap:wrap; gap:8px 16px; align-items:center; min-height:60px; padding-block:8px; padding-left:max(16px,env(safe-area-inset-left,0px)); padding-right:max(16px,env(safe-area-inset-right,0px)); }
+.brand { display:flex; align-items:center; gap:8px; font:800 20px var(--fd); letter-spacing:-.02em; margin-right:auto; }
+.strip :focus-visible { outline-color:var(--onMark); }
+.strip .btn { background:transparent; border-color:var(--onMark); color:var(--onMark); }
+.strip .btn[aria-pressed="true"] { background:var(--onMark); color:var(--mark); }
+main { max-width:1240px; margin:0 auto; padding-block:32px; padding-left:max(16px,env(safe-area-inset-left,0px)); padding-right:max(16px,env(safe-area-inset-right,0px)); display:grid; gap:44px; }
+.hero h1 { font:800 clamp(34px,6vw,64px)/1 var(--fd); letter-spacing:-.03em; text-wrap:balance; }
+.hero p { margin-top:12px; font-size:17px; max-width:62ch; color:var(--text2); }
+section > h2 { font:800 26px/1.1 var(--fd); letter-spacing:-.02em; padding-bottom:8px; border-bottom:3px solid var(--text); margin-bottom:16px; }
+.grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr)); gap:18px; }
+.cell { display:grid; gap:10px; align-content:start; min-width:0; }
+.cap { font-size:13px; color:var(--text2); }
+.row { display:flex; flex-wrap:wrap; gap:8px; align-items:center; }
+
+.btn { display:inline-flex; align-items:center; justify-content:center; gap:8px; min-height:40px; padding:0 14px; border:2px solid var(--text); border-radius:2px; background:var(--surface); font-weight:700; cursor:pointer; transition:background 120ms cubic-bezier(.3,0,0,1); }
+.btn:hover { background:var(--surface2); }
+.btn.pri { background:var(--accent); border-color:var(--accent); color:var(--onAccent); }
+.btn.pri:hover { background:var(--accentHover); border-color:var(--accentHover); }
+.btn.dng { background:var(--danger); border-color:var(--danger); color:var(--onDanger); }
+.btn.gho { border-color:transparent; background:transparent; }
+.btn.lg { min-height:48px; padding:0 20px; }
+.btn.sm { min-height:32px; padding:0 10px; font-size:13px; }
+.btn:disabled { cursor:not-allowed; background:var(--surface2); border-color:var(--line); color:var(--text2); }
+.spin { width:14px; height:14px; border:2px solid currentColor; border-right-color:transparent; border-radius:50%; animation:spin .8s linear infinite; }
+@keyframes spin { to { transform:rotate(360deg); } }
+
+.field { display:grid; gap:4px; }
+.field label { font-weight:700; font-size:14px; }
+.input,.select { width:100%; min-height:40px; padding:0 10px; border:2px solid var(--text); border-radius:2px; background:var(--surface); }
+.input::placeholder { color:var(--text2); }
+.input:disabled,.select:disabled { border-color:var(--line); background:var(--surface2); color:var(--text2); cursor:not-allowed; }
+.field.err .input { border-color:var(--danger); }
+.err-msg { color:var(--danger); font-size:13px; font-weight:700; }
+.help { color:var(--text2); font-size:13px; }
+.check { display:flex; align-items:flex-start; gap:8px; min-height:24px; }
+.check input { width:20px; height:20px; accent-color:var(--accent); margin:1px 0 0; }
+
+.stamp { justify-self:start; width:fit-content; display:inline-flex; align-items:center; gap:6px; padding:2px 8px; border:2px solid currentColor; border-radius:2px; font-size:12px; font-weight:700; transform:rotate(-1.5deg); }
+.stamp.ok { color:var(--ok); } .stamp.dng { color:var(--danger); } .stamp.wrn { color:var(--warn); } .stamp.neu { color:var(--text2); }
+
+.tag { position:relative; background:var(--surface); padding:12px; clip-path:polygon(0 0,calc(100% - 18px) 0,100% 18px,100% 100%,0 100%); display:grid; gap:6px; min-width:0; }
+.tag::before { content:""; position:absolute; top:9px; right:24px; width:8px; height:8px; border-radius:50%; background:var(--bg); }
+.tag .id { font:600 12px var(--fm); color:var(--text2); }
+.tag strong { font-size:16px; line-height:1.25; }
+.tag .who { color:var(--text2); font-size:14px; }
+.tag .meta { display:flex; flex-wrap:wrap; justify-content:space-between; gap:4px 8px; font-size:13px; color:var(--text2); }
+.tag .price { font:600 13px var(--fm); color:var(--text); white-space:nowrap; }
+.tag .tools { display:flex; gap:4px; }
+.tag.crit { box-shadow:inset 4px 0 0 var(--danger); }
+.skel { height:12px; background:var(--surface2); animation:pulse 1.2s infinite ease-in-out; }
+@keyframes pulse { 50% { opacity:.5; } }
+.w40 { width:40%; } .w70 { width:70%; } .w90 { width:90%; }
+
+.col > header { display:flex; justify-content:space-between; align-items:flex-end; gap:6px; font-weight:700; font-size:14px; padding-bottom:6px; border-bottom:3px solid var(--text); }
+.col { display:grid; gap:8px; align-content:start; }
+.empty { padding:14px; border:2px dashed var(--line); color:var(--text2); font-size:14px; }
+.fail { padding:12px; border:2px solid var(--danger); display:grid; gap:8px; justify-items:start; font-size:14px; }
+
+.rail { list-style:none; margin:0; padding:0; display:grid; grid-template-columns:repeat(6,minmax(0,1fr)); gap:4px; font-size:13px; }
+.rail li { display:grid; gap:6px; color:var(--text2); }
+.rail li::before { content:""; height:10px; background:var(--surface2); }
+.rail li.done::before { background:var(--text2); }
+.rail li.now { color:var(--text); font-weight:700; }
+.rail li.now::before { background:var(--mark); box-shadow:inset 0 0 0 2px var(--onMark); }
+
+.meter { display:grid; gap:4px; font-size:13px; }
+.meter i { display:block; height:10px; background:var(--surface2); position:relative; }
+.meter i b { display:block; height:100%; background:var(--ok); }
+.meter.low i b { background:var(--danger); }
+.meter i u { position:absolute; top:-3px; bottom:-3px; width:2px; background:var(--text); }
+
+.toast { display:flex; gap:10px; align-items:center; background:var(--text); color:var(--bg); padding:10px 14px; font-weight:700; width:fit-content; max-width:100%; }
+.alert { border-left:6px solid var(--danger); background:var(--surface); padding:10px 12px; }
+.alert.ok { border-left-color:var(--ok); }
+.dialog { background:var(--surface); padding:20px; border:2px solid var(--text); display:grid; gap:12px; max-width:420px; }
+.dialog h3 { font:800 20px var(--fd); }
+.scrim { background:var(--overlay); padding:24px 16px; display:grid; place-items:center; }
+
+.bubble { padding:10px 12px; background:var(--surface); max-width:88%; }
+.bubble.me { justify-self:end; background:var(--text); color:var(--bg); }
+.typing { display:inline-flex; gap:4px; padding:12px; background:var(--surface); width:fit-content; }
+.typing i { width:7px; height:7px; border-radius:50%; background:var(--text2); animation:pulse 1.2s infinite; }
+.typing i:nth-child(2) { animation-delay:.2s; } .typing i:nth-child(3) { animation-delay:.4s; }
+.chat { display:grid; gap:10px; }
+
+.phone { display:flex; justify-content:space-around; background:var(--surface); border-top:3px solid var(--text); }
+.phone a { flex:1; min-height:56px; display:grid; place-items:center; font-weight:700; font-size:13px; }
+.phone a.on { background:var(--mark); color:var(--onMark); }
+.nav { display:flex; gap:2px; font-weight:700; }
+.nav a { padding:9px 11px; border-bottom:3px solid transparent; }
+.nav a.on { border-bottom-color:currentColor; }
+.scale > * { line-height:1.15; }
+@media (max-width:640px) { .rail { grid-template-columns:repeat(3,minmax(0,1fr)); row-gap:10px; } }
+@media (prefers-reduced-motion:reduce) { *,*::before { animation:none !important; transition:none !important; } }
+</style>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><symbol id="m" viewBox="0 0 48 48"><path fill="currentColor" fill-rule="evenodd" d="M5 4h27l11 11v29H5zM14 11a3 3 0 1 0 0 6 3 3 0 0 0 0-6zM12 22v6h9v11h7V28h9v-6z"/></symbol></svg>
+
+<header class="strip"><span class="brand"><svg width="28" height="28"><use href="#m"/></svg>TechFix.AI</span>
+  <div class="row" role="group" aria-label="Tema"><button class="btn sm" type="button" data-th="light">Claro</button><button class="btn sm" type="button" data-th="dark">Oscuro</button></div></header>
+
+<main>
+  <div class="hero"><h1>Sistema Banco</h1><p>Cada reparación es una etiqueta de taller que avanza de estación en estación. Los ejemplos usan los datos de demostración del producto.</p></div>
+
+  <section><h2>Marca y tipografía</h2><div class="grid">
+    <div class="cell"><div class="row"><svg width="72" height="72"><use href="#m"/></svg><svg width="32" height="32"><use href="#m"/></svg><svg width="16" height="16"><use href="#m"/></svg></div><p class="cap">Símbolo a 72, 32 y 16 px</p></div>
+    <div class="cell scale"><p style="font:800 48px var(--fd);letter-spacing:-.03em">Listo para retiro</p><p style="font:800 26px var(--fd)">Banco de hoy</p><p style="font-size:17px">Pantalla en negro y fallo de lectura</p><p class="cap">Atkinson Hyperlegible para texto, 15 px de base</p><p style="font:600 12px var(--fm)">TCK-2041 · S/. 395.00</p></div>
+  </div></section>
+
+  <section><h2>Botones</h2><div class="grid">
+    <div class="cell"><div class="row"><button class="btn pri lg" type="button">Generar ticket</button><button class="btn pri" type="button">Principal</button><button class="btn" type="button">Secundario</button><button class="btn gho" type="button">Discreto</button><button class="btn dng" type="button">Eliminar</button><button class="btn sm" type="button">Pequeño</button></div><p class="cap">Tipos y tamaños</p></div>
+    <div class="cell"><div class="row"><button class="btn pri f" type="button">Foco</button><button class="btn pri" type="button" aria-busy="true"><span class="spin"></span>Guardando</button><button class="btn pri" type="button" disabled>Deshabilitado</button></div><p class="cap">Foco, carga y deshabilitado</p></div>
+  </div></section>
+
+  <section><h2>Formularios</h2><div class="grid">
+    <div class="cell"><div class="field"><label for="f1">Correo electrónico</label><input class="input" id="f1" placeholder="tu.correo@ejemplo.com"><span class="help">Normal, con ayuda</span></div>
+      <div class="field"><label for="f2">Teléfono móvil</label><input class="input f" id="f2" value="987 654 321"><span class="help">Con foco</span></div></div>
+    <div class="cell"><div class="field err"><label for="f3">Código SKU</label><input class="input" id="f3" value="SSD-NVME-2TB-KC" aria-invalid="true" aria-describedby="f3e"><span class="err-msg" id="f3e">Este SKU ya existe en el inventario.</span></div>
+      <div class="field"><label for="f4">Patrón de atención</label><select class="select" id="f4" disabled><option>Jerárquico</option></select><span class="help">Deshabilitado: fijo durante la conversación</span></div></div>
+    <div class="cell"><div class="field"><label for="f5">Mover a</label><select class="select" id="f5"><option>En Revisión Técnica</option><option>Esperando Stock</option></select></div><label class="check"><input type="checkbox" checked> Acepto los Términos de Servicio</label></div>
+  </div></section>
+
+  <section><h2>Etiqueta de trabajo</h2><div class="grid">
+    <div class="cell"><article class="tag"><span class="id">TCK-2041</span><strong>MacBook Pro 14" M2 Max</strong><span class="who">Martín Gómez</span><div class="meta"><span>Reparación · Bot</span><span class="price">S/. 395.00</span></div><select class="select" aria-label="Mover TCK-2041"><option>En Revisión Técnica</option></select><div class="tools"><button class="btn sm" type="button">Ver</button><button class="btn sm" type="button">Correo</button></div></article><p class="cap">Normal</p></div>
+    <div class="cell"><article class="tag"><span class="id">TCK-2040</span><strong>iPhone 15 Pro Max</strong><span class="who">Valeria Lozano</span><div class="meta"><span>Reparación · Presencial</span><span class="price">S/. 312.00</span></div><select class="select" aria-label="Mover TCK-2040"><option>Esperando Stock</option></select><div class="tools"><button class="btn sm" type="button">Ver</button><button class="btn sm" type="button" disabled>Correo</button></div></article><p class="cap">Sin correo registrado: acción deshabilitada</p></div>
+    <div class="cell"><article class="tag" aria-busy="true"><span class="skel w40"></span><span class="skel w90"></span><span class="skel w70"></span><span class="skel w90" style="height:40px"></span></article><p class="cap">Cargando</p></div>
+  </div></section>
+
+  <section><h2>Estaciones</h2><div class="grid">
+    <div class="col"><header><span>Esperando Stock</span><span style="font-family:var(--fm)">1</span></header><article class="tag"><span class="id">TCK-2040</span><strong>iPhone 15 Pro Max</strong></article><button class="btn sm" type="button">Mostrar más</button></div>
+    <div class="col"><header><span>Entregado</span><span style="font-family:var(--fm)">0</span></header><p class="empty">No hay tickets en esta estación.</p></div>
+    <div class="col"><header><span>Nuevo</span><span style="font-family:var(--fm)">–</span></header><div class="fail"><span>No pudimos cargar esta cola.</span><button class="btn sm" type="button">Reintentar</button></div></div>
+  </div>
+  <div class="cell" style="margin-top:18px"><ol class="rail" aria-label="Avance del ticket"><li class="done">Nuevo</li><li class="now" aria-current="step">En Revisión Técnica</li><li>Esperando Stock</li><li>Presupuesto Aprobado</li><li>Listo para Retiro</li><li>Entregado</li></ol><p class="cap">Carril de estaciones del detalle y de Mis Tickets</p></div></section>
+
+  <section><h2>Repuestos</h2><div class="grid">
+    <div class="cell"><div class="meter"><span><b>Batería A2337 Original OEM</b> · 19 u.</span><i><b style="width:70%"></b><u style="left:20%"></u></i><span class="cap">Con stock. La marca indica el mínimo</span></div><span class="stamp ok">En stock</span></div>
+    <div class="cell"><div class="meter low"><span><b>Display FHD 15.6" IPS</b> · 2 u.</span><i><b style="width:12%"></b><u style="left:25%"></u></i><span class="cap">Por debajo del mínimo</span></div><span class="stamp dng">Stock crítico</span></div>
+  </div></section>
+
+  <section><h2>Avisos y diálogo</h2><div class="grid">
+    <div class="cell"><div class="toast">Estado actualizado</div><div class="alert ok">Tu ticket quedó registrado.</div><div class="alert" role="alert">Correo o contraseña incorrectos</div><div class="row"><span class="stamp wrn">Pago pendiente</span><span class="stamp neu">Recibido</span></div></div>
+    <div class="cell"><div class="scrim"><div class="dialog" role="alertdialog" aria-labelledby="dt"><h3 id="dt">¿Eliminar este repuesto?</h3><p>Esta acción lo quita del inventario.</p><div class="row"><button class="btn" type="button">Cancelar</button><button class="btn dng" type="button">Eliminar</button></div></div></div></div>
+  </div></section>
+
+  <section><h2>Asistente</h2><div class="grid">
+    <div class="chat"><p class="bubble">Cuéntame primero qué equipo necesitas revisar: tipo, marca y modelo.</p><p class="bubble me">MacBook Air M1. La batería dura muy poco.</p><div class="typing" role="status" aria-label="Escribiendo"><i></i><i></i><i></i></div><div class="fail"><span>No se pudo enviar el mensaje.</span><button class="btn sm" type="button">Reintentar</button></div></div>
+    <article class="tag"><span class="id">Etiqueta en preparación</span><span class="who">Equipo</span><strong>MacBook Air M1</strong><span class="who">Repuesto</span><strong>Batería A2337 Original OEM</strong><span class="who">Total del ejemplo</span><strong style="font:600 22px var(--fm)">S/. 80.10</strong><button class="btn pri" type="button">Confirmar y guardar</button><button class="btn" type="button">No guardar</button></article>
+  </div></section>
+
+  <section><h2>Navegación</h2><div class="grid">
+    <div class="cell"><div class="strip" style="padding:8px 12px"><span class="brand" style="font-size:17px"><svg width="22" height="22"><use href="#m"/></svg>TechFix.AI</span><nav class="nav" aria-label="Ejemplo de escritorio"><a class="on" aria-current="page">Banco</a><a>Repuestos</a></nav></div><p class="cap">Franja de escritorio</p></div>
+    <div class="cell"><nav class="phone" aria-label="Ejemplo de celular"><a class="on" aria-current="page">Banco</a><a>Repuestos</a><a>Nuevo</a></nav><p class="cap">Barra inferior en celular</p></div>
+  </div></section>
+</main>
+<script>
+const ths=[...document.querySelectorAll("[data-th]")];
+function sync(){const c=document.documentElement.dataset.theme||(matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light");ths.forEach(b=>b.setAttribute("aria-pressed",b.dataset.th===c))}
+ths.forEach(b=>b.onclick=()=>{document.documentElement.dataset.theme=b.dataset.th;sync()});sync();
+</script>

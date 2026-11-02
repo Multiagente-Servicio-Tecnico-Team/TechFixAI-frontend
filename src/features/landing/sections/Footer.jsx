@@ -15,34 +15,32 @@ function FooterLink({ href, children }) {
 export default function Footer() {
   return (
     <footer className="footer">
-      <div className="container">
-        <div className="footer__top">
-          <div className="footer__brand">
-            <Logo />
-            <p>
-              Plataforma inteligente de servicio técnico para talleres que necesitan operar con más
-              velocidad, precisión y confianza.
-            </p>
+      <div className="container footer__top">
+        <div className="footer__brand">
+          <Logo />
+          <p>
+            Plataforma inteligente de servicio técnico para talleres que necesitan operar con más
+            velocidad, precisión y confianza.
+          </p>
+        </div>
+        {columns.map((col) => (
+          <div key={col.title}>
+            <h3 className="footer__title">{col.title}</h3>
+            <ul>
+              {col.links.map(([label, href]) => (
+                <li key={label}><FooterLink href={href}>{label}</FooterLink></li>
+              ))}
+            </ul>
           </div>
-          {columns.map((col) => (
-            <div key={col.title} className="footer__col">
-              <h4>{col.title}</h4>
-              <ul>
-                {col.links.map(([label, href]) => (
-                  <li key={label}><FooterLink href={href}>{label}</FooterLink></li>
-                ))}
-              </ul>
-            </div>
-          ))}
-        </div>
-        <div className="footer__bottom">
-          <p>© 2026 TechFix.AI Inc. Todos los derechos reservados.</p>
-          <nav aria-label="Legal">
-            <Link to="/ayuda#legal">Privacidad</Link>
-            <Link to="/ayuda#legal">Términos</Link>
-            <Link to="/ayuda#legal">Certificaciones</Link>
-          </nav>
-        </div>
+        ))}
+      </div>
+      <div className="container footer__bottom">
+        <p>© 2026 TechFix.AI Inc. Todos los derechos reservados.</p>
+        <nav aria-label="Legal">
+          <Link to="/ayuda#legal">Privacidad</Link>
+          <Link to="/ayuda#legal">Términos</Link>
+          <Link to="/ayuda#legal">Certificaciones</Link>
+        </nav>
       </div>
     </footer>
   );

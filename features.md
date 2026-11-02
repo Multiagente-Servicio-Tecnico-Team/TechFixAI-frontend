@@ -60,4 +60,7 @@ demostración.
 | Llamadas al chat y tickets | `src/features/chat/chatApi.js` |
 | Formato de importes en soles | `formatPEN`, `parseMoney` y `centsToInput` en `src/domain/money.js` |
 | Estados y categorías de ticket | `src/domain/tickets.js` |
-| Colores, radios, sombras, foco | variables de `src/shared/styles/tokens.css` |
+| Colores, radios, foco | variables de `src/shared/styles/tokens.css` (sistema «Banco», ver `design/DESIGN.md`) |
+| Logotipo | `src/shared/ui/Logo.jsx` y `public/favicon.svg` |
+| Tema claro u oscuro | `src/shared/ui/ThemeToggle.jsx`; `index.html` aplica la preferencia antes de pintar |
+| Etiqueta de trabajo, carril y sellos | clases `jobtag`, `rail` y `stamp` de `src/shared/styles/components.css` |

@@ -44,7 +44,7 @@ describe("sign out", () => {
     renderApp("/portal/tickets", client);
 
     await user.click(screen.getByRole("button", { name: "Menú de usuario" }));
-    await user.click(screen.getByRole("menuitem", { name: /cerrar sesión/i }));
+    await user.click(screen.getByRole("button", { name: /cerrar sesión/i }));
 
     expect(await screen.findByRole("heading", { name: /Cada reparación avanza/ })).toBeInTheDocument();
     expect(sessionStorage.getItem("techfix.session")).toBeNull();

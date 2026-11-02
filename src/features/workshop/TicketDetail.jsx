@@ -1,29 +1,17 @@
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { Banknote, Bot, CalendarDays, CircleCheck, Laptop, MessageSquareText, Save, UserRound } from "lucide-react";
+import { Bot, CalendarDays, CircleCheck, MessageSquareText, Save, UserRound } from "lucide-react";
 import { BackLink, Toast } from "../../shared/ui/ui.jsx";
 import { useStore } from "../../state/store.jsx";
 import { formatPEN } from "../../domain/money.js";
 import { STAFF_STATUSES } from "../../domain/tickets.js";
 
-function Info({ label, children, wide }) {
+function Datum({ label, children }) {
   return (
-    <div className={`info${wide ? " info--wide" : ""}`}>
-      <p className="mono-label">{label}</p>
-      <div className="info__value">{children}</div>
+    <div className="datum">
+      <p className="datum__label">{label}</p>
+      <div>{children}</div>
     </div>
-  );
-}
-
-function Section({ icon: Icon, title, children }) {
-  return (
-    <section className="panel">
-      <h2 className="panel__title">
-        <span className="icon-tile icon-tile--sm"><Icon size={18} aria-hidden="true" /></span>
-        {title}
-      </h2>
-      {children}
-    </section>
   );
 }
 
@@ -38,10 +26,10 @@ export default function TicketDetail() {
 
   if (!ticket) {
     return (
-      <div className="staff-page">
+      <div className="page">
         <BackLink to="/taller">Volver a Gestión de Tickets</BackLink>
-        <div className="panel empty-panel">
-          <h1 className="page-title">Ticket no encontrado</h1>
+        <div className="jobtag jobtag--lg">
+          <h1 className="title">Ticket no encontrado</h1>
           <p>No existe un ticket con el código <strong>{id}</strong>.</p>
           <Link to="/taller" className="btn btn--primary">Ir a la cola de triage</Link>
         </div>
@@ -57,61 +45,73 @@ export default function TicketDetail() {
   const whatsapp = `https://wa.me/${ticket.phone.replace(/\D/g, "")}`;
 
   return (
-    <div className="staff-page">
+    <div className="page">
       <BackLink to="/taller">Volver a Gestión de Tickets</BackLink>
-      <div className="page-head">
-        <div className="title-row">
-          <h1 className="page-title">Ticket #{ticket.id}</h1>
-          <span className="tag tag--blue">
-            {ticket.origin === "Bot" ? <Bot size={13} aria-hidden="true" /> : <UserRound size={13} aria-hidden="true" />}
-            {ticket.origin === "Bot" ? "Bot IA" : "Presencial"}
-          </span>
-          <span className="tag tag--muted"><CalendarDays size={13} aria-hidden="true" />{ticket.date}</span>
+      <article className="jobtag jobtag--lg">
+        <div className="detail__top">
+          <div>
+            <h1 className="title">Ticket #{ticket.id}</h1>
+            <p className="detail__device">{ticket.device}</p>
+            <div className="detail__meta">
+              <span className="stamp stamp--info">
+                {ticket.origin === "Bot" ? <Bot size={13} aria-hidden="true" /> : <UserRound size={13} aria-hidden="true" />}
+                {ticket.origin === "Bot" ? "Bot IA" : "Presencial"}
+              </span>
+              <span className="stamp"><CalendarDays size={13} aria-hidden="true" />{ticket.date}</span>
+            </div>
+          </div>
         </div>
-        <button type="button" className="btn btn--primary" onClick={save} disabled={!dirty}>
-          <Save size={17} aria-hidden="true" /> Guardar Cambios
-        </button>
-      </div>
 
-      <Section icon={UserRound} title="1. Datos del Cliente">
-        <div className="info-grid info-grid--3">
-          <Info label="Nombre completo"><strong>{ticket.client}</strong></Info>
-          <Info label="Teléfono / WhatsApp">
-            <span className="mono info__split">
-              {ticket.phone}
-              <a href={whatsapp} target="_blank" rel="noreferrer" className="icon-link" aria-label="Abrir WhatsApp"><MessageSquareText size={17} /></a>
-            </span>
-          </Info>
-          <Info label="Correo electrónico">{ticket.email || <span className="muted">No registrado</span>}</Info>
-        </div>
-      </Section>
+        <ol className="rail" aria-label="Avance del ticket">
+          {STAFF_STATUSES.map((s, i) => {
+            const at = STAFF_STATUSES.indexOf(status);
+            return <li key={s} className={i < at ? "is-done" : i === at ? "is-now" : ""} aria-current={i === at ? "step" : undefined}>{s}</li>;
+          })}
+        </ol>
 
-      <Section icon={Laptop} title="2. Detalle del Equipo y Falla">
-        <div className="info-grid">
-          <Info label="Equipo / Marca y modelo"><strong>{ticket.device}</strong></Info>
-          <Info label="Detalle de la falla / Motivo de ingreso" wide>{ticket.issue}</Info>
-        </div>
-      </Section>
-
-      <Section icon={Banknote} title="3. Costo y Estado">
-        <div className="info-grid info-grid--3">
-          <Info label="Monto presupuestado / Total">
-            <span className="amount">{formatPEN(ticket.budget)}</span>
-            {ticket.advance !== null && ticket.advance !== undefined && (
-              <span className="mono-small">Adelanto: {formatPEN(ticket.advance)} · {ticket.method}</span>
-            )}
-          </Info>
-          <div className="info">
-            <label className="mono-label" htmlFor="ticket-status">Estado del ticket</label>
-            <select id="ticket-status" className="input select" value={status} onChange={(e) => setStatus(e.target.value)}>
+        <div className="detail__move">
+          <div className="field">
+            <label className="field__label" htmlFor="ticket-status">Estado del ticket</label>
+            <select id="ticket-status" className="input" value={status} onChange={(e) => setStatus(e.target.value)}>
               {STAFF_STATUSES.map((s) => <option key={s}>{s}</option>)}
             </select>
           </div>
-          <Info label="Método de pago / Condición">
-            <span className="ok-text"><CircleCheck size={15} aria-hidden="true" /> {ticket.payment}</span>
-          </Info>
+          <button type="button" className="btn btn--primary" onClick={save} disabled={!dirty}>
+            <Save size={17} aria-hidden="true" /> Guardar Cambios
+          </button>
         </div>
-      </Section>
+
+        <div className="detail__cols">
+          <section className="datum" aria-label="Datos del cliente">
+            <h2 className="subtitle">Cliente</h2>
+            <Datum label="Nombre completo"><strong>{ticket.client}</strong></Datum>
+            <Datum label="Teléfono / WhatsApp">
+              <span className="mono datum__row">
+                {ticket.phone}
+                <a href={whatsapp} target="_blank" rel="noreferrer" className="icon-btn" aria-label="Abrir WhatsApp"><MessageSquareText size={17} /></a>
+              </span>
+            </Datum>
+            <Datum label="Correo electrónico">{ticket.email || <span className="muted">No registrado</span>}</Datum>
+          </section>
+          <section className="datum" aria-label="Detalle del equipo y falla">
+            <h2 className="subtitle">Equipo y falla</h2>
+            <Datum label="Equipo / Marca y modelo"><strong>{ticket.device}</strong></Datum>
+            <Datum label="Detalle de la falla / Motivo de ingreso">{ticket.issue}</Datum>
+          </section>
+          <section className="datum" aria-label="Costo">
+            <h2 className="subtitle">Costo</h2>
+            <Datum label="Monto presupuestado / Total">
+              <span className="amount">{formatPEN(ticket.budget)}</span>
+              {ticket.advance !== null && ticket.advance !== undefined && (
+                <span className="small muted"> Adelanto: {formatPEN(ticket.advance)} · {ticket.method}</span>
+              )}
+            </Datum>
+            <Datum label="Método de pago / Condición">
+              <span className="ok-text"><CircleCheck size={15} aria-hidden="true" /> {ticket.payment}</span>
+            </Datum>
+          </section>
+        </div>
+      </article>
       <Toast message={toast} onDone={() => setToast("")} />
     </div>
   );

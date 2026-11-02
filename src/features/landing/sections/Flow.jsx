@@ -11,27 +11,22 @@ const steps = [
 
 export default function Flow() {
   return (
-    <section className="section section--tint" id="flujo">
+    <section className="section section--band" id="flujo">
       <div className="container">
         <Eyebrow>Del primer mensaje al cierre</Eyebrow>
-        <h2 className="h2 h2--narrow">Un flujo continuo, sin puntos ciegos</h2>
-        <p className="lead lead--wide">
+        <h2 className="h2">Un flujo continuo, sin puntos ciegos</h2>
+        <p className="lead">
           TechFix.AI convierte cada interacción en una acción operativa. El taller conserva el
           control y el cliente ve exactamente qué está ocurriendo.
         </p>
-        <ol className="flow">
+        <ol className="route">
           {steps.map(({ icon: Icon, title, text, result }, i) => (
-            <li key={title} className="card flow__step">
-              <div className="flow__top">
-                <span className="icon-tile icon-tile--sm"><Icon size={17} aria-hidden="true" /></span>
-                <span className="flow__num">{String(i + 1).padStart(2, "0")}</span>
-              </div>
+            <li key={title} className="route__stop">
+              <span className="route__num mono">{i + 1}</span>
+              <Icon size={22} aria-hidden="true" />
               <h3>{title}</h3>
               <p>{text}</p>
-              <div className="flow__result">
-                <span className="mono-label">Resultado</span>
-                <strong>{result}</strong>
-              </div>
+              <span className="stamp">{result}</span>
             </li>
           ))}
         </ol>

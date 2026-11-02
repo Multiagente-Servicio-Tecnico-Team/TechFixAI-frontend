@@ -1,0 +1,35 @@
+{
+  "name": "Banco",
+  "font": {
+    "display": "Bricolage Grotesque",
+    "body": "Atkinson Hyperlegible",
+    "data": "Martian Mono"
+  },
+  "size": { "xs": 12, "sm": 13, "base": 15, "md": 17, "lg": 20, "xl": 26, "2xl": 34, "3xl": 48, "4xl": 72 },
+  "space": [4, 8, 12, 16, 24, 32, 48, 64, 96],
+  "radius": { "control": 2, "pill": 999 },
+  "border": { "thin": 1, "strong": 2, "rule": 3 },
+  "tag": { "notch": 18, "notchLarge": 32, "hole": 8 },
+  "control": { "small": 32, "default": 40, "large": 48, "minTarget": 24, "primaryMinTarget": 40 },
+  "motion": { "fast": "120ms", "base": "180ms", "easing": "cubic-bezier(0.3, 0, 0, 1)" },
+  "layout": { "stripHeight": 60, "content": 1360, "phoneBar": 64 },
+  "breakpoints": { "phone": 640, "tablet": 1024 },
+  "color": {
+    "light": {
+      "bg": "#E9EDF5", "surface": "#FFFFFF", "surface2": "#DDE3EF", "line": "#B7C1D6",
+      "text": "#101B3B", "text2": "#46527A",
+      "accent": "#1F3FBF", "onAccent": "#FFFFFF", "accentHover": "#18329A",
+      "mark": "#FFC91F", "onMark": "#101B3B",
+      "danger": "#B3261E", "onDanger": "#FFFFFF", "ok": "#0E7043", "warn": "#7A5200",
+      "focus": "#1F3FBF", "overlay": "rgba(16, 27, 59, 0.55)"
+    },
+    "dark": {
+      "bg": "#0E1530", "surface": "#18224A", "surface2": "#222E5E", "line": "#3A4883",
+      "text": "#F2F4FB", "text2": "#B6BEDC",
+      "accent": "#FFC91F", "onAccent": "#101B3B", "accentHover": "#FFD755",
+      "mark": "#FFC91F", "onMark": "#101B3B",
+      "danger": "#FF8A80", "onDanger": "#101B3B", "ok": "#5FD7A1", "warn": "#FFD755",
+      "focus": "#FFC91F", "overlay": "rgba(5, 9, 24, 0.72)"
+    }
+  }
+}

@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from "react";
-import { NavLink, Outlet, useNavigate } from "react-router-dom";
-import { LogOut, UserRound } from "lucide-react";
+import { Link, NavLink, Outlet, useNavigate } from "react-router-dom";
+import { LifeBuoy, LogOut, MessageSquareText, TicketCheck, UserRound } from "lucide-react";
 import Logo from "../../shared/ui/Logo.jsx";
+import ThemeToggle from "../../shared/ui/ThemeToggle.jsx";
 import { useStore } from "../../state/store.jsx";
 import { authApi } from "../../features/auth/authApi.js";
 
@@ -10,13 +11,18 @@ export function UserMenu({ extra }) {
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
+  const buttonRef = useRef(null);
 
   useEffect(() => {
     if (!open) return undefined;
     const onDoc = (e) => {
       if (ref.current && !ref.current.contains(e.target)) setOpen(false);
     };
-    const onKey = (e) => e.key === "Escape" && setOpen(false);
+    const onKey = (e) => {
+      if (e.key !== "Escape") return;
+      setOpen(false);
+      buttonRef.current?.focus();
+    };
     document.addEventListener("mousedown", onDoc);
     document.addEventListener("keydown", onKey);
     return () => {
@@ -34,9 +40,9 @@ export function UserMenu({ extra }) {
   return (
     <div className="user-menu" ref={ref}>
       <button
+        ref={buttonRef}
         type="button"
-        className="avatar avatar--online"
-        aria-haspopup="menu"
+        className="avatar"
         aria-expanded={open}
         aria-label="Menú de usuario"
         onClick={() => setOpen((v) => !v)}
@@ -44,11 +50,12 @@ export function UserMenu({ extra }) {
         <UserRound size={18} />
       </button>
       {open && (
-        <div className="user-menu__panel" role="menu">
+        <div className="user-menu__panel">
           <p className="user-menu__name">{session?.name}</p>
           <p className="user-menu__mail">{session?.email}</p>
           {extra}
-          <button type="button" role="menuitem" className="user-menu__item" onClick={signOut}>
+          <Link to="/ayuda" className="user-menu__item"><LifeBuoy size={16} aria-hidden="true" /> Ayuda</Link>
+          <button type="button" className="user-menu__item" onClick={signOut}>
             <LogOut size={16} aria-hidden="true" /> Cerrar sesión
           </button>
         </div>
@@ -57,27 +64,27 @@ export function UserMenu({ extra }) {
   );
 }
 
+const tabClass = ({ isActive }) => `tabs__link${isActive ? " is-active" : ""}`;
+
 export default function PortalLayout() {
   return (
-    <div className="portal">
-      <header className="portal-header">
+    <div className="app app--nav">
+      <header className="strip">
         <Logo />
-        <nav className="portal-header__nav" aria-label="Portal del cliente">
-          <NavLink to="/portal/asistente" className="tab-link">
-            <span className="hide-xs">Nuevo Ticket / </span>Chat IA
-          </NavLink>
-          <NavLink to="/portal/tickets" className="tab-link">Mis Tickets</NavLink>
+        <nav className="tabs" aria-label="Portal del cliente">
+          <NavLink to="/portal/tickets" className={tabClass}><TicketCheck size={17} aria-hidden="true" /> Mis Tickets</NavLink>
+          <NavLink to="/portal/asistente" className={tabClass}><MessageSquareText size={17} aria-hidden="true" /> Asistente</NavLink>
         </nav>
-        <UserMenu />
+        <div className="strip__actions">
+          <ThemeToggle />
+          <UserMenu />
+        </div>
       </header>
-      <main className="portal-main">
+      <main className="app__main" tabIndex={-1}>
         <Outlet />
       </main>
-      <footer className="portal-footer">
-        <p>
-          <strong>TechFix<span className="logo__ai">.AI</span></strong>
-          <span className="mono-small">Plataforma Inteligente de Servicio Técnico</span>
-        </p>
+      <footer className="app-foot">
+        <p>TechFix.AI · Plataforma Inteligente de Servicio Técnico</p>
         <p>© 2026 TechFix.AI. Diagnóstico autónomo y gestión de triage de hardware.</p>
       </footer>
     </div>

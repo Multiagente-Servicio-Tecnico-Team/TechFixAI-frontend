@@ -107,84 +107,116 @@ export default function Tickets({ api = chatApi }) {
     return tickets.filter((t) => f.match(t) && (!q || `${t.id} ${t.device} ${t.summary}`.toLowerCase().includes(q)));
   }, [tickets, filter, query]);
 
+  const groups = [
+    { id: "needs", title: "Necesita tu aprobación", urgent: true, items: visible.filter((t) => ["approval", "payment"].includes(t.status)) },
+    { id: "active", title: "En curso", items: visible.filter((t) => ["received", "workshop", "ready"].includes(t.status)) },
+    { id: "closed", title: "Finalizados", items: visible.filter((t) => t.status === "done") },
+  ].filter((g) => g.items.length > 0);
+
   return (
-    <div className="container-narrow">
+    <div className="portal">
       <div className="page-head">
-        <h1 className="page-title">Mis Tickets de Atención</h1>
+        <h1 className="title">Mis Tickets de Atención</h1>
         <Link to="/portal/asistente" className="btn btn--primary">
           <Plus size={18} aria-hidden="true" /> Nueva Consulta / Chat IA
         </Link>
       </div>
 
-      <div className="toolbar">
+      <div className="tools">
         <label className="search">
           <Search size={18} aria-hidden="true" />
           <input type="search" placeholder="Buscar por código o equipo..." value={query} onChange={(e) => setQuery(e.target.value)} aria-label="Buscar tickets" />
         </label>
-        <div className="chips" role="tablist" aria-label="Filtrar por estado">
+        <div className="toggle-group" role="group" aria-label="Filtrar por estado">
           {filters.map((f) => (
-            <button
-              key={f.id}
-              type="button"
-              role="tab"
-              aria-selected={filter === f.id}
-              className={`chip${filter === f.id ? " is-active" : ""}`}
-              onClick={() => setFilter(f.id)}
-            >
+            <button key={f.id} type="button" aria-pressed={filter === f.id} className="toggle" onClick={() => setFilter(f.id)}>
               {f.label} ({tickets.filter(f.match).length})
             </button>
           ))}
         </div>
       </div>
 
-      <div className="ticket-list" aria-busy={loading}>
+      <p className="vh" role="status">{loading ? "" : `${visible.length} tickets`}</p>
+      <div className="portal" aria-busy={loading}>
         {loading && <p className="empty">Cargando tus tickets...</p>}
         {!loading && error && (
-          <div className="empty-panel">
+          <div className="retry">
             <p role="alert">{error}</p>
-            <button type="button" className="btn btn--ghost btn--sm" onClick={loadTickets}>Reintentar</button>
+            <button type="button" className="btn btn--sm" onClick={loadTickets}>Reintentar</button>
           </div>
         )}
         {!loading && !error && visible.length === 0 && (
           <p className="empty">{tickets.length ? "No hay tickets que coincidan con la búsqueda." : "Todavía no tienes tickets. Inicia una consulta en el chat para crear uno."}</p>
         )}
-        {!loading && !error && visible.map((t) => (
-          <article key={t.id} className={`tcard${t.status === "done" ? " tcard--muted" : ""}`}>
-            <div className="tcard__meta">
-              <span className="tcard__id">#{t.id}</span>
-              <span className="tcard__when">{t.when}</span>
-              <span className="tag">{t.kind}</span>
-              <span className={`pill pill--${t.tone} tcard__status`}>
-                {t.status === "done" ? <CircleCheck size={13} aria-hidden="true" /> : <span className="pill__dot" />}
-                {t.statusLabel}
-              </span>
+        {!loading && !error && groups.map((g) => (
+          <section key={g.id} className={`group${g.urgent ? " group--urgent" : ""}`} aria-labelledby={`group-${g.id}`}>
+            <div className="group__head">
+              <h2 id={`group-${g.id}`} className="subtitle">{g.title}</h2>
+              <span className="mono small">{g.items.length}</span>
             </div>
-            <div className="tcard__body">
-              <span className="tcard__icon"><ItemIcon name={t.icon} /></span>
-              <div className="tcard__text">
-                <h2>{t.device}</h2>
-                <p>{t.summary}</p>
-                {t.note && <p className="mono-small">{t.note}</p>}
-                {t.status === "ready" && <span className="pickup"><Store size={14} aria-hidden="true" /> Disponible para retiro o despacho</span>}
-              </div>
-              {(t.total !== null || t.status === "received") && (
-                <div className="tcard__amount">
-                  <span className="mono-label">{t.total !== null ? "Total cotizado" : "Presupuesto"}</span>
-                  <strong>{formatPEN(t.total)}</strong>
-                </div>
-              )}
+            <div className="group__list">
+              {g.items.map((t) => <TicketTag key={t.id} ticket={t} canApprove={demo && t.status === "approval"} />)}
             </div>
-            {t.lines.length > 0 && (
-              <div className="budget">
-                {t.lines.map((line) => (
-                  <div key={line.label} className="budget__row"><span>{line.label}</span><span className="mono">{formatPEN(line.amount)}</span></div>
-                ))}
-                <div className="budget__row budget__row--total"><span>Total</span><span className="mono">{formatPEN(t.total)}</span></div>
-              </div>
-            )}
-          </article>
+          </section>
         ))}
       </div>
     </div>
+  );
+}
+
+const STEPS = ["Ingreso", "Presupuesto", "En taller", "Listo", "Entregado"];
+const STEP_OF = { received: 0, approval: 1, payment: 1, workshop: 2, ready: 3, done: 4 };
+const STAMP_TONE = { blue: "info", teal: "warn", green: "ok", muted: "" };
+
+function TicketTag({ ticket: t, canApprove }) {
+  const cancelled = t.statusLabel === "Cancelado";
+  const step = STEP_OF[t.status] ?? 0;
+  const tone = STAMP_TONE[t.tone];
+  return (
+    <article className={`jobtag tticket${t.status === "done" ? " tticket--done" : ""}`}>
+      <div className="tticket__top">
+        <span className="kicker">#{t.id}</span>
+        <span className="small muted">{t.when}</span>
+        <span className="small muted">{t.kind}</span>
+        <span className={`stamp${tone ? ` stamp--${tone}` : ""}`}>
+          {t.status === "done" && !cancelled && <CircleCheck size={13} aria-hidden="true" />}
+          {t.statusLabel}
+        </span>
+      </div>
+      <div className="tticket__main">
+        <div>
+          <h3 className="tticket__name"><ItemIcon name={t.icon} /> {t.device}</h3>
+          <p className="tticket__sum">{t.summary}</p>
+          {t.note && <p className="small muted">{t.note}</p>}
+        </div>
+        {(t.total !== null || t.status === "received") && (
+          <div className="tticket__amount">
+            <span className="small muted">{t.total !== null ? "Total cotizado" : "Presupuesto"}</span>
+            <strong>{formatPEN(t.total)}</strong>
+          </div>
+        )}
+      </div>
+      {!cancelled && (
+        <ol className="rail" style={{ "--rail-steps": STEPS.length }} aria-label="Avance del ticket">
+          {STEPS.map((s, i) => (
+            <li key={s} className={i < step ? "is-done" : i === step ? "is-now" : ""} aria-current={i === step ? "step" : undefined}>{s}</li>
+          ))}
+        </ol>
+      )}
+      {t.lines.length > 0 && (
+        <div className="budget">
+          {t.lines.map((line) => (
+            <div key={line.label} className="budget__row"><span>{line.label}</span><span className="mono">{formatPEN(line.amount)}</span></div>
+          ))}
+          <div className="budget__row budget__row--total"><span>Total</span><span className="mono">{formatPEN(t.total)}</span></div>
+        </div>
+      )}
+      {(t.status === "ready" || (canApprove && t.lines.length > 0)) && (
+        <div className="tticket__foot">
+          {t.status === "ready" && <span className="stamp stamp--ok"><Store size={14} aria-hidden="true" /> Disponible para retiro o despacho</span>}
+          {canApprove && t.lines.length > 0 && <Link to={`/portal/asistente?ticket=${t.id}`} className="btn btn--primary">Revisar y aprobar</Link>}
+        </div>
+      )}
+    </article>
   );
 }

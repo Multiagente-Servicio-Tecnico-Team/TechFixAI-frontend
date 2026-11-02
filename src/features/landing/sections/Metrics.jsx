@@ -9,29 +9,22 @@ const metrics = [
 
 export default function Metrics() {
   return (
-    <section className="section section--tint metrics-section">
+    <section className="metrics">
       <div className="container">
-        <div className="metrics">
-          <div className="metrics__head">
-            <div>
-              <Eyebrow dot={false} tone="cyan">Valor operativo medible</Eyebrow>
-              <h2 className="h2 h2--light">Más capacidad sin perder precisión ni trazabilidad</h2>
+        <Eyebrow>Valor operativo medible</Eyebrow>
+        <h2 className="h2">Más capacidad sin perder precisión ni trazabilidad</h2>
+        <dl className="metrics__grid">
+          {metrics.map(({ label, value, note }) => (
+            <div key={label}>
+              <dt>{label}</dt>
+              <dd className="metrics__value">{value}</dd>
+              <dd>{note}</dd>
             </div>
-            <p>
-              Resultados de una operación piloto de 90 días en un taller multimarca con 1,200
-              tickets mensuales.
-            </p>
-          </div>
-          <div className="metrics__grid">
-            {metrics.map(({ label, value, note }) => (
-              <div key={label} className="metric">
-                <p className="mono-label">{label}</p>
-                <p className="metric__value">{value}</p>
-                <p className="metric__note">{note}</p>
-              </div>
-            ))}
-          </div>
-        </div>
+          ))}
+        </dl>
+        <p className="metrics__source">
+          Resultados de una operación piloto de 90 días en un taller multimarca con 1,200 tickets mensuales.
+        </p>
       </div>
     </section>
   );

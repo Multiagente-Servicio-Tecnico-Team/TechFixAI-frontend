@@ -10,9 +10,16 @@ export function ConfirmDialog({ open, title, children, confirmLabel = "Eliminar"
   const bodyId = useId();
   const cancelRef = useRef(null);
   const confirmRef = useRef(null);
+  const returnRef = useRef(null);
 
   useEffect(() => {
-    if (open) cancelRef.current?.focus();
+    if (!open) return undefined;
+    returnRef.current = document.activeElement;
+    cancelRef.current?.focus();
+    // Al cerrar, el foco vuelve a quien abrió el diálogo si sigue en la página.
+    return () => {
+      (returnRef.current?.isConnected ? returnRef.current : document.querySelector("main"))?.focus();
+    };
   }, [open]);
 
   if (!open) return null;
@@ -34,10 +41,10 @@ export function ConfirmDialog({ open, title, children, confirmLabel = "Eliminar"
       <div className="dialog" role="alertdialog" aria-modal="true" aria-labelledby={titleId} aria-describedby={bodyId} onKeyDown={onKeyDown}>
         <span className="dialog__icon"><TriangleAlert size={22} aria-hidden="true" /></span>
         <h2 id={titleId} className="dialog__title">{title}</h2>
-        <div id={bodyId} className="dialog__body">{children}</div>
+        <div id={bodyId}>{children}</div>
         {error && <p className="dialog__error" role="alert">{error}</p>}
         <div className="dialog__actions">
-          <button ref={cancelRef} type="button" className="btn btn--ghost" onClick={close} disabled={busy}>Cancelar</button>
+          <button ref={cancelRef} type="button" className="btn" onClick={close} disabled={busy}>Cancelar</button>
           <button ref={confirmRef} type="button" className="btn btn--danger" onClick={onConfirm} disabled={busy}>
             {busy ? "Eliminando…" : confirmLabel}
           </button>

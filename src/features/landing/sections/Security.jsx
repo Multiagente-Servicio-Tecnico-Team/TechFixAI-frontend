@@ -10,26 +10,24 @@ const items = [
 
 export default function Security() {
   return (
-    <section className="section section--flush-top" id="seguridad">
-      <div className="container">
-        <div className="security">
-          <div className="security__intro">
-            <Eyebrow dot={false}>Control empresarial</Eyebrow>
-            <h2 className="h3">IA gobernada para una operación confiable</h2>
-            <p>Automatiza con límites claros, trazabilidad completa y control humano en decisiones sensibles.</p>
-          </div>
-          <ul className="security__grid">
-            {items.map(({ icon: Icon, title, text }) => (
-              <li key={title}>
-                <span className="icon-tile"><Icon size={18} aria-hidden="true" /></span>
-                <div>
-                  <strong>{title}</strong>
-                  <p>{text}</p>
-                </div>
-              </li>
-            ))}
-          </ul>
+    <section className="section" id="seguridad">
+      <div className="container split">
+        <div>
+          <Eyebrow>Control empresarial</Eyebrow>
+          <h2 className="h2">IA gobernada para una operación confiable</h2>
+          <p className="lead">Automatiza con límites claros, trazabilidad completa y control humano en decisiones sensibles.</p>
         </div>
+        <ul className="ruled">
+          {items.map(({ icon: Icon, title, text }) => (
+            <li key={title} className="ruled__item">
+              <Icon size={22} aria-hidden="true" />
+              <div>
+                <h3>{title}</h3>
+                <p>{text}</p>
+              </div>
+            </li>
+          ))}
+        </ul>
       </div>
     </section>
   );

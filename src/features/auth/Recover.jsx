@@ -34,23 +34,24 @@ export default function Recover({ api = defaultApi }) {
   };
 
   return (
-    <div className="auth-stack">
-      <BackLink to="/portal/acceso" mono>Volver a iniciar sesión</BackLink>
-      <div className="auth-card auth-card--accent auth-card--left">
-        <div className="auth-card__body">
-          <span className="badge"><ShieldCheck size={14} aria-hidden="true" />Seguridad de cuenta · Soporte técnico</span>
+    <div className="auth">
+      <div className="auth__intro">
+        <BackLink to="/portal/acceso">Volver a iniciar sesión</BackLink>
+        <span className="stamp stamp--info"><ShieldCheck size={14} aria-hidden="true" />Seguridad de cuenta · Soporte técnico</span>
+        <h1 className="auth__title">{sent ? "Revisa tu correo" : "¿Olvidaste tu contraseña?"}</h1>
+      </div>
+      <div className="jobtag jobtag--lg">
           {sent ? (
-            <div className="success-state">
-              <span className="success-state__icon"><MailCheck size={26} aria-hidden="true" /></span>
-              <h1 className="auth-title">Revisa tu correo</h1>
-              <p className="auth-sub">
+            <div className="result">
+              <span className="result__seal"><MailCheck size={26} aria-hidden="true" /></span>
+              <p>
                 Si <strong>{email.trim()}</strong> está registrado, recibirás un enlace de restablecimiento válido durante 15 minutos.
                 Revisa también tu carpeta de spam.
               </p>
-              <div className="btn-row btn-row--start">
-                <button type="button" className="btn btn--ghost" onClick={() => setSent(false)}>Usar otro correo</button>
+              <div className="btn-row">
+                <button type="button" className="btn" onClick={() => setSent(false)}>Usar otro correo</button>
                 {api.mode === "mock" && (
-                  <Link to="/portal/restablecer?token=demo" className="btn btn--soft">Abrir enlace de prueba</Link>
+                  <Link to="/portal/restablecer?token=demo" className="btn">Abrir enlace de prueba</Link>
                 )}
               </div>
               {api.mode === "mock" && (
@@ -59,8 +60,7 @@ export default function Recover({ api = defaultApi }) {
             </div>
           ) : (
             <>
-              <h1 className="auth-title">¿Olvidaste tu contraseña?</h1>
-              <p className="auth-sub">
+              <p>
                 Introduce el correo electrónico asociado a tu cuenta de TechFix.AI para recibir un enlace seguro de
                 restablecimiento de contraseña temporal (válido durante 15 minutos).
               </p>
@@ -95,8 +95,7 @@ export default function Recover({ api = defaultApi }) {
               </form>
             </>
           )}
-          <Link to="/portal/acceso" className="link link--strong">← Volver a Iniciar Sesión</Link>
-        </div>
+          <Link to="/portal/acceso" className="link">← Volver a Iniciar Sesión</Link>
       </div>
     </div>
   );

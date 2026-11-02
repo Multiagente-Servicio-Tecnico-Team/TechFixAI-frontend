@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { Archive, Banknote, Barcode, Laptop, Lock, Save, Trash2, X } from "lucide-react";
+import { Barcode, Laptop, Lock, Save, Trash2, X } from "lucide-react";
 import { BackLink, Field, InputIcon } from "../../shared/ui/ui.jsx";
 import { ConfirmDialog } from "../../shared/ui/ConfirmDialog.jsx";
 import { FormAlert } from "../../shared/ui/FormAlert.jsx";
@@ -19,7 +19,7 @@ export default function PartForm({ api }) {
 
   if (editing && inventory.status === "loading") {
     return (
-      <div className="staff-page">
+      <div className="page">
         <BackLink to={BACK}>Volver a Inventario de Repuestos</BackLink>
         <p className="empty" role="status">Cargando repuesto…</p>
       </div>
@@ -27,10 +27,10 @@ export default function PartForm({ api }) {
   }
   if (editing && !existing) {
     return (
-      <div className="staff-page">
+      <div className="page">
         <BackLink to={BACK}>Volver a Inventario de Repuestos</BackLink>
-        <div className="panel empty-panel">
-          <h1 className="page-title">Repuesto no encontrado</h1>
+        <div className="jobtag jobtag--lg">
+          <h1 className="title">Repuesto no encontrado</h1>
           <p>No existe el SKU <strong>{sku}</strong>.</p>
           {inventory.error && <FormAlert>{inventory.error}</FormAlert>}
           <Link to={BACK} className="btn btn--primary">Volver al inventario</Link>
@@ -96,18 +96,16 @@ function PartEditor({ existing, inventory }) {
   };
 
   return (
-    <div className="staff-page staff-page--form">
+    <div className="page">
       <BackLink to={BACK}>Volver a Inventario de Repuestos</BackLink>
-      <h1 className="page-title">{editing ? "Editar Repuesto y Ajustar Stock" : "Registrar Nuevo Repuesto (SKU)"}</h1>
+      <h1 className="title">{editing ? "Editar Repuesto y Ajustar Stock" : "Registrar Nuevo Repuesto (SKU)"}</h1>
 
-      <form onSubmit={submit} noValidate className="stack">
-        <section className="panel">
-          <div className="panel__head">
-            {editing ? <span className="icon-tile icon-tile--sm"><Archive size={18} aria-hidden="true" /></span> : <span className="step-num">01</span>}
-            <div>
-              <h2>{editing ? "Datos del Repuesto" : "Identificación y Categoría"}</h2>
-              <p>Especificaciones técnicas, catalogación y compatibilidad del componente</p>
-            </div>
+      <form onSubmit={submit} noValidate className="intake">
+        <div className="intake__main">
+        <section className="intake__section">
+          <div className="intake__head">
+            <h2 className="subtitle">{editing ? "Datos del Repuesto" : "1. Identificación y Categoría"}</h2>
+            <p>Especificaciones técnicas, catalogación y compatibilidad del componente</p>
           </div>
           <div className="grid-2">
             <Field
@@ -122,7 +120,7 @@ function PartEditor({ existing, inventory }) {
               </InputIcon>
             </Field>
             <Field label="Categoría de Componente" htmlFor="pf-cat" required error={errors.category}>
-              <select id="pf-cat" className="input select" value={form.category} onChange={set("category")}>
+              <select id="pf-cat" className="input" value={form.category} onChange={set("category")}>
                 {PART_CATEGORIES.map((c) => <option key={c}>{c}</option>)}
               </select>
             </Field>
@@ -137,13 +135,10 @@ function PartEditor({ existing, inventory }) {
           </Field>
         </section>
 
-        <section className="panel">
-          <div className="panel__head">
-            {editing ? <span className="icon-tile icon-tile--sm"><Banknote size={18} aria-hidden="true" /></span> : <span className="step-num">02</span>}
-            <div>
-              <h2>Stock Operativo y Precios</h2>
-              <p>Cantidades disponibles para órdenes de trabajo, alertas de reposición y tarifa de cotización</p>
-            </div>
+        <section className="intake__section">
+          <div className="intake__head">
+            <h2 className="subtitle">{editing ? "Stock Operativo y Precios" : "2. Stock Operativo y Precios"}</h2>
+            <p>Cantidades disponibles para órdenes de trabajo, alertas de reposición y tarifa de cotización</p>
           </div>
           <div className="grid-3">
             <Field label={editing ? "Stock Actual Disponible" : "Cantidad Inicial"} htmlFor="pf-stock" required error={errors.stock}>
@@ -157,26 +152,36 @@ function PartEditor({ existing, inventory }) {
               </InputIcon>
             </Field>
             <Field label="Precio de Venta / Cotización (PEN)" htmlFor="pf-price" required error={errors.price}>
-              <div className="input-prefix input-prefix--money">
+              <div className="input-prefix">
                 <span>S/.</span>
                 <input id="pf-price" inputMode="decimal" className="input mono" placeholder="0.00" value={form.price} onChange={set("price")} />
               </div>
             </Field>
           </div>
         </section>
+        </div>
 
+        <aside className="intake__side" aria-label="Etiqueta del repuesto">
+        <div className="jobtag jobtag--lg">
+          <p className="kicker">{form.sku || "SKU por indicar"}</p>
+          <strong className="subtitle">{form.name || "Repuesto sin nombre"}</strong>
+          <div className="tagfield"><span>Categoría</span>{form.category}</div>
+          <div className={`tagfield${form.stock ? "" : " tagfield--wait"}`}><span>Stock</span>{form.stock ? `${form.stock} u. · mínimo ${form.min || "por indicar"}` : "Por indicar"}</div>
+          <div className={`tagfield${form.price ? "" : " tagfield--wait"}`}><span>Precio</span>{form.price ? `S/. ${form.price}` : "Por indicar"}</div>
         <FormAlert>{serverError}</FormAlert>
-        <div className="form-actions">
+        <div className="intake__actions">
           {editing && (
-            <button type="button" className="btn btn--danger-ghost form-actions__start" onClick={() => { setDeleteError(""); setConfirming(true); }} disabled={saving}>
+            <button type="button" className="btn btn--danger-ghost" onClick={() => { setDeleteError(""); setConfirming(true); }} disabled={saving}>
               <Trash2 size={17} aria-hidden="true" /> Eliminar repuesto
             </button>
           )}
-          <Link to={BACK} className="btn btn--ghost"><X size={17} aria-hidden="true" /> Cancelar</Link>
+          <Link to={BACK} className="btn"><X size={17} aria-hidden="true" /> Cancelar</Link>
           <button type="submit" className="btn btn--primary btn--lg" disabled={saving}>
             <Save size={18} aria-hidden="true" /> {saving ? "Guardando…" : editing ? "Guardar Cambios" : "Guardar Repuesto"}
           </button>
         </div>
+        </div>
+        </aside>
       </form>
 
       {editing && (

@@ -28,6 +28,7 @@ export default function PasswordFields({ password, confirm, onPassword, onConfir
               <li key={r.id} className={ok ? "is-ok" : ""}>
                 {ok ? <Check size={13} aria-hidden="true" /> : <X size={13} aria-hidden="true" />}
                 {r.label}
+                <span className="vh">{ok ? " (cumplido)" : " (pendiente)"}</span>
               </li>
             );
           })}
@@ -38,7 +39,7 @@ export default function PasswordFields({ password, confirm, onPassword, onConfir
         label="Confirmar Contraseña"
         htmlFor={`${idPrefix}-confirm`}
         error={errors.confirm}
-        aside={matches && <span className="match"><CircleCheck size={14} aria-hidden="true" /> Coinciden</span>}
+        aside={matches && <span className="match" role="status"><CircleCheck size={14} aria-hidden="true" /> Coinciden</span>}
       >
         <PasswordInput id={`${idPrefix}-confirm`} icon={KeyRound} autoComplete="new-password" value={confirm} onChange={onConfirm} invalid={!!errors.confirm} />
       </Field>

@@ -1,9 +1,9 @@
 /*
  * Cliente del inventario de repuestos del taller.
  *
- * - Con VITE_INVENTORY_URL definido llama a la API REST del backend con la cookie del inicio de sesión
- *   (credentials: "include"): GET/POST /api/inventory/parts y PUT/DELETE /api/inventory/parts/{code}.
- * - Sin VITE_INVENTORY_URL queda en modo demostración: las pantallas trabajan con los datos en memoria.
+ * - Con VITE_API_URL definido llama a la API REST del backend con la cookie del inicio de sesión
+ *   (credentials: "include"): repuestos en /api/inventory/parts y categorías en /api/inventory/categories.
+ * - Sin VITE_API_URL queda en modo demostración: las pantallas trabajan con los datos en memoria.
  *
  * Los precios viajan como texto con dos decimales ("114.75") y en la pantalla se usan en céntimos.
  */
@@ -27,6 +27,7 @@ export const INVENTORY_MESSAGES = {
   duplicate: "Este SKU ya existe en el inventario.",
   inUse: "No se puede eliminar: el repuesto figura en presupuestos registrados.",
   invalid: "Revisa los datos del repuesto.",
+  invalidResponse: "El inventario devolvió una respuesta inesperada. Inténtalo de nuevo.",
   unavailable: "No se pudo conectar con el inventario. Inténtalo de nuevo.",
 };
 
@@ -39,14 +40,31 @@ const ICON_BY_CATEGORY = {
 
 /** JSON de la API → repuesto de la pantalla. */
 export function fromApi(p) {
+  const price = typeof p?.unit_price === "string" && /^\d+\.\d{2}$/.test(p.unit_price)
+    ? parseMoney(p.unit_price)
+    : null;
+  if (
+    !p ||
+    !Number.isInteger(p.id) || p.id < 1 ||
+    typeof p.code !== "string" ||
+    typeof p.name !== "string" ||
+    !(p.category === null || typeof p.category === "string") ||
+    !(p.description === null || typeof p.description === "string") ||
+    !Number.isInteger(p.current_stock) || p.current_stock < 0 ||
+    !Number.isInteger(p.minimum_threshold) || p.minimum_threshold < 0 ||
+    price === null || price <= 0
+  ) {
+    throw new InventoryError(INVENTORY_MESSAGES.invalidResponse, { code: "invalid_response" });
+  }
   return {
+    id: p.id,
     sku: p.code,
     name: p.name,
     category: p.category ?? "",
     compat: p.description ?? "",
     stock: Number(p.current_stock),
     min: Number(p.minimum_threshold),
-    price: parseMoney(p.unit_price) ?? 0,
+    price,
     icon: ICON_BY_CATEGORY[p.category] ?? "chip",
   };
 }
@@ -78,10 +96,10 @@ export function createInventoryApi({ baseUrl = "", fetchImpl } = {}) {
   const base = baseUrl.replace(/\/+$/, "");
   const doFetch = fetchImpl ?? ((...args) => globalThis.fetch(...args));
 
-  async function request(path, { method = "GET", body, action } = {}) {
+  async function request(path = "", { method = "GET", body, action, resource = "parts" } = {}) {
     let res;
     try {
-      res = await doFetch(`${base}/api/inventory/parts${path}`, {
+      res = await doFetch(`${base}/api/inventory/${resource}${path}`, {
         method,
         headers: body ? { "Content-Type": "application/json", Accept: "application/json" } : { Accept: "application/json" },
         credentials: "include",
@@ -108,15 +126,27 @@ export function createInventoryApi({ baseUrl = "", fetchImpl } = {}) {
     mode: base ? "api" : "mock",
     async list() {
       const data = await request("");
-      return (data?.parts ?? []).map(fromApi);
+      if (!Array.isArray(data?.parts)) {
+        throw new InventoryError(INVENTORY_MESSAGES.invalidResponse, { code: "invalid_response" });
+      }
+      return data.parts.map(fromApi);
+    },
+    async listCategories() {
+      const data = await request("", { resource: "categories" });
+      if (!Array.isArray(data?.categories) || data.categories.some((category) => typeof category !== "string" || !category.trim())) {
+        throw new InventoryError(INVENTORY_MESSAGES.invalidResponse, { code: "invalid_response" });
+      }
+      return [...new Set(data.categories)];
     },
     async create(part) {
       const data = await request("", { method: "POST", body: toApi(part), action: "create" });
-      return data?.part ? fromApi(data.part) : part;
+      if (!data?.part) throw new InventoryError(INVENTORY_MESSAGES.invalidResponse, { code: "invalid_response" });
+      return fromApi(data.part);
     },
     async update(part) {
       const data = await request(one(part.sku), { method: "PUT", body: toApi(part), action: "update" });
-      return data?.part ? fromApi(data.part) : part;
+      if (!data?.part) throw new InventoryError(INVENTORY_MESSAGES.invalidResponse, { code: "invalid_response" });
+      return fromApi(data.part);
     },
     async remove(sku) {
       await request(one(sku), { method: "DELETE", action: "remove" });
@@ -124,8 +154,8 @@ export function createInventoryApi({ baseUrl = "", fetchImpl } = {}) {
   };
 }
 
-// Sin URL configurada se queda en demostración, también en producción: el backend aún no publica estas rutas.
-const configured = import.meta.env?.VITE_INVENTORY_URL ?? "";
+// En desarrollo, sin URL configurada conserva el modo demostración. Producción resuelve el proxy same-origin.
+const configured = import.meta.env?.VITE_API_URL ?? "";
 export const inventoryApi = createInventoryApi({
-  baseUrl: configured.trim() ? resolveApiBaseUrl(configured, "/backend", import.meta.env?.PROD === true) : "",
+  baseUrl: resolveApiBaseUrl(configured, "/backend", import.meta.env?.PROD === true),
 });

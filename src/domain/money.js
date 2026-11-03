@@ -12,7 +12,7 @@ export function formatPEN(cents) {
 /** Convierte "114.75" en 11475. Devuelve null si el texto no es un importe válido. */
 export function parseMoney(text) {
   const clean = String(text).trim().replace(/,/g, "");
-  const match = /^(\d{1,7})(?:\.(\d{1,2}))?$/.exec(clean);
+  const match = /^(\d{1,8})(?:\.(\d{1,2}))?$/.exec(clean);
   if (!match) return null;
   return Number(match[1]) * 100 + Number((match[2] || "0").padEnd(2, "0"));
 }

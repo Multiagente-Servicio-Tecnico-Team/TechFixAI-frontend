@@ -32,6 +32,11 @@
 .detail__move { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 8px; }
 .detail__move .field { flex: 1 1 220px; max-width: 320px; }
 .detail__cols { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px 28px; padding-top: 16px; border-top: var(--rule) solid var(--text); }
+.ticket-detail__quote, .ticket-detail__audit { margin-top: 18px; padding-top: 14px; border-top: var(--rule) solid var(--text); }
+.ticket-detail__quote .detail__cols { grid-template-columns: repeat(auto-fit, minmax(min(100%, 180px), 1fr)); }
+.ticket-detail__audit ol { display: grid; gap: 10px; margin: 0; padding-left: 22px; }
+.ticket-detail__audit li { overflow-wrap: anywhere; }
+.ticket-detail__audit pre { max-width: 100%; overflow: auto; padding: 8px; background: var(--surface-2, var(--surface)); border-radius: var(--radius); font-size: var(--size-xs); }
 .datum { display: grid; gap: 2px; align-content: start; min-width: 0; overflow-wrap: anywhere; }
 .datum__label { font-size: var(--size-xs); font-weight: 700; color: var(--text-2); }
 .datum__row { display: flex; align-items: center; gap: 8px; }
@@ -114,6 +119,57 @@
 .accounting-timeline p { margin: 3px 0; color: var(--text-2); font-size: var(--size-sm); }
 .accounting-success { display: grid; gap: 8px; }
 .badge--warn { color: var(--danger); }
+.tabs__link--purchases { white-space: nowrap; }
+.purchases-menu-link { display: none; }
+.purchases-page { display: grid; gap: 18px; min-width: 0; }
+.purchases-page .page-head { align-items: center; }
+.purchases-page .page-head .muted { margin-top: 4px; }
+.purchases-filters { display: grid; gap: 12px; }
+.purchases-filters .grid-2, .purchases-form__section .grid-2, .purchases-line-form .grid-2 { grid-template-columns: repeat(auto-fit, minmax(min(100%, 210px), 1fr)); }
+.purchases-search { display: flex; align-items: flex-end; gap: 10px; }
+.purchases-search .field { flex: 1; min-width: 0; }
+.purchases-list { display: grid; gap: 10px; min-width: 0; }
+.purchases-card { display: grid; gap: 10px; min-width: 0; padding: 14px; }
+.purchases-card__top { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; }
+.purchases-card__top .subtitle { margin: 0; }
+.purchases-card__document { font: 700 var(--size-base) var(--mono); color: var(--accent); overflow-wrap: anywhere; }
+.purchases-summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 140px), 1fr)); gap: 10px 16px; margin: 0; }
+.purchases-summary > div { min-width: 0; overflow-wrap: anywhere; }
+.purchases-summary dt { color: var(--text-2); font-size: var(--size-xs); font-weight: 700; }
+.purchases-summary dd { margin: 2px 0 0; }
+.purchases-form { display: grid; gap: 16px; min-width: 0; }
+.purchases-form__section { display: grid; gap: 14px; padding: 16px; min-width: 0; }
+.purchases-inline-link { display: inline-block; margin-top: 5px; font-size: var(--size-sm); }
+.purchases-section { display: grid; gap: 10px; min-width: 0; }
+.purchases-section > .subtitle { padding-bottom: 6px; border-bottom: var(--rule) solid var(--text); }
+.purchases-section__head { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 12px; }
+.purchases-section__head p { margin-top: 4px; }
+.purchases-line { display: grid; gap: 10px; padding: 14px; min-width: 0; }
+.purchases-line h3, .purchases-event h3 { overflow-wrap: anywhere; }
+.purchases-detail { display: grid; gap: 14px; padding: 16px; min-width: 0; }
+.purchases-detail__grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 180px), 1fr)); gap: 14px 20px; margin: 0; }
+.purchases-notes { margin: 0; padding-top: 10px; border-top: 1px solid var(--line); overflow-wrap: anywhere; }
+.purchases-detail__actions { padding-top: 10px; border-top: 1px solid var(--line); }
+.purchases-line-form { display: grid; gap: 14px; padding: 14px; margin: 0; min-width: 0; }
+.purchases-line-form legend { padding: 0 6px; font-weight: 700; }
+.purchases-line-form__foot { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 8px; }
+.purchases-totals { display: grid; gap: 10px; padding: 16px; }
+.purchases-totals dl { display: grid; gap: 8px; margin: 0; }
+.purchases-totals dl > div { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px; }
+.purchases-totals dd { margin: 0; font-family: var(--mono); }
+.purchases-grand-total { padding-top: 10px; border-top: var(--rule) solid var(--text); font-weight: 800; }
+.purchases-grand-total dd { font-size: var(--size-lg); }
+.purchases-event { display: grid; gap: 8px; padding: 14px; }
+.purchases-event p { margin: 0; }
+.purchases-movement { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 12px; padding-top: 6px; border-top: 1px solid var(--line); font-size: var(--size-sm); }
+.purchases-audit { display: grid; gap: 10px; margin: 0; padding-left: 22px; }
+.purchases-audit li { display: grid; gap: 3px; overflow-wrap: anywhere; }
+.purchases-audit span, .purchases-audit small { color: var(--text-2); }
+.purchases-receive-form, .purchases-receipt-review { display: grid; gap: 12px; padding: 14px; }
+.purchases-receipt-review h3, .purchases-receipt-review ul { margin: 0; }
+.purchases-success, .purchases-notice { padding: 10px 12px; border-left: var(--rule) solid var(--ok); background: var(--surface); }
+.purchases-notice { border-left-color: var(--text-2); }
+.purchases-page .btn-row { flex-wrap: wrap; }
 @media (max-width: 600px) {
   .accounting-line__amounts { grid-template-columns: minmax(0, 1fr); }
   .accounting-table thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; }
@@ -133,13 +189,16 @@
 }
 @media (max-width: 760px) {
   .tabs__link--accounting { display: none; }
+  .tabs__link--purchases { display: none; }
   .accounting-menu-link { display: flex; }
+  .purchases-menu-link { display: flex; }
   .station__picker { display: grid; gap: 2px; font-size: var(--size-sm); font-weight: 700; }
   .board { grid-template-columns: minmax(0, 1fr); overflow-x: visible; }
   .station { display: none; }
   .station.is-focus { display: grid; }
   .detail__cols { grid-template-columns: minmax(0, 1fr); }
   .detail__top { padding-right: 24px; }
+  .purchases-search { align-items: stretch; flex-direction: column; }
 }
 @media (min-width: 761px) {
   .accounting-menu-link { display: none; }

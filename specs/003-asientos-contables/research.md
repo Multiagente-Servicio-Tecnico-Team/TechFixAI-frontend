@@ -42,11 +42,9 @@
 
 ## Decision 6: Configuración del servicio contable
 
-**Decision**: Añadir `VITE_ACCOUNTING_URL` como URL raíz independiente del backend contable; en producción, usar el proxy same-origin `/backend`. Si falta en desarrollo, mostrar el servicio como no configurado en lugar de simular asientos.
+**Decision**: Añadir `VITE_API_URL` como URL raíz independiente del backend contable; en producción, usar el proxy same-origin `/backend`. Si falta en desarrollo, mostrar el servicio como no configurado en lugar de simular asientos.
 
-**Rationale**: `VITE_API_URL` apunta hoy a la base de autenticación y `VITE_CHAT_URL` puede estar vacío para dejar el chat en demostración. Reutilizar cualquiera de esas variables acoplaría el registro contable a una capacidad distinta. El inventario ya demuestra el patrón de una base URL propia por función.
-
-**Alternatives considered**: Compartir `VITE_CHAT_URL` hace que una función contable dependa de activar chat; reusar `VITE_API_URL` exigiría recortar `/auth` de una URL ya configurada; crear un mock contable podría confundirse con el libro real.
+**Rationale**: todas las funciones del frontend comparten la URL raíz; cada cliente agrega su ruta API y mantiene su propio contrato y política de disponibilidad. La contabilidad no usa datos ficticios cuando el servicio no está configurado.
 
 ## Repository evidence
 

@@ -22,6 +22,11 @@ import PartForm from "../features/workshop/PartForm.jsx";
 import AccountingList from "../features/accounting/AccountingList.jsx";
 import AccountingCreate from "../features/accounting/AccountingCreate.jsx";
 import AccountingDetail from "../features/accounting/AccountingDetail.jsx";
+import TicketAdminRoute from "../features/workshop/TicketAdminRoute.jsx";
+import PurchasesList from "../features/purchases/PurchasesList.jsx";
+import PurchaseCreate from "../features/purchases/PurchaseCreate.jsx";
+import PurchaseDetail from "../features/purchases/PurchaseDetail.jsx";
+import SupplierManager from "../features/purchases/SupplierManager.jsx";
 
 export default function App() {
   return (
@@ -47,9 +52,11 @@ export default function App() {
         </Route>
 
         <Route element={<RequireRole role="staff"><StaffLayout /></RequireRole>}>
-          <Route path="/taller" element={<Workshop />} />
-          <Route path="/taller/tickets/nuevo" element={<NewTicket />} />
-          <Route path="/taller/tickets/:id" element={<TicketDetail />} />
+          <Route element={<TicketAdminRoute />}>
+            <Route path="/taller" element={<Workshop />} />
+            <Route path="/taller/tickets/nuevo" element={<NewTicket />} />
+            <Route path="/taller/tickets/:id" element={<TicketDetail />} />
+          </Route>
           <Route path="/taller/inventario" element={<Inventory />} />
           <Route path="/taller/inventario/nuevo" element={<PartForm />} />
           <Route path="/taller/inventario/:sku/editar" element={<PartForm />} />
@@ -57,6 +64,12 @@ export default function App() {
             <Route path="/taller/contabilidad" element={<AccountingList />} />
             <Route path="/taller/contabilidad/nuevo" element={<AccountingCreate />} />
             <Route path="/taller/contabilidad/:id" element={<AccountingDetail />} />
+          </Route>
+          <Route element={<RequireRole role="staff" accountRole="ADMIN" deniedStateKey="purchasesDenied" deniedTo="/taller/inventario"><Outlet /></RequireRole>}>
+            <Route path="/taller/compras" element={<PurchasesList />} />
+            <Route path="/taller/compras/nuevo" element={<PurchaseCreate />} />
+            <Route path="/taller/compras/proveedores" element={<SupplierManager />} />
+            <Route path="/taller/compras/:id" element={<PurchaseDetail />} />
           </Route>
         </Route>
       </Routes>

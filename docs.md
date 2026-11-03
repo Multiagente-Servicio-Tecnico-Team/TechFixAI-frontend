@@ -17,6 +17,17 @@ Dónde está explicado cada tema. Antes de documentar algo nuevo, revisa si ya e
 | `specs/003-asientos-contables/plan.md` y `tasks.md` | Diseño y tareas de implementación frontend; el OpenAPI backend define rutas y payloads |
 | `src/features/accounting/` | Cliente API y pantallas de listado, alta, detalle y reversión para ADMIN |
 | `src/domain/accounting.js` | Importes contables exactos y validación balanceada de las líneas |
+| `specs/006-compras-proveedores/` | Especificación, plan, modelo, contrato de cliente, quickstart y tareas para compras a proveedores |
+| `src/features/purchases/` y `src/domain/purchases.js` | Cliente API, pantallas ADMIN de compras/proveedores, recepciones y reglas de importes/estados |
+| [OpenAPI de compras backend](../Sistema-Multiagente-de-Servicio-T-cnico-Ventas-y-Soporte/specs/006-registro-compras-proveedores/contracts/purchases.openapi.yaml) | Contrato de proveedores, compras, recepciones, estados e idempotencia |
+| `specs/004-admin-ticket-ui/` | Contrato de interfaz, plan, modelo, tareas y quickstart para tickets administrativos |
+| `specs/005-inventory-api-integration/` | Plan, modelo, contrato de consumo, tareas y quickstart del inventario conectado |
+| [OpenAPI canónico de inventario](../Sistema-Multiagente-de-Servicio-T-cnico-Ventas-y-Soporte/specs/005-api-inventario/contracts/inventory.openapi.yaml) | Contrato de lectura, categorías, altas, edición y eliminación |
+| `src/features/workshop/inventoryApi.js` y `useInventory.js` | Cliente API y estado compartido de artículos/categorías |
+| `src/domain/inventory.js` | Validación y reglas del inventario de taller |
+| `tests/unit/inventory.test.js`, `tests/integration/inventory.test.jsx` | Pruebas unitarias del contrato y escenarios de interfaz del inventario |
+
+| `src/features/workshop/ticketsApi.js` y `useAdminTickets.js` | Cliente API ADMIN, normalización de DTO, filtros y carga paginada del taller |
 
 ## En el backend ([TechFixAI-backend](https://github.com/Multiagente-Servicio-Tecnico-Team/TechFixAI-backend))
 

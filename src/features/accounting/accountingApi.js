@@ -93,7 +93,7 @@ export function createAccountingApi({ baseUrl = "", fetchImpl } = {}) {
   };
 }
 
-const configuredUrl = import.meta.env?.VITE_ACCOUNTING_URL ?? "";
+const configuredUrl = import.meta.env?.VITE_API_URL ?? "";
 export const accountingApi = createAccountingApi({
   baseUrl: resolveApiBaseUrl(configuredUrl, "/backend", import.meta.env?.PROD === true),
 });

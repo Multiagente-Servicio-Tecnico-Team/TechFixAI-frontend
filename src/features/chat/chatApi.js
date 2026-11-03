@@ -1,9 +1,9 @@
 /*
  * Cliente del chat del portal: POST /api/chat del patrón LangGraph.
  *
- * - Con VITE_CHAT_URL definido llama al patrón; la identidad la da la cookie del inicio de sesión
+ * - Con VITE_API_URL definido llama al patrón; la identidad la da la cookie del inicio de sesión
  *   (credentials: "include"). El cuerpo nunca lleva correo ni identificador del cliente.
- * - Sin VITE_CHAT_URL el asistente sigue en modo demostración.
+ * - Sin VITE_API_URL el asistente sigue en modo demostración.
  */
 import { resolveApiBaseUrl } from "../../shared/api/baseUrl.js";
 
@@ -169,7 +169,7 @@ export function createChatApi({ baseUrl = "", fetchImpl } = {}) {
 
 export const chatApi = createChatApi({
   baseUrl: resolveApiBaseUrl(
-    import.meta.env?.VITE_CHAT_URL ?? "",
+    import.meta.env?.VITE_API_URL ?? "",
     "/backend",
     import.meta.env?.PROD === true,
   ),

@@ -54,7 +54,7 @@ Ver [research.md](research.md) para decisiones y alternativas consideradas:
 3. Crear un dominio monetario contable específico que convierta las cadenas decimales a céntimos exactos mediante `BigInt`; no reutilizar `parseMoney` para importes contables máximos porque limita a siete enteros y usa `Number`.
 4. Cada borrador de alta conserva una clave UUID. Un reintento idéntico mantiene la clave; al cambiar el payload se crea una clave nueva. Un doble clic no genera una segunda petición.
 5. El frontend implementa solo un cliente para el contrato backend, resumen UI del contrato y pruebas de respuestas; no mantiene una copia alternativa del OpenAPI canónico.
-6. La conexión contable usa `VITE_ACCOUNTING_URL` con fallback same-origin `/backend`; si no se configura en desarrollo, la UI informa que no está disponible y nunca crea asientos demostrativos.
+6. La conexión contable usa `VITE_API_URL` con fallback same-origin `/backend`; si no se configura en desarrollo, la UI informa que no está disponible y nunca crea asientos demostrativos.
 
 ## Project Structure
 

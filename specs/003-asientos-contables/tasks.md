@@ -16,7 +16,7 @@ description: "Tareas frontend para registro, consulta y reversión de asientos c
 
 **Purpose**: Preparar la configuración del servicio contable sin añadir dependencias ni un modo de datos financieros ficticios.
 
-- [X] T001 Documentar `VITE_ACCOUNTING_URL` y su fallback same-origin `/backend` en `.env.example` y `README.md`; vacío significa servicio contable no configurado, nunca datos contables simulados.
+- [X] T001 Documentar `VITE_API_URL` y su fallback same-origin `/backend` en `.env.example` y `README.md`; vacío significa servicio contable no configurado, nunca datos contables simulados.
 
 ---
 

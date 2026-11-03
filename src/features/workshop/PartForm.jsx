@@ -5,7 +5,7 @@ import { BackLink, Field, InputIcon } from "../../shared/ui/ui.jsx";
 import { ConfirmDialog } from "../../shared/ui/ConfirmDialog.jsx";
 import { FormAlert } from "../../shared/ui/FormAlert.jsx";
 import { centsToInput } from "../../domain/money.js";
-import { PART_CATEGORIES, validatePart } from "../../domain/inventory.js";
+import { validatePart } from "../../domain/inventory.js";
 import { useInventory } from "./useInventory.js";
 
 const BACK = "/taller/inventario";
@@ -48,7 +48,7 @@ function PartEditor({ existing, inventory }) {
   const [form, setForm] = useState(() => ({
     sku: existing?.sku ?? "",
     name: existing?.name ?? "",
-    category: existing?.category || PART_CATEGORIES[1],
+    category: existing ? (existing.category ?? "") : (inventory.categories[0] ?? ""),
     compat: existing?.compat ?? "",
     stock: existing ? String(existing.stock) : "",
     min: existing ? String(existing.min) : "",
@@ -120,9 +120,18 @@ function PartEditor({ existing, inventory }) {
               </InputIcon>
             </Field>
             <Field label="Categoría de Componente" htmlFor="pf-cat" required error={errors.category}>
-              <select id="pf-cat" className="input" value={form.category} onChange={set("category")}>
-                {PART_CATEGORIES.map((c) => <option key={c}>{c}</option>)}
-              </select>
+              <input
+                id="pf-cat"
+                className="input"
+                list="pf-category-options"
+                maxLength={50}
+                value={form.category}
+                onChange={set("category")}
+                autoComplete="off"
+              />
+              <datalist id="pf-category-options">
+                {inventory.categories.map((category) => <option key={category} value={category} />)}
+              </datalist>
             </Field>
           </div>
           <Field label="Nombre y Descripción del Componente" htmlFor="pf-name" required error={errors.name}>

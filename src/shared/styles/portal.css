@@ -44,6 +44,9 @@
 
 .composer { display: flex; align-items: flex-end; gap: 8px; }
 .composer__input { flex: 1; min-width: 0; min-height: var(--control-lg); max-height: 140px; padding: 11px 12px; border: var(--border) solid var(--text); border-radius: var(--radius); background: var(--surface); resize: none; field-sizing: content; }
+.composer__mic { flex: 0 0 var(--control-lg); width: var(--control-lg); min-width: var(--control-lg); padding: 0; justify-content: center; }
+.composer__mic.is-recording { color: var(--bg); background: var(--mark); }
+.composer__voice-status { font-size: var(--size-sm); color: var(--text-2); }
 .composer__input::placeholder { color: var(--text-2); opacity: 1; }
 .composer__hint { display: flex; flex-wrap: wrap; align-items: center; gap: 2px 8px; font-size: var(--size-xs); color: var(--text-2); }
 .desk__foot { display: grid; gap: 8px; }
@@ -79,4 +82,6 @@
   .tticket__main { grid-template-columns: minmax(0, 1fr); }
   .tticket__amount { justify-items: start; }
   .msg { max-width: 96%; }
+  .composer { gap: 6px; }
+  .composer__mic { flex-basis: var(--control-lg); }
 }

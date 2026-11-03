@@ -14,7 +14,7 @@ description: "Tareas locales del frontend derivadas de la spec canónica del bac
 
 **Purpose**: Preparar APIs de navegador simuladas para probar captura de voz sin micrófono real.
 
-- [ ] T001 Añadir mocks reutilizables de `MediaRecorder`, `getUserMedia`, blobs y liberación de pistas en `tests/setup.js`.
+- [X] T001 Añadir mocks reutilizables de `MediaRecorder`, `getUserMedia`, blobs y liberación de pistas en `tests/setup.js`.
 
 ---
 
@@ -26,15 +26,15 @@ description: "Tareas locales del frontend derivadas de la spec canónica del bac
 
 ### Tests primero
 
-- [ ] T002 [P] [US1] Añadir pruebas de `sendAudioMessage` (FormData, cookie incluida, campos y boundary no fijado manualmente) en `tests/unit/chat-api-audio.test.js`.
-- [ ] T003 [P] [US1] Añadir pruebas del hook de captura para inicio/detención, duración máxima de 120 s, MIME soportado, permiso denegado y cierre de pistas en `tests/unit/voice-recorder.test.js`.
-- [ ] T004 [P] [US1] Añadir prueba de integración del botón, selección del patrón, envío único y render de transcripción + respuesta en `tests/integration/chat-audio.test.jsx`.
+- [X] T002 [P] [US1] Añadir pruebas de `sendAudioMessage` (FormData, cookie incluida, campos y boundary no fijado manualmente) en `tests/unit/chat-api-audio.test.js`.
+- [X] T003 [P] [US1] Añadir pruebas del hook de captura para inicio/detención, duración máxima de 120 s, MIME soportado, permiso denegado y cierre de pistas en `tests/unit/voice-recorder.test.js`.
+- [X] T004 [P] [US1] Añadir prueba de integración del botón, selección del patrón, envío único y render de transcripción + respuesta en `tests/integration/chat-audio.test.jsx`.
 
 ### Implementación
 
-- [ ] T005 [P] [US1] Añadir `sendAudioMessage` en `src/features/chat/chatApi.js`; enviar `audio`, `duration_ms`, `pattern`, `conversation_id` y `request_id` como `FormData` con `credentials: "include"`, sin fijar `Content-Type`.
-- [ ] T006 [P] [US1] Crear `src/features/chat/useVoiceRecorder.js` para solicitar permiso, seleccionar un MIME aceptado por Groq, grabar hasta 120 s, detener al segundo toque y limpiar tracks al completar/desmontar.
-- [ ] T007 [US1] Integrar el botón accesible de micrófono y estados `idle/recording/submitting/error` en `src/features/chat/LiveChat.jsx`; añadir mensaje del cliente con la transcripción y estilos responsivos en `src/shared/styles/portal.css`.
+- [X] T005 [P] [US1] Añadir `sendAudioMessage` en `src/features/chat/chatApi.js`; enviar `audio`, `duration_ms`, `pattern`, `conversation_id` y `request_id` como `FormData` con `credentials: "include"`, sin fijar `Content-Type`.
+- [X] T006 [P] [US1] Crear `src/features/chat/useVoiceRecorder.js` para solicitar permiso, seleccionar un MIME aceptado por Groq, grabar hasta 120 s, detener al segundo toque y limpiar tracks al completar/desmontar.
+- [X] T007 [US1] Integrar el botón accesible de micrófono y estados `idle/recording/submitting/error` en `src/features/chat/LiveChat.jsx`; añadir mensaje del cliente con la transcripción y estilos responsivos en `src/shared/styles/portal.css`.
 
 **Checkpoint**: La consulta por voz funciona contra un cliente API falso sin romper el envío escrito.
 
@@ -48,12 +48,12 @@ description: "Tareas locales del frontend derivadas de la spec canónica del bac
 
 ### Tests primero
 
-- [ ] T008 [P] [US2] Añadir pruebas de permiso denegado, límite excedido, 413/415/422/429/503/504, red caída y recuperación escrita en `tests/integration/chat-audio-errors.test.jsx`.
+- [X] T008 [P] [US2] Añadir pruebas de permiso denegado, límite excedido, 413/415/422/429/503/504, red caída y recuperación escrita en `tests/integration/chat-audio-errors.test.jsx`.
 
 ### Implementación
 
-- [ ] T009 [US2] Mapear errores 413/415/422/429/503/504 y errores de red a mensajes seguros en `src/features/chat/chatApi.js`.
-- [ ] T010 [US2] Mostrar error recuperable, liberar el micrófono, evitar doble envío y conservar habilitado el formulario escrito en `src/features/chat/LiveChat.jsx`.
+- [X] T009 [US2] Mapear errores 413/415/422/429/503/504 y errores de red a mensajes seguros en `src/features/chat/chatApi.js`.
+- [X] T010 [US2] Mostrar error recuperable, liberar el micrófono, evitar doble envío y conservar habilitado el formulario escrito en `src/features/chat/LiveChat.jsx`.
 
 **Checkpoint**: Un fallo de audio no bloquea la conversación escrita ni revela errores técnicos.
 
@@ -67,11 +67,11 @@ description: "Tareas locales del frontend derivadas de la spec canónica del bac
 
 ### Tests primero
 
-- [ ] T011 [P] [US3] Añadir prueba de historial tras voz + texto y reintento sin duplicados en `tests/integration/chat-audio-history.test.jsx`.
+- [X] T011 [P] [US3] Añadir prueba de historial tras voz + texto y reintento sin duplicados en `tests/integration/chat-audio.test.jsx`.
 
 ### Implementación
 
-- [ ] T012 [US3] Mantener la transcripción como mensaje de usuario en orden cronológico y usar el `conversation_id` de la respuesta para turnos posteriores en `src/features/chat/LiveChat.jsx`.
+- [X] T012 [US3] Mantener la transcripción como mensaje de usuario en orden cronológico y usar el `conversation_id` de la respuesta para turnos posteriores en `src/features/chat/LiveChat.jsx`.
 
 **Checkpoint**: La voz y el texto permanecen en el mismo hilo visible.
 
@@ -79,8 +79,9 @@ description: "Tareas locales del frontend derivadas de la spec canónica del bac
 
 ## Phase 5: Polish & Cross-Cutting
 
-- [ ] T013 [P] Documentar el botón, estados, requisitos HTTPS y vínculo a la spec/OpenAPI canónicos en `features.md` y `docs.md`.
-- [ ] T014 Ejecutar `npm test` y `npm run build` desde la raíz del frontend y validar manualmente el portal en 360, 390, 768 y 1024 px con permiso de micrófono concedido/denegado.
+- [X] T013 [P] Documentar el botón, estados, requisitos HTTPS y vínculo a la spec/OpenAPI canónicos en `features.md` y `docs.md`.
+- [X] T014 Ejecutar `npm test` y `npm run build` desde la raíz del frontend.
+- [ ] T015 Validar manualmente el portal en 360, 390, 768 y 1024 px y comprobar permisos concedido/denegado en un navegador. La prueba de envío real requiere backend con `AUDIO_TRANSCRIPTION_ENABLED=true`.
 
 ---
 

@@ -117,7 +117,7 @@ describe("role returned by the backend", () => {
     await submit(user);
 
     expect(await screen.findByRole("heading", { name: "Panel del taller" })).toBeInTheDocument();
-    expect(JSON.parse(sessionStorage.getItem("techfix.session"))).toEqual({ role: "staff", email: "persona@taller.com", name: "Carlos Ríos" });
+    expect(JSON.parse(sessionStorage.getItem("techfix.session"))).toEqual({ role: "staff", accountRole: "TECHNICIAN", email: "persona@taller.com", name: "Carlos Ríos" });
   });
 
   it("a customer cannot enter the workshop panel and the server session is closed", async () => {

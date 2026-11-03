@@ -13,6 +13,10 @@ Dónde está explicado cada tema. Antes de documentar algo nuevo, revisa si ya e
 | `design/` | Sistema de diseño «Banco»: decisiones y mapa por pantalla (`DESIGN.md`), tokens y vista previa |
 | `public/_redirects` | Proxy `/backend/*` y rutas de la SPA para Netlify |
 | `tests/unit/`, `tests/integration/` | Pruebas Vitest: dominio, contrato de API y capas (unit); pantallas de acceso, registro, recuperación, chat, consulta, inventario, tablero y tema (integration) |
+| `specs/003-asientos-contables/spec.md` | Requisitos de UI para asientos contables; la spec y OpenAPI del backend siguen siendo la fuente canónica |
+| `specs/003-asientos-contables/plan.md` y `tasks.md` | Diseño y tareas de implementación frontend; el OpenAPI backend define rutas y payloads |
+| `src/features/accounting/` | Cliente API y pantallas de listado, alta, detalle y reversión para ADMIN |
+| `src/domain/accounting.js` | Importes contables exactos y validación balanceada de las líneas |
 
 ## En el backend ([TechFixAI-backend](https://github.com/Multiagente-Servicio-Tecnico-Team/TechFixAI-backend))
 
@@ -20,6 +24,9 @@ Dónde está explicado cada tema. Antes de documentar algo nuevo, revisa si ya e
 | --- | --- |
 | `app/accounts/README.md` | Endpoints de cuentas (`/auth/registro`, `/login`, `/logout`, `/me`, `/recuperar`, `/restablecer`) y reglas de sesión |
 | `app/chat/README.md` | Contrato de `POST /api/chat`: campos, presupuesto, ticket y errores |
+| [OpenAPI canónico del backend](../Sistema-Multiagente-de-Servicio-T-cnico-Ventas-y-Soporte/specs/002-transcripcion-audio/contracts/audio-chat.openapi.yaml) | Contrato de `POST /api/chat/audio` |
+| [OpenAPI contable canónico](../Sistema-Multiagente-de-Servicio-T-cnico-Ventas-y-Soporte/specs/003-asientos-contables/contracts/accounting.openapi.yaml) | Contrato de categorías, asientos, detalle, autorización ADMIN y reversión |
+| `specs/002-transcripcion-audio/plan.md` y `tasks.md` | Plan y tareas locales de interfaz; requisitos en backend |
 | `features.md` | Estado de los patrones de agentes y pendientes del backend |
 | `docs.md` | Índice de la documentación del backend |
 

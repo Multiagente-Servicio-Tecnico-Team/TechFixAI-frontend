@@ -145,8 +145,17 @@ Abrir http://localhost:5173. Para usar un backend local, crear un archivo `.env`
 ```bash
 VITE_API_URL=http://localhost:8000/auth
 VITE_CHAT_URL=http://localhost:8000
-VITE_INVENTORY_URL=http://localhost:8000
+VITE_ACCOUNTING_URL=http://localhost:8000
 ```
+
+El inventario permanece en modo demostración porque el backend todavía no publica sus rutas; no configurar `VITE_INVENTORY_URL`.
+
+### Asientos contables del taller
+
+`src/features/accounting/accountingApi.js` usa `VITE_ACCOUNTING_URL` como raíz del backend y envía la cookie de sesión.
+Solo una cuenta `ADMIN` puede usar la pantalla. Si la variable está vacía en desarrollo, la función informa que no está
+configurada; no crea datos contables de demostración. En producción la URL absoluta se reemplaza por el proxy same-origin
+`/backend`.
 
 ## Pruebas
 
@@ -167,7 +176,7 @@ npm run build
 
 Genera `dist/` (HTML, CSS y JS estáticos). Para publicarlo:
 
-1. Para Netlify, definir `VITE_API_URL=/backend/auth` y `VITE_CHAT_URL=/backend` antes de compilar. No
+1. Para Netlify, definir `VITE_API_URL=/backend/auth`, `VITE_CHAT_URL=/backend` y `VITE_ACCOUNTING_URL=/backend` antes de compilar. No
    configurar URLs absolutas del backend Render en el cliente.
 2. En Netlify, publicar `public/_redirects` junto con `dist/`; `/backend/*` debe proxyar al backend unificado,
    conservando método, cuerpo y cabeceras `Set-Cookie`/`Cookie`.

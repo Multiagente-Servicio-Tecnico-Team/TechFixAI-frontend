@@ -49,7 +49,8 @@ export function LoginForm({ role, badge, title, subtitle, defaultTo, footer, api
         setLoading(false);
         return;
       }
-      login({ role: area, email: user.email, name: fullName(user) || user.email });
+      const accountRole = user.rol ?? user.role;
+      login({ role: area, ...(accountRole ? { accountRole } : {}), email: user.email, name: fullName(user) || user.email });
       const target = area === role ? location.state?.from || defaultTo : "/taller";
       navigate(target, { replace: true });
     } catch (err) {

@@ -28,12 +28,38 @@ integrante puede proponer cambios con un PR hacia `develop`.
 | `/portal/asistente` | Chat con los agentes: selector de patrón, presupuesto con aceptar/rechazar, ticket | Lista (depende del backend) | `chat.test.jsx`, `consultation.test.jsx` |
 | `/portal/tickets` | «Mis Tickets» del cliente | Conectada; el backend falla con tickets presupuestados | `consultation.test.jsx` |
 | `/taller/acceso`, `/taller/*` | Panel del taller: cola, detalle, ticket presencial e inventario | Datos de demostración en memoria | — |
+| `/taller/contabilidad` | Listado con filtros, paginación y resumen de asientos (solo ADMIN) | Implementada; depende de `VITE_ACCOUNTING_URL` o `/backend` en producción | `accounting-list.test.jsx`, `accounting-access.test.jsx` |
+| `/taller/contabilidad/nuevo` | Alta confirmada con balance debe/haber, revisión e idempotencia | Implementada; requiere API contable configurada | `accounting-create.test.jsx`, `accounting-domain.test.js`, `accounting-api.test.js` |
+| `/taller/contabilidad/:id` | Detalle, trazabilidad y reversión compensatoria (solo ADMIN) | Implementada; requiere API contable configurada | `accounting-detail.test.jsx`, `accounting-reversal.test.jsx` |
 | `/ayuda` | Soporte, preguntas frecuentes, estado y legales | Lista | — |
 | `*` | Página 404 | Lista | — |
 
-Clientes de API: `src/features/auth/authApi.js` (cuentas) y `src/features/chat/chatApi.js` (chat y tickets), con pruebas
+Clientes de API: `src/features/auth/authApi.js` (cuentas), `src/features/chat/chatApi.js` (chat y tickets) y `src/features/accounting/accountingApi.js` (asientos), con pruebas
 de contrato en `tests/unit/auth-api.test.js`, `tests/integration/chat.test.jsx` y `tests/unit/api-base-url.test.js`. Sin `VITE_API_URL`/`VITE_CHAT_URL` funcionan en modo
 demostración.
+
+## Consulta por voz en el asistente
+
+El chat conectado de `/portal/asistente` incluye un botón de micrófono: un toque inicia
+la captura y el siguiente la detiene y envía. La transcripción y respuesta aparecen en
+el mismo historial, conversación y patrón. Se limita la captura a 120 segundos y 25 MB;
+los errores de permiso, formato, tamaño, cuota, proveedor o red permiten continuar por
+texto. El navegador debe permitir `MediaRecorder`/`getUserMedia` y la captura requiere
+HTTPS o `localhost`. El backend debe tener habilitada `AUDIO_TRANSCRIPTION_ENABLED`.
+
+Implementación en `src/features/chat/useVoiceRecorder.js`, `chatApi.js` y `LiveChat.jsx`.
+Pruebas: `chat-api-audio.test.js`, `voice-recorder.test.js`, `chat-audio.test.jsx` y
+`chat-audio-errors.test.jsx`. El contrato y requisitos canónicos se mantienen en el
+repositorio backend (ver `docs.md`).
+
+## Contabilidad del taller
+
+La zona `/taller/contabilidad/*` permite a `ADMIN` registrar asientos balanceados, consultar y filtrar su historial,
+revisar detalle y eventos, y crear una reversión compensatoria. Los asientos se confirman inmediatamente y no se editan
+ni eliminan. La UI conserva `accountRole` junto al área del taller; el backend sigue autorizando cada operación.
+Dinero y totales se representan con centavos `BigInt`. Configure `VITE_ACCOUNTING_URL`; en producción, si está vacío,
+se usa same-origin `/backend`; en desarrollo sin URL el servicio muestra un estado no configurado y no datos simulados.
+El contrato canónico y los requisitos completos están en el backend: `../Sistema-Multiagente-de-Servicio-T-cnico-Ventas-y-Soporte/specs/003-asientos-contables/`.
 
 ## Calidad verificada
 
@@ -58,6 +84,7 @@ demostración.
 | Validar correo o móvil | `EMAIL_RE` e `isMobilePhone` en `src/domain/validation.js` |
 | Llamadas a cuentas | `src/features/auth/authApi.js` (no uses `fetch` directo en las pantallas) |
 | Llamadas al chat y tickets | `src/features/chat/chatApi.js` |
+| Llamadas a contabilidad | `src/features/accounting/accountingApi.js` |
 | Formato de importes en soles | `formatPEN`, `parseMoney` y `centsToInput` en `src/domain/money.js` |
 | Estados y categorías de ticket | `src/domain/tickets.js` |
 | Colores, radios, foco | variables de `src/shared/styles/tokens.css` (sistema «Banco», ver `design/DESIGN.md`) |

@@ -8,4 +8,4 @@ Esta carpeta contiene únicamente el trabajo de interfaz del frontend. **La fuen
 
 No dupliques ni edites aquí requisitos del producto. Si cambia la spec o el OpenAPI, actualiza estas tareas a partir de la versión canónica. Las rutas de esta lista son relativas a la raíz de `TechFixAI-frontend`.
 
-El frontend aún no tiene `.specify/` ni skills locales de Spec Kit. Este `tasks.md` es una lista derivada para ejecución local; los comandos `$speckit-*` se ejecutan desde el backend mientras la spec canónica permanezca allí.
+El repositorio contiene una copia local de Spec Kit para ejecutar el flujo de implementación. `plan.md` y `tasks.md` cubren solo el trabajo de interfaz; los requisitos y contrato canónicos permanecen en el backend. Las carpetas `.specify/` y `.agents/` están ignoradas por Git en este repo, así que la skill debe estar instalada en el entorno local.

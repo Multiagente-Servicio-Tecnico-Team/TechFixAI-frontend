@@ -76,6 +76,52 @@
 .gauge__row { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 2px 8px; font-size: var(--size-sm); }
 .gauge__row strong { font-family: var(--mono); font-size: var(--size-sm); }
 .gauge--low .gauge__row strong { color: var(--danger); }
+
+/* ---------- Libro contable ---------- */
+.accounting-page { display: grid; gap: 18px; }
+.accounting-page .page-head { align-items: center; }
+.accounting-filters { display: grid; gap: 12px; }
+.accounting-filters .grid-2 { grid-template-columns: repeat(auto-fit, minmax(min(100%, 190px), 1fr)); }
+.accounting-list { display: grid; gap: 10px; }
+.accounting-card { display: grid; gap: 8px; padding: 14px; }
+.accounting-card__top { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 8px; }
+.accounting-entry-number { font: 700 var(--size-base) var(--mono); color: var(--accent); text-underline-offset: 3px; }
+.accounting-summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 150px), 1fr)); gap: 10px 16px; margin: 0; }
+.accounting-summary > div { min-width: 0; overflow-wrap: anywhere; }
+.accounting-summary dt { color: var(--text-2); font-size: var(--size-xs); font-weight: 700; }
+.accounting-summary dd { margin: 2px 0 0; }
+.accounting-summary--detail { grid-template-columns: repeat(auto-fit, minmax(min(100%, 210px), 1fr)); }
+.accounting-section { display: grid; gap: 12px; }
+.accounting-section .subtitle { padding-bottom: 6px; border-bottom: var(--rule) solid var(--text); }
+.accounting-line { min-width: 0; margin: 10px 0; padding: 12px; border: 1px solid var(--line); border-radius: var(--radius); }
+.accounting-line__head { display: flex; justify-content: space-between; align-items: center; }
+.accounting-line__head legend { font-weight: 700; }
+.accounting-line__amounts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.accounting-totals { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px 18px; padding: 10px 0; border-block: var(--rule) solid var(--text); font-size: var(--size-sm); }
+.accounting-totals strong { font: 600 var(--size-base) var(--mono); }
+.accounting-totals--balanced { color: var(--ok); }
+.accounting-form__actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.accounting-review dl { display: grid; gap: 6px; }
+.accounting-review dl > div { display: flex; justify-content: space-between; gap: 12px; }
+.accounting-review dt { color: var(--text-2); }
+.accounting-review dd { margin: 0; font: 600 var(--size-sm) var(--mono); }
+.accounting-table-wrap { width: 100%; overflow-x: auto; }
+.accounting-table { width: 100%; border-collapse: collapse; font-size: var(--size-sm); }
+.accounting-table th, .accounting-table td { padding: 9px 8px; border-bottom: 1px solid var(--line); text-align: left; overflow-wrap: anywhere; }
+.accounting-table th { font-size: var(--size-xs); }
+.accounting-timeline { display: grid; gap: 12px; margin: 0; padding-left: 22px; }
+.accounting-timeline li { padding-left: 4px; }
+.accounting-timeline p { margin: 3px 0; color: var(--text-2); font-size: var(--size-sm); }
+.accounting-success { display: grid; gap: 8px; }
+.badge--warn { color: var(--danger); }
+@media (max-width: 600px) {
+  .accounting-line__amounts { grid-template-columns: minmax(0, 1fr); }
+  .accounting-table thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; }
+  .accounting-table, .accounting-table tbody, .accounting-table tr, .accounting-table td { display: block; width: 100%; }
+  .accounting-table tr { margin: 8px 0; padding: 8px; border: 1px solid var(--line); border-radius: var(--radius); }
+  .accounting-table td { display: grid; grid-template-columns: minmax(95px, .7fr) minmax(0, 1.3fr); gap: 8px; border: 0; }
+  .accounting-table td::before { content: attr(data-label); color: var(--text-2); font-weight: 700; }
+}
 .bin__foot { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 .bin__price { font: 600 var(--size-base) var(--mono); white-space: nowrap; }
 .bin__tools { display: flex; gap: 4px; }
@@ -86,10 +132,15 @@
   .detail__cols { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 @media (max-width: 760px) {
+  .tabs__link--accounting { display: none; }
+  .accounting-menu-link { display: flex; }
   .station__picker { display: grid; gap: 2px; font-size: var(--size-sm); font-weight: 700; }
   .board { grid-template-columns: minmax(0, 1fr); overflow-x: visible; }
   .station { display: none; }
   .station.is-focus { display: grid; }
   .detail__cols { grid-template-columns: minmax(0, 1fr); }
   .detail__top { padding-right: 24px; }
+}
+@media (min-width: 761px) {
+  .accounting-menu-link { display: none; }
 }

@@ -1,4 +1,4 @@
-import { Route, Routes } from "react-router-dom";
+import { Outlet, Route, Routes } from "react-router-dom";
 import { RequireRole } from "../features/auth/RequireRole.jsx";
 import { ScrollManager } from "./ScrollManager.jsx";
 import AuthLayout from "./layouts/AuthLayout.jsx";
@@ -19,6 +19,9 @@ import TicketDetail from "../features/workshop/TicketDetail.jsx";
 import NewTicket from "../features/workshop/NewTicket.jsx";
 import Inventory from "../features/workshop/Inventory.jsx";
 import PartForm from "../features/workshop/PartForm.jsx";
+import AccountingList from "../features/accounting/AccountingList.jsx";
+import AccountingCreate from "../features/accounting/AccountingCreate.jsx";
+import AccountingDetail from "../features/accounting/AccountingDetail.jsx";
 
 export default function App() {
   return (
@@ -50,6 +53,11 @@ export default function App() {
           <Route path="/taller/inventario" element={<Inventory />} />
           <Route path="/taller/inventario/nuevo" element={<PartForm />} />
           <Route path="/taller/inventario/:sku/editar" element={<PartForm />} />
+          <Route element={<RequireRole role="staff" accountRole="ADMIN"><Outlet /></RequireRole>}>
+            <Route path="/taller/contabilidad" element={<AccountingList />} />
+            <Route path="/taller/contabilidad/nuevo" element={<AccountingCreate />} />
+            <Route path="/taller/contabilidad/:id" element={<AccountingDetail />} />
+          </Route>
         </Route>
       </Routes>
     </>

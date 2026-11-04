@@ -5,7 +5,7 @@ import { BackLink, Field, Toast } from "../../shared/ui/ui.jsx";
 import { useStore } from "../../state/store.jsx";
 import { formatPEN, parseMoney } from "../../domain/money.js";
 import { REQUEST_TYPE_LABEL, STAFF_STATUSES, TICKET_STATUS_CODES, ADMIN_TICKET_STATUS_LABEL, TICKET_ORIGIN_LABEL } from "../../domain/tickets.js";
-import { ticketsApi } from "./ticketsApi.js";
+import { normalizeTicketQuote, ticketsApi } from "./ticketsApi.js";
 import { inventoryApi } from "./inventoryApi.js";
 
 function Datum({ label, children }) {
@@ -20,6 +20,7 @@ function dateLabel(value) {
 
 const auditLabel = { CREATED: "Ticket creado", UPDATED: "Ticket actualizado", STATUS_CHANGED: "Estado actualizado", CANCELLED: "Ticket cancelado", QUOTE_CREATED: "Cotización registrada" };
 const quoteTypeLabel = { REPAIR: "Reparación", DIRECT_SALE: "Venta directa", PC_BUILD: "Armado de PC" };
+const SERVICE_REPAIR_TYPES = new Set(["REPAIR", "SUPPORT", "WARRANTY_CLAIM"]);
 
 export default function TicketDetail() {
   const { id } = useParams();
@@ -35,9 +36,10 @@ export default function TicketDetail() {
   const [loading, setLoading] = useState(apiMode);
   const [saving, setSaving] = useState(false);
   const [quoteFormOpen, setQuoteFormOpen] = useState(false);
-  const [quoteDraft, setQuoteDraft] = useState({ kind: "REPAIR", sparePartId: "", quantity: "1", observations: "" });
+  const [quoteDraft, setQuoteDraft] = useState({ laborTaskType: "maintenance", parts: [], observations: "" });
   const [parts, setParts] = useState([]);
   const [quoteError, setQuoteError] = useState("");
+  const [inventoryError, setInventoryError] = useState("");
   const [quoteSaving, setQuoteSaving] = useState(false);
 
   useEffect(() => {
@@ -105,30 +107,74 @@ export default function TicketDetail() {
   const whatsappDigits = ticket.phone.replace(/\D/g, "");
   const quote = ticket.quote;
   const quoteHistory = Array.isArray(ticket.quotes) ? ticket.quotes : quote ? [quote] : [];
+  const serviceQuoteType = ticket.requestType === "PC_BUILD"
+    ? "PC_BUILD"
+    : SERVICE_REPAIR_TYPES.has(ticket.requestType) ? "REPAIR" : null;
+  const laborTaskOptions = serviceQuoteType === "PC_BUILD"
+    ? [{ value: "pc_build", label: "Armado de PC" }]
+    : [{ value: "maintenance", label: "Mantenimiento / reparación" }, { value: "diagnosis", label: "Diagnóstico" }];
 
   const openQuoteForm = async () => {
-    setQuoteFormOpen(true); setQuoteError("");
-    if (inventoryApi.mode !== "api") { setQuoteError("Configura el inventario del backend para agregar artículos a la cotización."); return; }
+    setQuoteFormOpen(true); setQuoteError(""); setInventoryError("");
+    if (!serviceQuoteType) {
+      setQuoteError("Este tipo de ticket no admite cotizaciones de servicio desde esta pantalla.");
+      return;
+    }
+    setQuoteDraft({ laborTaskType: serviceQuoteType === "PC_BUILD" ? "pc_build" : "maintenance", parts: [], observations: "" });
+    if (inventoryApi.mode !== "api") { setParts([]); setInventoryError("El inventario no está conectado; puedes continuar con una cotización solo de mano de obra."); return; }
     try { setParts(await inventoryApi.list()); }
-    catch (e) { setQuoteError(e.message || "No se pudo cargar el inventario."); }
+    catch (e) { setParts([]); setInventoryError(`${e.message || "No se pudo cargar el inventario."} Puedes continuar con una cotización solo de mano de obra.`); }
   };
 
   const createQuote = async (event) => {
     event.preventDefault();
-    const sparePartId = Number(quoteDraft.sparePartId);
-    const quantity = Number(quoteDraft.quantity);
-    if (!Number.isInteger(sparePartId) || sparePartId < 1 || !Number.isInteger(quantity) || quantity < 1 || quantity > 1000) {
-      setQuoteError("Selecciona un repuesto válido e indica una cantidad entre 1 y 1000."); return;
+    if (!serviceQuoteType) {
+      setQuoteError("Este tipo de ticket no admite cotizaciones de servicio desde esta pantalla."); return;
+    }
+    const selectedParts = [];
+    for (const line of quoteDraft.parts) {
+      const sparePartId = Number(line.sparePartId);
+      const quantity = Number(line.quantity);
+      const selectedPart = parts.find((part) => part.id === sparePartId);
+      if (!Number.isInteger(sparePartId) || sparePartId < 1 || !selectedPart) {
+        setQuoteError("Selecciona un repuesto válido o elimina la línea vacía."); return;
+      }
+      if (!Number.isInteger(quantity) || quantity < 1 || quantity > 1000) {
+        setQuoteError("Cada cantidad debe ser un número entre 1 y 1000."); return;
+      }
+      if (quantity > selectedPart.stock) {
+        setQuoteError(`La cantidad de «${selectedPart.name}» supera las ${selectedPart.stock} unidades disponibles.`); return;
+      }
+      selectedParts.push({ spare_part_id: sparePartId, quantity });
     }
     setQuoteSaving(true); setQuoteError("");
     try {
-      await ticketsApi.createServiceQuote(id, {
-        kind: quoteDraft.kind,
-        lines: [{ spare_part_id: sparePartId, quantity }],
+      const created = await ticketsApi.createServiceQuote(id, {
+        quote_type: serviceQuoteType,
+        labor_task_type: serviceQuoteType === "PC_BUILD" ? "pc_build" : quoteDraft.laborTaskType,
+        parts: selectedParts,
         observations: quoteDraft.observations.trim() || null,
       });
       const updated = await ticketsApi.getTicket(id);
-      setTicket(updated); setQuoteFormOpen(false); setToast("Cotización de servicio registrada.");
+      const createdQuote = normalizeTicketQuote({
+        ...created,
+        lines: selectedParts.map((line) => {
+          const part = parts.find((item) => item.id === line.spare_part_id);
+          return {
+            spare_part_id: part.id,
+            name_snapshot: part.name,
+            quantity: line.quantity,
+          };
+        }),
+      });
+      const previousQuotes = [
+        ...(updated.quotes ?? []),
+        ...(ticket.quotes ?? []),
+        ...(ticket.quote ? [ticket.quote] : []),
+      ];
+      const history = [createdQuote, ...previousQuotes.filter((item) => item.id !== createdQuote.id)];
+      setTicket({ ...updated, quote: createdQuote, quotes: history });
+      setQuoteFormOpen(false); setToast("Cotización de servicio registrada.");
     } catch (e) {
       setQuoteError(e.message || "No se pudo crear la cotización.");
       if (e.status === 401) navigate("/taller/acceso", { replace: true, state: { from: location.pathname } });
@@ -187,7 +233,8 @@ export default function TicketDetail() {
         </div>
 
         {apiMode && <section className="datum ticket-detail__quote" aria-label="Cotización existente">
-          <div className="commerce-card__head"><h2 className="subtitle">Cotizaciones de servicio ({quoteHistory.length})</h2><button type="button" className="btn btn--sm" onClick={openQuoteForm}>Añadir cotización de servicio</button></div>
+          <div className="commerce-card__head"><h2 className="subtitle">Cotizaciones de servicio ({quoteHistory.length})</h2><button type="button" className="btn btn--sm" disabled={!serviceQuoteType} onClick={openQuoteForm}>Añadir cotización de servicio</button></div>
+          {!serviceQuoteType && <p className="small muted">Las cotizaciones de venta se registran desde el apartado Ventas y pagos; aquí se cotizan servicios asociados al equipo.</p>}
           {quoteHistory.length ? <div className="commerce-grid">{quoteHistory.map((item, index) => <article className="quote-history" key={item.id ?? index}>
             <div className="commerce-card__head"><strong>Cotización #{item.id ?? index + 1}</strong><span className="stamp">{item.statusLabel || item.status}</span></div>
             <div className="detail__cols">
@@ -198,15 +245,26 @@ export default function TicketDetail() {
               <Datum label="Fecha">{item.dateLabel || dateLabel(item.created_at)}</Datum>
               {item.observations && <Datum label="Observaciones">{item.observations}</Datum>}
             </div>
-            {item.lines?.length > 0 && <ul className="commerce-lines">{item.lines.map((line, lineIndex) => <li key={`${line.spare_part_id ?? line.name_snapshot}-${lineIndex}`}><span>{line.name_snapshot ?? line.name} × {line.quantity}</span><span className="mono">{formatPEN(parseMoney(line.subtotal))}</span></li>)}</ul>}
+            {item.lines?.length > 0 && <ul className="commerce-lines">{item.lines.map((line, lineIndex) => <li key={`${line.spare_part_id ?? line.name_snapshot}-${lineIndex}`}><span>{line.name_snapshot ?? line.name} × {line.quantity}</span>{line.subtotal != null && <span className="mono">{formatPEN(parseMoney(line.subtotal))}</span>}</li>)}</ul>}
           </article>)}</div> : <p className="muted">No hay una cotización registrada.</p>}
           {quoteFormOpen && <form className="commerce-form" onSubmit={createQuote}>
             <h3 className="subtitle">Nueva cotización</h3>
-            <Field label="Tipo de servicio" htmlFor="service-quote-kind"><select id="service-quote-kind" className="input" value={quoteDraft.kind} onChange={(e) => setQuoteDraft({ ...quoteDraft, kind: e.target.value })}><option value="REPAIR">Reparación</option><option value="PC_BUILD">Armado de PC</option></select></Field>
-            <div className="grid-2"><Field label="Repuesto" htmlFor="service-quote-part" required><select id="service-quote-part" className="input" value={quoteDraft.sparePartId} onChange={(e) => setQuoteDraft({ ...quoteDraft, sparePartId: e.target.value })}><option value="">Selecciona un artículo</option>{parts.map((part) => <option key={part.id} value={part.id}>{part.name} · {part.stock} disponibles · {formatPEN(part.price)}</option>)}</select></Field><Field label="Cantidad" htmlFor="service-quote-quantity" required><input id="service-quote-quantity" className="input" type="number" min="1" max="1000" value={quoteDraft.quantity} onChange={(e) => setQuoteDraft({ ...quoteDraft, quantity: e.target.value })} /></Field></div>
+            <p className="small muted">Tipo de cotización: {quoteTypeLabel[serviceQuoteType]}. Se determina por el tipo de ticket.</p>
+            {serviceQuoteType === "PC_BUILD"
+              ? <p className="small muted">Mano de obra: armado de PC. El importe lo calcula el backend.</p>
+              : <Field label="Tipo de mano de obra" htmlFor="service-quote-labor-task" required><select id="service-quote-labor-task" className="input" value={quoteDraft.laborTaskType} onChange={(e) => setQuoteDraft({ ...quoteDraft, laborTaskType: e.target.value })}>{laborTaskOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}</select></Field>}
+            <section className="commerce-form__lines" aria-label="Repuestos de la cotización">
+              <div className="commerce-card__head"><h4 className="subtitle">Repuestos (opcional)</h4><button type="button" className="btn btn--sm" disabled={!parts.length} onClick={() => setQuoteDraft((current) => ({ ...current, parts: [...current.parts, { sparePartId: "", quantity: "1" }] }))}>Añadir repuesto</button></div>
+              {!quoteDraft.parts.length && <p className="small muted">Puedes crear una cotización solo de mano de obra.</p>}
+              {quoteDraft.parts.map((line, index) => <div className="grid-2 commerce-line-form" key={index}>
+                <Field label={`Repuesto ${index + 1}`} htmlFor={`service-quote-part-${index}`} required><select id={`service-quote-part-${index}`} className="input" value={line.sparePartId} onChange={(e) => setQuoteDraft((current) => ({ ...current, parts: current.parts.map((item, itemIndex) => itemIndex === index ? { ...item, sparePartId: e.target.value } : item) }))}><option value="">Selecciona un artículo</option>{parts.map((part) => <option key={part.id} value={part.id} disabled={part.stock < 1}>{part.name} · {part.stock} disponibles · {formatPEN(part.price)}</option>)}</select></Field>
+                <div className="commerce-line-form__quantity"><Field label="Cantidad" htmlFor={`service-quote-quantity-${index}`} required><input id={`service-quote-quantity-${index}`} className="input" type="number" min="1" max="1000" value={line.quantity} onChange={(e) => setQuoteDraft((current) => ({ ...current, parts: current.parts.map((item, itemIndex) => itemIndex === index ? { ...item, quantity: e.target.value } : item) }))} /></Field><button type="button" className="btn btn--sm" onClick={() => setQuoteDraft((current) => ({ ...current, parts: current.parts.filter((_, itemIndex) => itemIndex !== index) }))}>Quitar</button></div>
+              </div>)}
+            </section>
+            {inventoryError && <p className="small muted" role="status">{inventoryError}</p>}
             <Field label="Observaciones" htmlFor="service-quote-observations"><textarea id="service-quote-observations" className="input textarea" maxLength={2000} value={quoteDraft.observations} onChange={(e) => setQuoteDraft({ ...quoteDraft, observations: e.target.value })} /></Field>
             {quoteError && <p className="form-alert" role="alert">{quoteError}</p>}
-            <div className="btn-row"><button type="submit" className="btn btn--primary" disabled={quoteSaving || !parts.length}>{quoteSaving ? "Guardando…" : "Crear cotización"}</button><button type="button" className="btn" onClick={() => setQuoteFormOpen(false)}>Cancelar</button></div>
+            <div className="btn-row"><button type="submit" className="btn btn--primary" disabled={quoteSaving || !serviceQuoteType}>{quoteSaving ? "Guardando…" : "Crear cotización"}</button><button type="button" className="btn" onClick={() => setQuoteFormOpen(false)}>Cancelar</button></div>
           </form>}
         </section>}
 

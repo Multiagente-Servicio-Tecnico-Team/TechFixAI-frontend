@@ -23,12 +23,34 @@ export class TicketsApiError extends Error {
   }
 }
 
-function errorForStatus(status) {
+const VALIDATION_FIELD_LABELS = {
+  quote_type: "Tipo de cotización",
+  labor_task_type: "Tipo de mano de obra",
+  parts: "Repuestos",
+  spare_part_id: "Repuesto",
+  quantity: "Cantidad",
+  observations: "Observaciones",
+};
+
+function validationMessage(data) {
+  if (Array.isArray(data?.errors) && data.errors.length) {
+    return data.errors.map((error) => {
+      const field = error.campo ?? error.field;
+      const label = VALIDATION_FIELD_LABELS[field] ?? field;
+      const detail = error.mensaje ?? error.reason ?? error.msg;
+      return [label, detail].filter(Boolean).join(": ");
+    }).filter(Boolean).join(" ");
+  }
+  if (typeof data?.detail === "string" && data.detail !== "Datos inválidos.") return data.detail;
+  return TICKETS_MESSAGES.invalid;
+}
+
+function errorForStatus(status, data) {
   if (status === 401) return new TicketsApiError(TICKETS_MESSAGES.session, { status, code: "session_required" });
   if (status === 403) return new TicketsApiError(TICKETS_MESSAGES.forbidden, { status, code: "forbidden" });
   if (status === 404) return new TicketsApiError(TICKETS_MESSAGES.notFound, { status, code: "not_found" });
   if (status === 409) return new TicketsApiError(TICKETS_MESSAGES.conflict, { status, code: "conflict" });
-  if (status === 422) return new TicketsApiError(TICKETS_MESSAGES.invalid, { status, code: "invalid" });
+  if (status === 422) return new TicketsApiError(validationMessage(data), { status, code: "invalid" });
   return new TicketsApiError(TICKETS_MESSAGES.unavailable, { status, code: "unavailable" });
 }
 
@@ -38,7 +60,7 @@ function displayDate(value) {
   return Number.isNaN(date.getTime()) ? "Fecha no disponible" : new Intl.DateTimeFormat("es-PE", { dateStyle: "medium", timeStyle: "short" }).format(date);
 }
 
-function normalizeQuote(quote) {
+export function normalizeTicketQuote(quote) {
   if (!quote) return null;
   return {
     ...quote,
@@ -56,8 +78,8 @@ export function normalizeAdminTicket(dto) {
   const requestType = dto.request_type;
   const originCode = dto.origin ?? "UNKNOWN";
   const advance = dto.advance_amount == null ? null : parseMoney(dto.advance_amount);
-  const quotes = Array.isArray(dto.quotes) ? dto.quotes.map(normalizeQuote) : dto.quote ? [normalizeQuote(dto.quote)] : [];
-  const quote = normalizeQuote(dto.quote) ?? quotes[quotes.length - 1] ?? null;
+  const quotes = Array.isArray(dto.quotes) ? dto.quotes.map(normalizeTicketQuote) : dto.quote ? [normalizeTicketQuote(dto.quote)] : [];
+  const quote = normalizeTicketQuote(dto.quote) ?? quotes[quotes.length - 1] ?? null;
   const quoteCents = quote?.totalCents ?? (dto.quote_total == null ? null : parseMoney(dto.quote_total));
   const paymentMethod = dto.advance_payment_method ?? dto.payment_method ?? null;
   return {
@@ -103,9 +125,13 @@ export function createTicketsApi({ baseUrl = "", fetchImpl } = {}) {
     } catch {
       throw new TicketsApiError(TICKETS_MESSAGES.unavailable, { code: "network" });
     }
-    if (!response.ok) throw errorForStatus(response.status);
+    let data = null;
+    if (response.status !== 204) {
+      try { data = await response.json(); } catch { data = null; }
+    }
+    if (!response.ok) throw errorForStatus(response.status, data);
     if (response.status === 204) return null;
-    try { return await response.json(); } catch { throw new TicketsApiError(TICKETS_MESSAGES.unavailable, { code: "invalid_response" }); }
+    return data;
   }
 
   return {

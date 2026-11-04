@@ -6,6 +6,11 @@ import { StoreProvider } from "../../src/state/store.jsx";
 
 const createTicket = vi.hoisted(() => vi.fn());
 vi.mock("../../src/features/workshop/ticketsApi.js", () => ({ ticketsApi: { mode: "api", createManualTicket: (...args) => createTicket(...args) } }));
+vi.mock("../../src/features/customers/customersApi.js", () => ({ customersApi: {
+  mode: "api",
+  list: vi.fn().mockResolvedValue({ items: [{ id: 801, name: "Valeria Torres", phone: "+51987654321", email: "valeria@example.pe", originLabel: "Presencial", accountLinked: false }], total: 1 }),
+  create: vi.fn(),
+} }));
 import NewTicket from "../../src/features/workshop/NewTicket.jsx";
 
 function CurrentPath() { const location = useLocation(); return <output>{location.pathname}</output>; }
@@ -13,8 +18,8 @@ function renderForm() {
   return render(<MemoryRouter initialEntries={["/taller/tickets/nuevo"]} future={{ v7_startTransition: true, v7_relativeSplatPath: true }}><StoreProvider><Routes><Route path="/taller/tickets/nuevo" element={<NewTicket />} /><Route path="/taller/tickets/:id" element={<CurrentPath />} /></Routes></StoreProvider></MemoryRouter>);
 }
 async function fillRequired(user) {
-  await user.type(screen.getByLabelText(/^Nombre Completo \/ Razón Social/), "Valeria Torres");
-  await user.type(screen.getByLabelText(/^WhatsApp \/ Celular/), "987654321");
+  await user.click(screen.getByRole("button", { name: "Buscar" }));
+  await user.click(await screen.findByRole("button", { name: /Valeria Torres/ }));
   await user.type(screen.getByLabelText(/^Equipo \/ Marca y Modelo/), "Dell XPS 15");
   await user.type(screen.getByLabelText(/^Detalle de la Falla o Solicitud/), "No enciende al presionar el botón");
 }
@@ -31,7 +36,7 @@ describe("alta manual conectada al backend", () => {
     await user.type(screen.getByLabelText("Monto Cobrado / Adelanto"), "99999999.99");
     await user.click(screen.getByLabelText("Efectivo"));
     await user.click(screen.getByRole("button", { name: "Generar Ticket" }));
-    await waitFor(() => expect(createTicket).toHaveBeenCalledWith(expect.objectContaining({ request_type: "WARRANTY_CLAIM", title: "Dell XPS 15", failure_description: "No enciende al presionar el botón", advance_amount: "99999999.99", advance_payment_method: "CASH" })));
+    await waitFor(() => expect(createTicket).toHaveBeenCalledWith(expect.objectContaining({ customer_id: 801, contact_name: "Valeria Torres", contact_phone: "+51987654321", request_type: "WARRANTY_CLAIM", title: "Dell XPS 15", failure_description: "No enciende al presionar el botón", advance_amount: "99999999.99", advance_payment_method: "CASH" })));
     expect(await screen.findByText("/taller/tickets/741")).toBeInTheDocument();
   });
 
@@ -79,6 +84,17 @@ describe("alta manual conectada al backend", () => {
     expect(screen.getByText(/equipo \(2 a 200/i)).toBeInTheDocument();
     expect(screen.getByText(/falla o solicitud \(5 a 10000/i)).toBeInTheDocument();
     expect(screen.getByText(/importe positivo/i)).toBeInTheDocument();
+    expect(createTicket).not.toHaveBeenCalled();
+  });
+
+  it("no crea el ticket hasta seleccionar un customer de la respuesta backend", async () => {
+    createTicket.mockReset();
+    const user = userEvent.setup();
+    renderForm();
+    await user.type(screen.getByLabelText(/^Equipo \/ Marca y Modelo/), "Dell XPS 15");
+    await user.type(screen.getByLabelText(/^Detalle de la Falla o Solicitud/), "No enciende al presionar el botón");
+    await user.click(screen.getByRole("button", { name: "Generar Ticket" }));
+    expect(await screen.findByText(/selecciona un cliente comercial/i)).toBeInTheDocument();
     expect(createTicket).not.toHaveBeenCalled();
   });
 });

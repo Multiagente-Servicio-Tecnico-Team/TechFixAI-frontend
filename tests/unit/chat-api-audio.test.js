@@ -6,6 +6,11 @@ function response(status, body) {
 }
 
 describe("audio chat API", () => {
+  it("maps an unresolved commercial customer profile to a safe recoverable message", async () => {
+    const api = createChatApi({ baseUrl: "https://api.test", fetchImpl: vi.fn().mockResolvedValue(response(403, { code: "customer_profile_missing" })) });
+    await expect(api.listMyTickets()).rejects.toMatchObject({ code: "customer_profile_missing", message: CHAT_MESSAGES.profileMissing });
+  });
+
   it("sends multipart with cookie and never sets Content-Type manually", async () => {
     const fetchImpl = vi.fn().mockResolvedValue(response(200, {
       transcript: "No enciende", conversation_id: "c1", reply: "Revisemos", pattern: "orchestrator",

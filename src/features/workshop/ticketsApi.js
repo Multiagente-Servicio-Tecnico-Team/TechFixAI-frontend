@@ -56,7 +56,8 @@ export function normalizeAdminTicket(dto) {
   const requestType = dto.request_type;
   const originCode = dto.origin ?? "UNKNOWN";
   const advance = dto.advance_amount == null ? null : parseMoney(dto.advance_amount);
-  const quote = normalizeQuote(dto.quote);
+  const quotes = Array.isArray(dto.quotes) ? dto.quotes.map(normalizeQuote) : dto.quote ? [normalizeQuote(dto.quote)] : [];
+  const quote = normalizeQuote(dto.quote) ?? quotes[quotes.length - 1] ?? null;
   const quoteCents = quote?.totalCents ?? (dto.quote_total == null ? null : parseMoney(dto.quote_total));
   const paymentMethod = dto.advance_payment_method ?? dto.payment_method ?? null;
   return {
@@ -80,6 +81,7 @@ export function normalizeAdminTicket(dto) {
     payment: dto.payment_status || (advance !== null ? `Adelanto ${ADVANCE_PAYMENT_METHOD_LABEL[paymentMethod] || "registrado"}` : "Pendiente"),
     budget: quoteCents,
     quote,
+    quotes,
     date: displayDate(dto.created_at),
   };
 }
@@ -122,6 +124,10 @@ export function createTicketsApi({ baseUrl = "", fetchImpl } = {}) {
       return normalizeAdminTicket(await request(`/${encodeURIComponent(id)}`));
     },
     async createManualTicket(payload) { return normalizeAdminTicket(await request("", { method: "POST", body: payload })); },
+    async createServiceQuote(ticketId, payload) {
+      if (!/^\d+$/.test(String(ticketId)) || Number(ticketId) < 1) throw new TicketsApiError(TICKETS_MESSAGES.notFound, { status: 404, code: "not_found" });
+      return request(`/${encodeURIComponent(ticketId)}/quotes`, { method: "POST", body: payload });
+    },
     async updateTicket(id, payload) {
       if (!/^\d+$/.test(String(id)) || Number(id) < 1) throw new TicketsApiError(TICKETS_MESSAGES.notFound, { status: 404, code: "not_found" });
       return normalizeAdminTicket(await request(`/${encodeURIComponent(id)}`, { method: "PATCH", body: payload }));

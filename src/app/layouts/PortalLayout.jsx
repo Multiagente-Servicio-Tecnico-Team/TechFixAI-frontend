@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, NavLink, Outlet, useNavigate } from "react-router-dom";
-import { LifeBuoy, LogOut, MessageSquareText, TicketCheck, UserRound } from "lucide-react";
+import { BadgeDollarSign, LifeBuoy, LogOut, MessageSquareText, ShoppingBag, TicketCheck, UserRound } from "lucide-react";
 import Logo from "../../shared/ui/Logo.jsx";
 import ThemeToggle from "../../shared/ui/ThemeToggle.jsx";
 import { useStore } from "../../state/store.jsx";
@@ -73,6 +73,8 @@ export default function PortalLayout() {
         <Logo />
         <nav className="tabs" aria-label="Portal del cliente">
           <NavLink to="/portal/tickets" className={tabClass}><TicketCheck size={17} aria-hidden="true" /> Mis Tickets</NavLink>
+          <NavLink to="/portal/cotizaciones" className={tabClass}><BadgeDollarSign size={17} aria-hidden="true" /> Cotizaciones</NavLink>
+          <NavLink to="/portal/compras" className={tabClass}><ShoppingBag size={17} aria-hidden="true" /> Mis Compras</NavLink>
           <NavLink to="/portal/asistente" className={tabClass}><MessageSquareText size={17} aria-hidden="true" /> Asistente</NavLink>
         </nav>
         <div className="strip__actions">

@@ -7,6 +7,7 @@ import { EMAIL_RE } from "../../domain/validation.js";
 import { centsToInput, formatPEN, parseMoney } from "../../domain/money.js";
 import { REQUEST_TYPE_CODES, REQUEST_TYPE_LABEL, TICKET_CATEGORIES } from "../../domain/tickets.js";
 import { ticketsApi } from "./ticketsApi.js";
+import CustomerPicker from "../customers/CustomerPicker.jsx";
 
 const methods = [
   { label: "Yape/Plin", code: "YAPE_PLIN" },
@@ -21,6 +22,7 @@ export default function NewTicket() {
   const navigate = useNavigate();
   const location = useLocation();
   const [form, setForm] = useState({ client: "", phone: "", email: "", device: "", issue: "", category: apiMode ? "REPAIR" : "Reparación", advance: "", method: apiMode ? "YAPE_PLIN" : "Yape/Plin" });
+  const [selectedCustomer, setSelectedCustomer] = useState(null);
   const [errors, setErrors] = useState({});
   const [serverError, setServerError] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -38,6 +40,7 @@ export default function NewTicket() {
     const contactPhone = `+51${digits}`;
     const email = form.email.trim();
     if (form.client.trim().length < 3 || form.client.trim().length > 200) next.client = "Ingresa un nombre de 3 a 200 caracteres.";
+    if (apiMode && (!selectedCustomer?.id || !Number.isInteger(Number(selectedCustomer.id)) || Number(selectedCustomer.id) < 1)) next.customer = "Busca y selecciona un cliente comercial antes de crear el ticket.";
     if (digits.length < 9 || contactPhone.length > 20) next.phone = "Ingresa un número local de 9 a 17 dígitos.";
     if (email && (!EMAIL_RE.test(email) || email.length > 255)) next.email = "Correo no válido (máximo 255 caracteres).";
     if (form.device.trim().length < 2 || form.device.trim().length > 200) next.device = "Indica el equipo (2 a 200 caracteres).";
@@ -55,6 +58,7 @@ export default function NewTicket() {
       setSubmitting(true);
       try {
         const ticket = await ticketsApi.createManualTicket({
+          customer_id: Number(selectedCustomer.id),
           contact_name: form.client.trim(),
           contact_phone: contactPhone,
           contact_email: email || null,
@@ -99,6 +103,13 @@ export default function NewTicket() {
         <div className="intake__main">
           <section className="intake__section">
             <div className="intake__head"><h2 className="subtitle">1. Datos del Cliente</h2><p>Recepción rápida en mostrador</p></div>
+            {apiMode && <><CustomerPicker value={selectedCustomer} onChange={(customer) => {
+              setSelectedCustomer(customer);
+              if (!customer) return;
+              const digitsOnly = String(customer.phone || "").replace(/\D/g, "");
+              const localPhone = digitsOnly.startsWith("51") && digitsOnly.length > 9 ? digitsOnly.slice(2) : digitsOnly;
+              setForm((current) => ({ ...current, client: customer.name ?? customer.display_name ?? "", phone: localPhone, email: customer.email ?? "" }));
+            }} />{errors.customer && <p className="field__error" role="alert">{errors.customer}</p>}</>}
             <Field label="Nombre Completo / Razón Social" htmlFor="nt-client" required error={errors.client}>
               <input id="nt-client" maxLength={200} className="input" placeholder="Valeria Marcela Gómez Rivas" value={form.client} onChange={set("client")} autoComplete="off" aria-invalid={!!errors.client || undefined} />
             </Field>

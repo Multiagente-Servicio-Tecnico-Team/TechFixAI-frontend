@@ -19,6 +19,7 @@ export class ChatError extends Error {
 export const CHAT_MESSAGES = {
   session: "Tu sesión terminó. Inicia sesión otra vez para seguir conversando.",
   customerOnly: "El chat es para clientes. Ingresa con una cuenta de cliente.",
+  profileMissing: "Tu cuenta todavía no tiene un perfil comercial disponible. Contacta al taller para revisar la vinculación.",
   notFound: "Esta conversación ya no está disponible. Empieza una nueva.",
   noQuote: "Este presupuesto ya fue respondido.",
   patternLocked: "Para cambiar de patrón, inicia una conversación nueva.",
@@ -35,6 +36,7 @@ export const CHAT_MESSAGES = {
 };
 
 function toChatError(status, data) {
+  if (data?.code === "customer_profile_missing") return new ChatError(CHAT_MESSAGES.profileMissing, { status, code: "customer_profile_missing" });
   if (status === 401) return new ChatError(CHAT_MESSAGES.session, { status, code: "session_required" });
   if (status === 403) return new ChatError(CHAT_MESSAGES.customerOnly, { status, code: "customer_only" });
   if (status === 404) return new ChatError(CHAT_MESSAGES.notFound, { status, code: "not_found" });

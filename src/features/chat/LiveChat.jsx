@@ -27,7 +27,7 @@ const PATTERN_DESCRIPTIONS = {
   decentralized: "Modo experimental: usa herramientas simuladas y no guarda tickets ni presupuestos.",
 };
 
-function QuoteCard({ quote, busy, onAction }) {
+function QuoteCard({ quote, quoteId, busy, onAction }) {
   const pending = quote.status === "proposed";
   return (
     <div className="quote">
@@ -45,6 +45,7 @@ function QuoteCard({ quote, busy, onAction }) {
         <strong>Total:</strong>
         <span className="quote__sum">{money(quote.total)}<small> {quote.currency}</small></span>
       </div>
+      {Number.isInteger(Number(quoteId)) && Number(quoteId) > 0 && <Link className="link" to={`/portal/cotizaciones#quote-${quoteId}`}>Ver cotización guardada #{quoteId}</Link>}
       {pending ? (
         <div className="btn-row">
           <button type="button" className="btn btn--primary" disabled={busy} onClick={() => onAction("accept_quote")}>
@@ -105,7 +106,7 @@ export default function LiveChat({ api = defaultChatApi }) {
       setMessages((messagesBefore) => [
         ...messagesBefore,
         { id: messageId, from: "user", time: chatTime(), text: data.transcript.trim() },
-        { id: messageId + 1, from: "bot", time: chatTime(), text: data.reply, quote: data.quote, ticket: data.ticket },
+        { id: messageId + 1, from: "bot", time: chatTime(), text: data.reply, quote: data.quote, quoteId: data.quote_id, ticket: data.ticket },
       ]);
     } catch (err) {
       if (err?.code === "session_required") {
@@ -132,7 +133,7 @@ export default function LiveChat({ api = defaultChatApi }) {
     try {
       const data = await api.sendMessage({ conversationId, pattern, ...payload });
       setConversationId(data.conversation_id);
-      setMessages((m) => [...m, { id: Date.now() + 1, from: "bot", time: chatTime(), text: data.reply, quote: data.quote, ticket: data.ticket }]);
+      setMessages((m) => [...m, { id: Date.now() + 1, from: "bot", time: chatTime(), text: data.reply, quote: data.quote, quoteId: data.quote_id, ticket: data.ticket }]);
     } catch (err) {
       if (err?.code === "session_required") {
         // La sesión del servidor terminó: se cierra la local y se vuelve al chat después de ingresar.
@@ -199,6 +200,7 @@ export default function LiveChat({ api = defaultChatApi }) {
                   <div className="jobtag">
                     <QuoteCard
                       quote={{ ...m.quote, status: m.quote.status === "proposed" ? "superseded" : m.quote.status }}
+                      quoteId={m.quoteId}
                       busy
                       onAction={() => {}}
                     />
@@ -309,7 +311,7 @@ export default function LiveChat({ api = defaultChatApi }) {
             </button>
           )}
           {lastQuoteMessage ? (
-            <QuoteCard quote={lastQuoteMessage.quote} busy={busy} onAction={(action) => call({ action })} />
+            <QuoteCard quote={lastQuoteMessage.quote} quoteId={lastQuoteMessage.quoteId} busy={busy} onAction={(action) => call({ action })} />
           ) : (
             <p className="tagfield tagfield--wait">El presupuesto aparecerá aquí en cuanto esté listo.</p>
           )}

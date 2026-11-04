@@ -104,7 +104,7 @@ describe("POST /restablecer contract", () => {
     const api = createAuthApi({ baseUrl: "http://api.local", fetchImpl });
 
     await expect(api.resetPassword({ token: "t1", password: "Nueva#Clave2026" })).rejects.toMatchObject({ code: "invalid_token", message: MESSAGES.invalidToken });
-    expect(fetchImpl.mock.calls[0][0]).toBe("http://api.local/restablecer");
+    expect(fetchImpl.mock.calls[0][0]).toBe("http://api.local/auth/restablecer");
     expect(JSON.parse(fetchImpl.mock.calls[0][1].body)).toEqual({ token: "t1", password: "Nueva#Clave2026" });
   });
 });

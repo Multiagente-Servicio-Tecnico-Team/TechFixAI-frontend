@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 import { Bot, CalendarDays, CircleCheck, MessageSquareText, Save, UserRound } from "lucide-react";
-import { BackLink, Toast } from "../../shared/ui/ui.jsx";
+import { BackLink, Field, Toast } from "../../shared/ui/ui.jsx";
 import { useStore } from "../../state/store.jsx";
-import { formatPEN } from "../../domain/money.js";
+import { formatPEN, parseMoney } from "../../domain/money.js";
 import { REQUEST_TYPE_LABEL, STAFF_STATUSES, TICKET_STATUS_CODES, ADMIN_TICKET_STATUS_LABEL, TICKET_ORIGIN_LABEL } from "../../domain/tickets.js";
 import { ticketsApi } from "./ticketsApi.js";
+import { inventoryApi } from "./inventoryApi.js";
 
 function Datum({ label, children }) {
   return <div className="datum"><p className="datum__label">{label}</p><div>{children}</div></div>;
@@ -33,6 +34,11 @@ export default function TicketDetail() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(apiMode);
   const [saving, setSaving] = useState(false);
+  const [quoteFormOpen, setQuoteFormOpen] = useState(false);
+  const [quoteDraft, setQuoteDraft] = useState({ kind: "REPAIR", sparePartId: "", quantity: "1", observations: "" });
+  const [parts, setParts] = useState([]);
+  const [quoteError, setQuoteError] = useState("");
+  const [quoteSaving, setQuoteSaving] = useState(false);
 
   useEffect(() => {
     if (!apiMode) { setTicket(demoTicket); setLoading(false); return undefined; }
@@ -98,6 +104,36 @@ export default function TicketDetail() {
   const statusIndex = statusOptions.indexOf(status);
   const whatsappDigits = ticket.phone.replace(/\D/g, "");
   const quote = ticket.quote;
+  const quoteHistory = Array.isArray(ticket.quotes) ? ticket.quotes : quote ? [quote] : [];
+
+  const openQuoteForm = async () => {
+    setQuoteFormOpen(true); setQuoteError("");
+    if (inventoryApi.mode !== "api") { setQuoteError("Configura el inventario del backend para agregar artículos a la cotización."); return; }
+    try { setParts(await inventoryApi.list()); }
+    catch (e) { setQuoteError(e.message || "No se pudo cargar el inventario."); }
+  };
+
+  const createQuote = async (event) => {
+    event.preventDefault();
+    const sparePartId = Number(quoteDraft.sparePartId);
+    const quantity = Number(quoteDraft.quantity);
+    if (!Number.isInteger(sparePartId) || sparePartId < 1 || !Number.isInteger(quantity) || quantity < 1 || quantity > 1000) {
+      setQuoteError("Selecciona un repuesto válido e indica una cantidad entre 1 y 1000."); return;
+    }
+    setQuoteSaving(true); setQuoteError("");
+    try {
+      await ticketsApi.createServiceQuote(id, {
+        kind: quoteDraft.kind,
+        lines: [{ spare_part_id: sparePartId, quantity }],
+        observations: quoteDraft.observations.trim() || null,
+      });
+      const updated = await ticketsApi.getTicket(id);
+      setTicket(updated); setQuoteFormOpen(false); setToast("Cotización de servicio registrada.");
+    } catch (e) {
+      setQuoteError(e.message || "No se pudo crear la cotización.");
+      if (e.status === 401) navigate("/taller/acceso", { replace: true, state: { from: location.pathname } });
+    } finally { setQuoteSaving(false); }
+  };
 
   return (
     <div className="page">
@@ -151,16 +187,27 @@ export default function TicketDetail() {
         </div>
 
         {apiMode && <section className="datum ticket-detail__quote" aria-label="Cotización existente">
-          <h2 className="subtitle">Cotización más reciente</h2>
-          {quote ? <div className="detail__cols">
-            <Datum label="Tipo">{quoteTypeLabel[quote.quote_type] || quote.quote_type}</Datum>
-            <Datum label="Mano de obra">{formatPEN(quote.laborCents)}</Datum>
-            <Datum label="Repuestos">{formatPEN(quote.partsCents)}</Datum>
-            <Datum label="Total">{formatPEN(quote.totalCents)}</Datum>
-            <Datum label="Estado">{quote.statusLabel || quote.status}</Datum>
-            <Datum label="Fecha">{quote.dateLabel || dateLabel(quote.created_at)}</Datum>
-            {quote.observations && <Datum label="Observaciones">{quote.observations}</Datum>}
-          </div> : <p className="muted">No hay una cotización registrada.</p>}
+          <div className="commerce-card__head"><h2 className="subtitle">Cotizaciones de servicio ({quoteHistory.length})</h2><button type="button" className="btn btn--sm" onClick={openQuoteForm}>Añadir cotización de servicio</button></div>
+          {quoteHistory.length ? <div className="commerce-grid">{quoteHistory.map((item, index) => <article className="quote-history" key={item.id ?? index}>
+            <div className="commerce-card__head"><strong>Cotización #{item.id ?? index + 1}</strong><span className="stamp">{item.statusLabel || item.status}</span></div>
+            <div className="detail__cols">
+              <Datum label="Tipo">{quoteTypeLabel[item.kind ?? item.quote_type] || item.kind || item.quote_type}</Datum>
+              {item.laborCents !== undefined && <Datum label="Mano de obra">{formatPEN(item.laborCents)}</Datum>}
+              {item.partsCents !== undefined && <Datum label="Repuestos">{formatPEN(item.partsCents)}</Datum>}
+              <Datum label="Total">{formatPEN(item.totalCents ?? item.total_amount)}</Datum>
+              <Datum label="Fecha">{item.dateLabel || dateLabel(item.created_at)}</Datum>
+              {item.observations && <Datum label="Observaciones">{item.observations}</Datum>}
+            </div>
+            {item.lines?.length > 0 && <ul className="commerce-lines">{item.lines.map((line, lineIndex) => <li key={`${line.spare_part_id ?? line.name_snapshot}-${lineIndex}`}><span>{line.name_snapshot ?? line.name} × {line.quantity}</span><span className="mono">{formatPEN(parseMoney(line.subtotal))}</span></li>)}</ul>}
+          </article>)}</div> : <p className="muted">No hay una cotización registrada.</p>}
+          {quoteFormOpen && <form className="commerce-form" onSubmit={createQuote}>
+            <h3 className="subtitle">Nueva cotización</h3>
+            <Field label="Tipo de servicio" htmlFor="service-quote-kind"><select id="service-quote-kind" className="input" value={quoteDraft.kind} onChange={(e) => setQuoteDraft({ ...quoteDraft, kind: e.target.value })}><option value="REPAIR">Reparación</option><option value="PC_BUILD">Armado de PC</option></select></Field>
+            <div className="grid-2"><Field label="Repuesto" htmlFor="service-quote-part" required><select id="service-quote-part" className="input" value={quoteDraft.sparePartId} onChange={(e) => setQuoteDraft({ ...quoteDraft, sparePartId: e.target.value })}><option value="">Selecciona un artículo</option>{parts.map((part) => <option key={part.id} value={part.id}>{part.name} · {part.stock} disponibles · {formatPEN(part.price)}</option>)}</select></Field><Field label="Cantidad" htmlFor="service-quote-quantity" required><input id="service-quote-quantity" className="input" type="number" min="1" max="1000" value={quoteDraft.quantity} onChange={(e) => setQuoteDraft({ ...quoteDraft, quantity: e.target.value })} /></Field></div>
+            <Field label="Observaciones" htmlFor="service-quote-observations"><textarea id="service-quote-observations" className="input textarea" maxLength={2000} value={quoteDraft.observations} onChange={(e) => setQuoteDraft({ ...quoteDraft, observations: e.target.value })} /></Field>
+            {quoteError && <p className="form-alert" role="alert">{quoteError}</p>}
+            <div className="btn-row"><button type="submit" className="btn btn--primary" disabled={quoteSaving || !parts.length}>{quoteSaving ? "Guardando…" : "Crear cotización"}</button><button type="button" className="btn" onClick={() => setQuoteFormOpen(false)}>Cancelar</button></div>
+          </form>}
         </section>}
 
         {apiMode && <section className="datum ticket-detail__audit" aria-label="Trazabilidad del ticket">

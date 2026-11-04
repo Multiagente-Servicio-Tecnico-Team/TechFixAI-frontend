@@ -4,8 +4,9 @@ import userEvent from "@testing-library/user-event";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { StoreProvider } from "../../src/state/store.jsx";
 
-const ticketApiState = vi.hoisted(() => ({ mode: "api", getTicket: vi.fn(), updateTicket: vi.fn() }));
+const ticketApiState = vi.hoisted(() => ({ mode: "api", getTicket: vi.fn(), updateTicket: vi.fn(), createServiceQuote: vi.fn() }));
 vi.mock("../../src/features/workshop/ticketsApi.js", () => ({ ticketsApi: ticketApiState }));
+vi.mock("../../src/features/workshop/inventoryApi.js", () => ({ inventoryApi: { mode: "api", list: vi.fn().mockResolvedValue([{ id: 4, name: "Memoria DDR4", sku: "RAM-4", stock: 10, price: 15000 }]) } }));
 import TicketDetail from "../../src/features/workshop/TicketDetail.jsx";
 
 const detail = (changes = {}) => ({
@@ -31,7 +32,7 @@ describe("detalle de ticket administrativo", () => {
     expect(screen.getByText("Revisar placa")).toBeInTheDocument();
     expect(screen.getByText("Pendiente")).toBeInTheDocument();
     expect(screen.getByRole("region", { name: "Trazabilidad del ticket" })).toHaveTextContent("Ticket creado");
-    expect(screen.queryByRole("button", { name: /crear cotización/i })).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /añadir cotización de servicio/i })).toBeInTheDocument();
   });
 
   it("envía PATCH parcial y refleja solo la respuesta confirmada", async () => {
@@ -61,5 +62,18 @@ describe("detalle de ticket administrativo", () => {
     renderDetail();
     expect(await screen.findByText("No hay una cotización registrada.")).toBeInTheDocument();
     expect(screen.getByText("S/. 25.00 · Yape/Plin")).toBeInTheDocument();
+  });
+
+  it("crea una cotización con ID numérico de inventario y conserva el historial", async () => {
+    const updated = detail({ quote: null, quotes: [{ id: 91, kind: "REPAIR", status: "PENDING", total_amount: "150.00", totalCents: 15000, lines: [{ spare_part_id: 4, name_snapshot: "Memoria DDR4", quantity: 1, subtotal: "150.00" }] }] });
+    ticketApiState.getTicket.mockReset().mockResolvedValueOnce(detail()).mockResolvedValueOnce(updated);
+    ticketApiState.createServiceQuote.mockReset().mockResolvedValue({ id: 91 });
+    const user = userEvent.setup();
+    renderDetail();
+    await user.click(await screen.findByRole("button", { name: /añadir cotización de servicio/i }));
+    await user.selectOptions(await screen.findByLabelText(/Repuesto/), "4");
+    await user.click(screen.getByRole("button", { name: "Crear cotización" }));
+    await waitFor(() => expect(ticketApiState.createServiceQuote).toHaveBeenCalledWith("76", { kind: "REPAIR", lines: [{ spare_part_id: 4, quantity: 1 }], observations: null }));
+    expect(await screen.findByText("Cotización #91")).toBeInTheDocument();
   });
 });

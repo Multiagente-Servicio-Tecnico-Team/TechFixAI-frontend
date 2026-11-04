@@ -16,6 +16,7 @@ integrante puede proponer cambios con un PR hacia `develop`.
 | Panel del taller (cola, detalle, ticket presencial, inventario) | SebasBazauri | jsalinas4 |
 | Estilos generales (`src/shared/styles/`) | SebasBazauri | — |
 | Clientes de API (`authApi.js`, `chatApi.js`) | SebasBazauri | jsalinas4 |
+| Clientes comerciales, tickets, cotizaciones, pagos y ventas | SebasBazauri | — |
 
 ## Pantallas
 
@@ -27,8 +28,12 @@ integrante puede proponer cambios con un PR hacia `develop`.
 | `/portal/recuperar`, `/portal/restablecer` | Recuperar y restablecer contraseña | Lista | `recovery.test.jsx` |
 | `/portal/asistente` | Chat con los agentes: selector de patrón, presupuesto con aceptar/rechazar, ticket | Lista (depende del backend) | `chat.test.jsx`, `consultation.test.jsx` |
 | `/portal/tickets` | «Mis Tickets» del cliente | Conectada; el backend falla con tickets presupuestados | `consultation.test.jsx` |
+| `/portal/cotizaciones` | Cotizaciones propias de servicio y venta, detalle y aceptación | API de comercio; sesión CUSTOMER | `customer-quotes.test.jsx` |
+| `/portal/compras` | Pagos y ventas propias confirmadas por backend | API de comercio; solo lectura para CUSTOMER | `customer-quotes.test.jsx` |
 | `/taller/acceso`, `/taller` | Banco con cola, filtros, estados y exportación para `ADMIN` | API administrativa con `VITE_API_URL`; demo si no hay URL en desarrollo | `workshop.test.jsx`, `admin-ticket-workshop.test.jsx`, `admin-ticket-access.test.jsx` |
 | `/taller/tickets/nuevo`, `/taller/tickets/:id` | Alta presencial y detalle con cotización de solo lectura | API administrativa; protegido para `ADMIN` | `admin-ticket-create.test.jsx`, `admin-ticket-detail.test.jsx` |
+| `/taller/clientes` | Buscar, crear y editar clientes comerciales; distingue clientes manuales y perfiles vinculados | API comercial; solo ADMIN; no crea cuentas de acceso | `admin-customers.test.jsx`, `customer-commerce-access.test.jsx` |
+| `/taller/ventas` | Crear cotizaciones de venta, registrar aceptación manual, confirmar pagos externos y consultar ventas | API comercial; solo ADMIN; inventario usa IDs numéricos | `admin-commerce.test.jsx`, `customer-commerce-access.test.jsx` |
 | `/taller/inventario`, `/taller/inventario/*` | Consulta y mantenimiento de repuestos | API de inventario; demo sin URL en desarrollo y `/backend` en producción | `inventory.test.jsx`, `inventory.test.js` |
 | `/taller/contabilidad` | Listado con filtros, paginación y resumen de asientos (solo ADMIN) | Implementada; depende de `VITE_API_URL` o `/backend` en producción | `accounting-list.test.jsx`, `accounting-access.test.jsx` |
 | `/taller/contabilidad/nuevo` | Alta confirmada con balance debe/haber, revisión e idempotencia | Implementada; requiere API contable configurada | `accounting-create.test.jsx`, `accounting-domain.test.js`, `accounting-api.test.js` |
@@ -74,6 +79,10 @@ la URL raíz compartida `VITE_API_URL` está configurada. En desarrollo sin URL 
 listado recorre y deduplica las páginas del backend, y los cambios de estado se confirman mediante PATCH. El alta
 envía los tipos y métodos de adelanto canónicos. El detalle consulta por ID numérico y presenta la última
 cotización y los eventos de auditoría como solo lectura. El portal cliente conserva su API independiente.
+
+## Clientes y comercio
+
+`src/features/customers/customersApi.js` y `src/features/commerce/commerceApi.js` comparten la URL raíz `VITE_API_URL` y envían cookies de sesión. El registro y login siguen gestionando solo cuentas `users`; la interfaz no solicita ni guarda IDs de customer de clientes del portal. El taller selecciona o crea clientes comerciales manuales sin contraseña, y sus tickets/cotizaciones usan el customer elegido explícitamente. Las rutas `/portal/cotizaciones` y `/portal/compras` consultan los datos propios por sesión. `/taller/clientes` y `/taller/ventas` son ADMIN-only. Aceptar una oferta no marca el pago como recibido; la venta aparece cuando el backend confirma el pago y devuelve la orden. Contrato y prerrequisitos: `specs/007-customer-commerce-ui/` y el Spec 007 del backend.
 
 ## Calidad verificada
 

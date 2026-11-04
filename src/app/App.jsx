@@ -27,6 +27,10 @@ import PurchasesList from "../features/purchases/PurchasesList.jsx";
 import PurchaseCreate from "../features/purchases/PurchaseCreate.jsx";
 import PurchaseDetail from "../features/purchases/PurchaseDetail.jsx";
 import SupplierManager from "../features/purchases/SupplierManager.jsx";
+import CustomerQuotes from "../features/commerce/CustomerQuotes.jsx";
+import CustomerOrders from "../features/commerce/CustomerOrders.jsx";
+import CustomerManager from "../features/customers/CustomerManager.jsx";
+import AdminCommerce from "../features/commerce/AdminCommerce.jsx";
 
 export default function App() {
   return (
@@ -49,6 +53,8 @@ export default function App() {
           <Route path="/portal" element={<Tickets />} />
           <Route path="/portal/tickets" element={<Tickets />} />
           <Route path="/portal/asistente" element={<Assistant />} />
+          <Route path="/portal/cotizaciones" element={<CustomerQuotes />} />
+          <Route path="/portal/compras" element={<CustomerOrders />} />
         </Route>
 
         <Route element={<RequireRole role="staff"><StaffLayout /></RequireRole>}>
@@ -70,6 +76,10 @@ export default function App() {
             <Route path="/taller/compras/nuevo" element={<PurchaseCreate />} />
             <Route path="/taller/compras/proveedores" element={<SupplierManager />} />
             <Route path="/taller/compras/:id" element={<PurchaseDetail />} />
+          </Route>
+          <Route element={<RequireRole role="staff" accountRole="ADMIN" deniedStateKey="commerceDenied" deniedTo="/taller/inventario"><Outlet /></RequireRole>}>
+            <Route path="/taller/clientes" element={<CustomerManager />} />
+            <Route path="/taller/ventas" element={<AdminCommerce />} />
           </Route>
         </Route>
       </Routes>

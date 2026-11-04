@@ -28,6 +28,8 @@ Dónde está explicado cada tema. Antes de documentar algo nuevo, revisa si ya e
 | `tests/unit/inventory.test.js`, `tests/integration/inventory.test.jsx` | Pruebas unitarias del contrato y escenarios de interfaz del inventario |
 
 | `src/features/workshop/ticketsApi.js` y `useAdminTickets.js` | Cliente API ADMIN, normalización de DTO, filtros y carga paginada del taller |
+| `specs/007-customer-commerce-ui/` | Requisitos, plan, contratos frontend, escenarios y tareas de clientes comerciales, portal, tickets, cotizaciones, pagos y ventas |
+| `src/features/customers/` y `src/features/commerce/` | Clientes API y pantallas de consulta del portal y gestión ADMIN de comercio |
 
 ## En el backend ([TechFixAI-backend](https://github.com/Multiagente-Servicio-Tecnico-Team/TechFixAI-backend))
 

@@ -19,6 +19,8 @@ describe("authentication client (API mode)", () => {
     expect(init.method).toBe("POST");
     expect(init.credentials).toBe("include");
     expect(JSON.parse(init.body)).toEqual({ nombre: "Martín Gómez", email: "martin@demo.pe", telefono: "+51987654321", password: "Clave#2026" });
+    expect(JSON.parse(init.body)).not.toHaveProperty("customer_id");
+    expect(JSON.parse(init.body)).not.toHaveProperty("user_id");
   });
 
   it("sends POST /auth/login and returns the user without the password", async () => {

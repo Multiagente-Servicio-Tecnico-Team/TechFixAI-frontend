@@ -84,6 +84,18 @@ describe("sign-in", () => {
 
     expect(await screen.findByRole("heading", { name: "Asistente" })).toBeInTheDocument();
   });
+
+  it("does not redirect a portal login to an external or workshop path", async () => {
+    const api = { mode: "api", login: vi.fn().mockResolvedValue({ nombre: "Ana", email: "ana@demo.pe", rol: "CUSTOMER" }) };
+    const user = userEvent.setup();
+    render(<MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }} initialEntries={[{ pathname: "/portal/acceso", state: { from: "//outside.example/path" } }]}>
+      <StoreProvider><Routes><Route path="/portal/acceso" element={<LoginForm role="client" badge="" title="Acceder" subtitle="" defaultTo="/portal/tickets" footer={null} api={api} />} /><Route path="/portal/tickets" element={<h1>Tickets seguros</h1>} /><Route path="/taller" element={<h1>Taller</h1>} /></Routes></StoreProvider>
+    </MemoryRouter>);
+    await user.type(screen.getByLabelText("Correo electrónico"), "ana@demo.pe");
+    await user.type(screen.getByLabelText("Contraseña"), "Secreta#2026");
+    await user.click(screen.getByRole("button", { name: /iniciar sesión/i }));
+    expect(await screen.findByRole("heading", { name: "Tickets seguros" })).toBeInTheDocument();
+  });
 });
 
 describe("role returned by the backend", () => {

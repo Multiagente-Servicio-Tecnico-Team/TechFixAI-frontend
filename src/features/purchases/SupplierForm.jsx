@@ -29,7 +29,7 @@ export default function SupplierForm({ api = defaultApi }) {
       (err) => {
         if (!alive) return;
         if (err.code === "session_required") { navigate(LOGIN, { replace: true, state: { from: location.pathname } }); return; }
-        setError(err.message);
+        setError(err.code === "not_found" ? "Este proveedor no existe o ya no está disponible." : err.message);
         setState(err.code === "not_found" ? "not-found" : "error");
       },
     );

@@ -82,18 +82,10 @@ export function createPurchasesApi({ baseUrl = "", fetchImpl } = {}) {
       if (!Array.isArray(data?.items)) throw new PurchaseError(PURCHASE_MESSAGES.unavailable, { code: "invalid_response" });
       return data;
     },
-    /** El backend no expone GET por id: se recorre el listado hasta encontrarlo. */
     async getSupplier(id) {
-      const target = Number(id);
-      for (let offset = 0; ; offset += 100) {
-        const { data } = await request(`/api/admin/suppliers${queryString({ limit: 100, offset })}`);
-        if (!Array.isArray(data?.items)) throw new PurchaseError(PURCHASE_MESSAGES.unavailable, { code: "invalid_response" });
-        const found = data.items.find((supplier) => supplier.id === target);
-        if (found) return found;
-        if (data.items.length < 100 || offset + 100 >= (data.total ?? 0)) {
-          throw new PurchaseError("El proveedor ya no está disponible.", { status: 404, code: "not_found" });
-        }
-      }
+      const { data } = await request(`/api/admin/suppliers/${encodeURIComponent(id)}`);
+      if (!data?.supplier) throw new PurchaseError(PURCHASE_MESSAGES.unavailable, { code: "invalid_response" });
+      return data.supplier;
     },
     async createSupplier(payload) {
       const { data } = await request("/api/admin/suppliers", { method: "POST", body: payload });

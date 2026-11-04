@@ -170,7 +170,7 @@ describe("formulario de proveedor", () => {
   it("informa si el proveedor ya no existe", async () => {
     const api = fakeApi({ getSupplier: vi.fn().mockRejectedValue(new PurchaseError("El proveedor ya no está disponible.", { status: 404, code: "not_found" })) });
     renderAt("/taller/compras/proveedores/77/editar", api);
-    expect(await screen.findByText("El proveedor ya no está disponible.")).toBeInTheDocument();
+    expect(await screen.findByText("Este proveedor no existe o ya no está disponible.")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Volver al listado" })).toBeInTheDocument();
   });
 });

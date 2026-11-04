@@ -36,18 +36,17 @@ describe("purchasesApi · proveedores", () => {
     await expect(api409.createSupplier({ name: "X" })).rejects.toMatchObject({ status: 409, message: expect.stringMatching(/tributario/) });
   });
 
-  it("busca un proveedor por id recorriendo las páginas", async () => {
-    const page1 = Array.from({ length: 100 }, (_, i) => ({ id: i + 1, name: `P${i + 1}` }));
-    const fetchImpl = vi.fn()
-      .mockReturnValueOnce(reply(200, { items: page1, total: 101 }))
-      .mockReturnValueOnce(reply(200, { items: [{ id: 101, name: "Último" }], total: 101 }));
+  it("consulta un proveedor por id con una sola petición", async () => {
+    const fetchImpl = vi.fn(() => reply(200, { supplier: { id: 101, name: "Último", active: false } }));
     const api = createPurchasesApi({ baseUrl: "http://api.test", fetchImpl });
-    await expect(api.getSupplier("101")).resolves.toMatchObject({ name: "Último" });
-    expect(fetchImpl.mock.calls[1][0]).toContain("offset=100");
+    await expect(api.getSupplier("101")).resolves.toMatchObject({ name: "Último", active: false });
+    expect(fetchImpl).toHaveBeenCalledTimes(1);
+    expect(fetchImpl.mock.calls[0][0]).toBe("http://api.test/api/admin/suppliers/101");
+    expect(fetchImpl.mock.calls[0][1].credentials).toBe("include");
   });
 
   it("informa 404 si el proveedor no existe", async () => {
-    const api = createPurchasesApi({ baseUrl: "http://api.test", fetchImpl: () => reply(200, { items: [{ id: 1 }], total: 1 }) });
-    await expect(api.getSupplier(9)).rejects.toMatchObject({ code: "not_found" });
+    const api = createPurchasesApi({ baseUrl: "http://api.test", fetchImpl: () => reply(404, { code: "supplier_not_found" }) });
+    await expect(api.getSupplier(9)).rejects.toMatchObject({ code: "not_found", status: 404 });
   });
 });

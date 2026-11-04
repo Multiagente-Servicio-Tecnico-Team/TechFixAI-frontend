@@ -41,7 +41,7 @@ integrante puede proponer cambios con un PR hacia `develop`.
 | `/taller/compras`, `/taller/compras/:id` | Historial paginado y detalle de comprobante, movimientos y auditoría (solo ADMIN) | API backend con `VITE_API_URL`; no usa datos demo | Pendiente de cobertura automatizada |
 | `/taller/compras/nuevo` | Registro de compras con líneas de inventario/conceptos libres y recepciones | API de compras y catálogo real usan `VITE_API_URL`; recepción idempotente | Pendiente de cobertura automatizada |
 | `/taller/compras/proveedores` | Directorio de proveedores: búsqueda, filtro activo/inactivo, desactivación con confirmación y reactivación (solo ADMIN) | Implementada; API de compras con `VITE_API_URL`, sin datos demo | `suppliers.test.jsx`, `suppliers-domain.test.js`, `purchases-api.test.js` |
-| `/taller/compras/proveedores/nuevo`, `/:id/editar` | Alta y edición en página propia; errores del backend junto a su campo (RUC repetido, correo) | Implementada; la edición por enlace directo busca el proveedor en el listado (el backend no tiene GET por id) | `suppliers.test.jsx` |
+| `/taller/compras/proveedores/nuevo`, `/:id/editar` | Alta y edición en página propia; errores del backend junto a su campo (RUC repetido, correo) | Implementada; la edición por enlace directo consulta `GET /api/admin/suppliers/{id}` | `suppliers.test.jsx` |
 | `/ayuda` | Soporte, preguntas frecuentes, estado y legales | Lista | — |
 | `*` | Página 404 | Lista | — |
 

@@ -2,23 +2,27 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { CircleCheck } from "lucide-react";
 import { BackLink, Field } from "../../shared/ui/ui.jsx";
-import { useStore } from "../../state/store.jsx";
+import { FormAlert } from "../../shared/ui/FormAlert.jsx";
+import { useTickets } from "./useTickets.js";
 import { EMAIL_RE } from "../../domain/validation.js";
 import { formatPEN, parseMoney } from "../../domain/money.js";
 import { TICKET_CATEGORIES } from "../../domain/tickets.js";
 
 const methods = ["Yape/Plin", "Efectivo", "Tarjeta"];
 
-export default function NewTicket() {
-  const { staffTickets, dispatch } = useStore();
+export default function NewTicket({ api }) {
+  const { create, nextId, live } = useTickets({ api, load: false });
+  const [saving, setSaving] = useState(false);
+  const [serverError, setServerError] = useState("");
   const navigate = useNavigate();
   const [form, setForm] = useState({ client: "", phone: "", email: "", device: "", issue: "", category: "Reparación", advance: "", method: "Yape/Plin" });
   const [errors, setErrors] = useState({});
   const set = (key) => (e) => setForm((f) => ({ ...f, [key]: e.target.value }));
-  const nextId = `TCK-${Math.max(...staffTickets.map((t) => Number(t.id.split("-")[1]))) + 1}`;
 
-  const submit = (e) => {
+  const submit = async (e) => {
     e.preventDefault();
+    if (saving) return;
+    setServerError("");
     const next = {};
     if (form.client.trim().length < 3) next.client = "Ingresa el nombre o razón social.";
     if (form.phone.replace(/\D/g, "").length < 9) next.phone = "Ingresa un número de 9 dígitos.";
@@ -33,9 +37,9 @@ export default function NewTicket() {
       return;
     }
 
-    dispatch({
-      type: "createTicket",
-      ticket: {
+    setSaving(true);
+    try {
+      const saved = await create({
         client: form.client.trim(),
         phone: `+51 ${form.phone.replace(/\D/g, "").replace(/(\d{3})(\d{3})(\d{3}).*/, "$1 $2 $3")}`,
         email: form.email.trim(),
@@ -45,9 +49,12 @@ export default function NewTicket() {
         advance,
         method: advance !== null ? form.method : null,
         payment: advance !== null ? `Adelanto ${formatPEN(advance)} · ${form.method}` : "Pendiente",
-      },
-    });
-    navigate(`/taller/tickets/${nextId}`);
+      });
+      navigate(`/taller/tickets/${encodeURIComponent(saved.id)}`, { state: { ticketCreated: saved.id } });
+    } catch (err) {
+      setServerError(err.message);
+      setSaving(false);
+    }
   };
 
   return (
@@ -55,7 +62,7 @@ export default function NewTicket() {
       <BackLink to="/taller">Volver a Gestión de Tickets</BackLink>
       <h1 className="title">Crear Nuevo Ticket</h1>
 
-      <form className="intake" onSubmit={submit} noValidate>
+      <form className="intake" onSubmit={submit} noValidate aria-busy={saving}>
         <div className="intake__main">
           <section className="intake__section">
             <div className="intake__head"><h2 className="subtitle">1. Datos del Cliente</h2><p>Recepción rápida en mostrador</p></div>
@@ -118,14 +125,15 @@ export default function NewTicket() {
 
         <aside className="intake__side" aria-label="Etiqueta del ticket">
           <div className="jobtag jobtag--lg">
-            <p className="kicker">Ticket #{nextId}</p>
+            <p className="kicker">{live ? "Código asignado al generar" : `Ticket #${nextId}`}</p>
             <strong className="subtitle">Listo para Emisión Rápida</strong>
             <div className={`tagfield${form.client ? "" : " tagfield--wait"}`}><span>Cliente</span>{form.client || "Por indicar"}</div>
             <div className={`tagfield${form.device ? "" : " tagfield--wait"}`}><span>Equipo</span>{form.device || "Por indicar"}</div>
             <div className="tagfield"><span>Categoría</span>{form.category}</div>
             <div className={`tagfield${form.advance ? "" : " tagfield--wait"}`}><span>Adelanto</span>{form.advance ? `S/. ${form.advance} · ${form.method}` : "Sin adelanto"}</div>
-            <button type="submit" className="btn btn--primary btn--lg btn--block">
-              <CircleCheck size={19} aria-hidden="true" /> Generar Ticket
+            <FormAlert>{serverError}</FormAlert>
+            <button type="submit" className="btn btn--primary btn--lg btn--block" disabled={saving}>
+              <CircleCheck size={19} aria-hidden="true" /> {saving ? "Generando…" : "Generar Ticket"}
             </button>
           </div>
         </aside>

@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 import { Bot, CalendarDays, CircleCheck, MessageSquareText, Save, UserRound } from "lucide-react";
 import { BackLink, Toast } from "../../shared/ui/ui.jsx";
-import { useStore } from "../../state/store.jsx";
+import { FormAlert } from "../../shared/ui/FormAlert.jsx";
+import { useTickets } from "./useTickets.js";
 import { formatPEN } from "../../domain/money.js";
 import { STAFF_STATUSES } from "../../domain/tickets.js";
 
@@ -15,14 +16,39 @@ function Datum({ label, children }) {
   );
 }
 
-export default function TicketDetail() {
+export default function TicketDetail({ api }) {
   const { id } = useParams();
-  const { staffTickets, dispatch } = useStore();
-  const ticket = staffTickets.find((t) => t.id === id);
+  const location = useLocation();
+  const navigate = useNavigate();
+  const { ticket, status: loadStatus, error, reload, updateStatus } = useTickets({ api, id });
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState("");
   const [status, setStatus] = useState(ticket?.status);
   const [toast, setToast] = useState("");
 
   useEffect(() => setStatus(ticket?.status), [ticket?.status]);
+
+  useEffect(() => {
+    if (location.state?.ticketCreated === id) {
+      setToast(`Ticket #${id} creado correctamente.`);
+      navigate(location.pathname, { replace: true, state: null });
+    }
+  }, [id, location.state, location.pathname, navigate]);
+
+  if (loadStatus === "loading" || loadStatus === "error") {
+    return (
+      <div className="page">
+        <BackLink to="/taller">Volver a Gestión de Tickets</BackLink>
+        {loadStatus === "loading" ? <p className="empty" role="status">Cargando ticket…</p> : (
+          <div className="jobtag jobtag--lg">
+            <FormAlert>{error}</FormAlert>
+            <button type="button" className="btn btn--ghost btn--sm" onClick={reload}>Reintentar</button>
+          </div>
+        )}
+        <Toast message={toast} onDone={() => setToast("")} />
+      </div>
+    );
+  }
 
   if (!ticket) {
     return (
@@ -38,9 +64,19 @@ export default function TicketDetail() {
   }
 
   const dirty = status !== ticket.status;
-  const save = () => {
-    dispatch({ type: "updateTicket", id: ticket.id, changes: { status } });
-    setToast(`Ticket #${ticket.id} actualizado: ${status}.`);
+  const save = async () => {
+    if (saving) return;
+    setSaving(true);
+    setSaveError("");
+    try {
+      const saved = await updateStatus(ticket.id, status);
+      setStatus(saved.status);
+      setToast(`Ticket #${saved.id} actualizado: ${saved.status}.`);
+    } catch (err) {
+      setSaveError(err.message);
+    } finally {
+      setSaving(false);
+    }
   };
   const whatsapp = `https://wa.me/${ticket.phone.replace(/\D/g, "")}`;
 
@@ -69,15 +105,16 @@ export default function TicketDetail() {
           })}
         </ol>
 
+        <FormAlert>{saveError}</FormAlert>
         <div className="detail__move">
           <div className="field">
             <label className="field__label" htmlFor="ticket-status">Estado del ticket</label>
-            <select id="ticket-status" className="input" value={status} onChange={(e) => setStatus(e.target.value)}>
+            <select id="ticket-status" className="input" value={status ?? ticket.status} disabled={saving} onChange={(e) => setStatus(e.target.value)}>
               {STAFF_STATUSES.map((s) => <option key={s}>{s}</option>)}
             </select>
           </div>
-          <button type="button" className="btn btn--primary" onClick={save} disabled={!dirty}>
-            <Save size={17} aria-hidden="true" /> Guardar Cambios
+          <button type="button" className="btn btn--primary" onClick={save} disabled={!dirty || saving}>
+            <Save size={17} aria-hidden="true" /> {saving ? "Guardando…" : "Guardar Cambios"}
           </button>
         </div>
 

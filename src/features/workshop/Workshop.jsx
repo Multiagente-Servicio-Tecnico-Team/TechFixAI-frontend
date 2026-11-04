@@ -1,7 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { Bot, Eye, Mail, Search, Upload, UserRound } from "lucide-react";
-import { useStore } from "../../state/store.jsx";
+import { Toast } from "../../shared/ui/ui.jsx";
+import { FormAlert } from "../../shared/ui/FormAlert.jsx";
+import { useTickets } from "./useTickets.js";
 import { centsToInput, formatPEN } from "../../domain/money.js";
 import { STAFF_STATUSES, TICKET_CATEGORIES } from "../../domain/tickets.js";
 
@@ -20,8 +22,11 @@ function exportCsv(rows) {
   URL.revokeObjectURL(url);
 }
 
-export default function Workshop() {
-  const { staffTickets, dispatch } = useStore();
+export default function Workshop({ api }) {
+  const { tickets: staffTickets, status: loadStatus, error, reload, updateStatus } = useTickets({ api });
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState("");
+  const [toast, setToast] = useState("");
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState("Todos");
   const [status, setStatus] = useState("");
@@ -55,12 +60,21 @@ export default function Workshop() {
     if (moved) (document.getElementById(`tag-${moved.id}`) ?? document.getElementById("tablero"))?.focus();
   }, [moved]);
 
-  const move = (id, next) => {
-    dispatch({ type: "updateTicket", id, changes: { status: next } });
-    setFocus(next);
-    // La estación destino se abre completa para que la tarjeta no quede tras «Mostrar más».
-    setShown((v) => ({ ...v, [next]: Number.MAX_SAFE_INTEGER }));
-    setMoved({ id, status: next, hidden: Boolean(status) && next !== status });
+  const move = async (id, next) => {
+    if (saving) return;
+    setSaving(true);
+    setSaveError("");
+    try {
+      const saved = await updateStatus(id, next);
+      setFocus(saved.status);
+      setShown((v) => ({ ...v, [saved.status]: Number.MAX_SAFE_INTEGER }));
+      setMoved({ id: saved.id, status: saved.status, hidden: Boolean(status) && saved.status !== status });
+      setToast(`Ticket #${saved.id} actualizado: ${saved.status}.`);
+    } catch (err) {
+      setSaveError(err.message);
+    } finally {
+      setSaving(false);
+    }
   };
 
   const resetPage = (fn) => (value) => {
@@ -72,7 +86,7 @@ export default function Workshop() {
     <div className="page">
       <div className="page-head">
         <h1 className="title">Banco de hoy</h1>
-        <button type="button" className="btn" onClick={() => exportCsv(filtered)}>
+        <button type="button" className="btn" onClick={() => exportCsv(filtered)} disabled={loadStatus !== "ready"}>
           <Upload size={17} aria-hidden="true" /> Exportar Reporte
         </button>
       </div>
@@ -107,10 +121,17 @@ export default function Workshop() {
         </select>
       </div>
 
+      <FormAlert>{saveError}</FormAlert>
+      {saving && <p role="status">Guardando…</p>}
+      {loadStatus === "loading" && <p className="empty" role="status">Cargando tickets…</p>}
+      {loadStatus === "error" && <div className="jobtag">
+        <FormAlert>{error}</FormAlert>
+        <button type="button" className="btn" onClick={reload}>Reintentar</button>
+      </div>}
       <p className="vh" role="status">
         {moved ? `Ticket ${moved.id} movido a ${moved.status}${moved.hidden ? " (no se muestra con el filtro de estado actual)" : ""}. ` : ""}{filtered.length} tickets
       </p>
-      {filtered.length === 0 && <p className="empty">No hay tickets con estos filtros.</p>}
+      {loadStatus === "ready" && filtered.length === 0 && <p className="empty">No hay tickets con estos filtros.</p>}
 
       <label className="station__picker">
         Ver estación
@@ -128,7 +149,7 @@ export default function Workshop() {
               <h2 className="station__head"><span>{s}</span><span className="mono">{all.length}</span></h2>
               <div className="station__list">
                 {all.length === 0 && <p className="empty small">Sin tickets.</p>}
-                {all.slice(0, limit).map((t) => <TicketTag key={t.id} ticket={t} onMove={move} />)}
+                {all.slice(0, limit).map((t) => <TicketTag key={t.id} ticket={t} onMove={move} saving={saving} />)}
                 {all.length > limit && (
                   <button type="button" className="btn" onClick={() => setShown((v) => ({ ...v, [s]: limit + PAGE_SIZE }))}>
                     Mostrar más ({all.length - limit})
@@ -139,11 +160,12 @@ export default function Workshop() {
           );
         })}
       </div>
+      <Toast message={toast} onDone={() => setToast("")} />
     </div>
   );
 }
 
-function TicketTag({ ticket: t, onMove }) {
+function TicketTag({ ticket: t, onMove, saving }) {
   return (
     <article id={`tag-${t.id}`} tabIndex={-1} className="jobtag wtag">
       <p className="wtag__id">
@@ -161,6 +183,7 @@ function TicketTag({ ticket: t, onMove }) {
         Mover a
         <select
           value={t.status}
+          disabled={saving}
           onChange={(e) => onMove(t.id, e.target.value)}
           aria-label={`Mover a, ticket ${t.id}`}
         >

@@ -22,6 +22,47 @@ function reducer(state, action) {
       const ticket = { ...action.ticket, id: `TCK-${next}`, date: today(), status: "Nuevo", origin: "Presencial", budget: null };
       return { ...state, staffTickets: [ticket, ...state.staffTickets] };
     }
+    case "setStaffTickets": {
+      const fetched = [...new Map(action.tickets.map((ticket) => [ticket.id, ticket])).values()];
+      const fetchedIds = new Set(fetched.map((ticket) => ticket.id));
+      const confirmedStatuses = { ...state.confirmedStaffTicketStatuses };
+      const tickets = fetched.map((ticket) => {
+        const status = confirmedStatuses[ticket.id];
+        if (status === ticket.status) delete confirmedStatuses[ticket.id];
+        return status ? { ...ticket, status } : ticket;
+      });
+      // El mock puede no listar todavía los tickets confirmados por POST.
+      // Solo se conservan esas altas locales, nunca los datos iniciales de demostración.
+      const pendingIds = state.pendingCreatedStaffTicketIds.filter((id) => !fetchedIds.has(id));
+      const pending = state.staffTickets.filter((ticket) => pendingIds.includes(ticket.id));
+      return { ...state, staffTickets: [...pending, ...tickets], pendingCreatedStaffTicketIds: pendingIds, confirmedStaffTicketStatuses: confirmedStatuses };
+    }
+    case "receiveStaffTicket": {
+      // Un GET fijo no debe deshacer un PATCH ya confirmado durante esta sesión.
+      const status = state.confirmedStaffTicketStatuses[action.ticket.id];
+      const ticket = status ? { ...action.ticket, status } : action.ticket;
+      return {
+        ...state,
+        staffTickets: state.staffTickets.some((row) => row.id === ticket.id)
+          ? state.staffTickets.map((row) => row.id === ticket.id ? ticket : row)
+          : [ticket, ...state.staffTickets],
+      };
+    }
+    case "saveStaffTicket": {
+      const confirmedStatuses = { ...state.confirmedStaffTicketStatuses };
+      if (action.created) delete confirmedStatuses[action.ticket.id];
+      if (action.updated) confirmedStatuses[action.ticket.id] = action.ticket.status;
+      return {
+        ...state,
+        confirmedStaffTicketStatuses: confirmedStatuses,
+        pendingCreatedStaffTicketIds: action.created
+          ? [...new Set([...state.pendingCreatedStaffTicketIds, action.ticket.id])]
+          : state.pendingCreatedStaffTicketIds,
+        staffTickets: state.staffTickets.some((ticket) => ticket.id === action.ticket.id)
+          ? state.staffTickets.map((ticket) => ticket.id === action.ticket.id ? action.ticket : ticket)
+          : [action.ticket, ...state.staffTickets],
+      };
+    }
     case "updateTicket":
       return {
         ...state,
@@ -73,7 +114,7 @@ function reducer(state, action) {
 const StoreContext = createContext(null);
 
 export function StoreProvider({ children }) {
-  const [state, dispatch] = useReducer(reducer, null, () => ({ staffTickets, clientTickets, parts, session: readSession() }));
+  const [state, dispatch] = useReducer(reducer, null, () => ({ staffTickets, pendingCreatedStaffTicketIds: [], confirmedStaffTicketStatuses: {}, clientTickets, parts, session: readSession() }));
 
   const login = useCallback((session) => {
     writeSession(session);

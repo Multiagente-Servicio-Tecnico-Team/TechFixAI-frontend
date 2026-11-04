@@ -18,7 +18,7 @@ Dónde está explicado cada tema. Antes de documentar algo nuevo, revisa si ya e
 | `src/features/accounting/` | Cliente API y pantallas de listado, alta, detalle y reversión para ADMIN |
 | `src/domain/accounting.js` | Importes contables exactos y validación balanceada de las líneas |
 | `specs/006-compras-proveedores/` | Especificación, plan, modelo, contrato de cliente, quickstart y tareas para compras a proveedores |
-| `src/features/purchases/` y `src/domain/purchases.js` | Cliente API, pantallas ADMIN de compras/proveedores, recepciones y reglas de importes/estados |
+| `src/features/purchases/`, `src/domain/purchases.js` y `src/domain/suppliers.js` | Cliente API, pantallas ADMIN de compras/proveedores, recepciones, reglas de importes/estados y validación de proveedores |
 | [OpenAPI de compras backend](../Sistema-Multiagente-de-Servicio-T-cnico-Ventas-y-Soporte/specs/006-registro-compras-proveedores/contracts/purchases.openapi.yaml) | Contrato de proveedores, compras, recepciones, estados e idempotencia |
 | `specs/004-admin-ticket-ui/` | Contrato de interfaz, plan, modelo, tareas y quickstart para tickets administrativos |
 | `specs/005-inventory-api-integration/` | Plan, modelo, contrato de consumo, tareas y quickstart del inventario conectado |

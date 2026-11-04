@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { Plus, Search } from "lucide-react";
+import { Building2, Plus, Search } from "lucide-react";
 import { formatPurchaseMoney, parsePurchaseMoney, PURCHASE_STATUS_LABELS, PAYMENT_STATUS_LABELS, DOCUMENT_TYPE_LABELS } from "../../domain/purchases.js";
 import { Field, Pagination } from "../../shared/ui/ui.jsx";
 import { FormAlert } from "../../shared/ui/FormAlert.jsx";
@@ -22,7 +22,8 @@ export default function PurchasesList({ api }) {
   return <div className="page purchases-page">
     <div className="page-head">
       <div><p className="kicker">TALLER · ADMINISTRACIÓN</p><h1 className="title">Compras</h1><p className="muted">Comprobantes, proveedores y recepciones</p></div>
-      <Link className="btn btn--primary" to="/taller/compras/nuevo"><Plus size={16} aria-hidden="true" /> Registrar compra</Link>
+      <div className="btn-row"><Link className="btn" to="/taller/compras/proveedores"><Building2 size={16} aria-hidden="true" /> Proveedores</Link>
+      <Link className="btn btn--primary" to="/taller/compras/nuevo"><Plus size={16} aria-hidden="true" /> Registrar compra</Link></div>
     </div>
 
     <form className="jobtag purchases-filters" onSubmit={submit}>

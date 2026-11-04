@@ -203,3 +203,9 @@
 @media (min-width: 761px) {
   .accounting-menu-link { display: none; }
 }
+/* Proveedores: misma ficha que los repuestos del inventario. */
+.supplier-card { display: grid; gap: 10px; align-content: start; }
+.supplier-card--inactive { opacity: .78; }
+.supplier-card__facts { display: grid; gap: 4px; margin: 0; padding: 0; list-style: none; font-size: var(--size-sm); color: var(--text-2); }
+.supplier-card__facts li { display: flex; align-items: center; gap: 6px; min-width: 0; overflow-wrap: anywhere; }
+.supplier-card__facts svg { flex: none; }

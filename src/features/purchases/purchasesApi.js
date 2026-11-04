@@ -27,7 +27,8 @@ function errorFor(status, data) {
   if (status === 403) return new PurchaseError(PURCHASE_MESSAGES.forbidden, { status, code: "forbidden" });
   if (status === 404) return new PurchaseError(PURCHASE_MESSAGES.notFound, { status, code: "not_found" });
   if (status === 409) return new PurchaseError(data?.detail || PURCHASE_MESSAGES.conflict, { status, code, field: data?.field });
-  if (status === 422) return new PurchaseError(PURCHASE_MESSAGES.invalid, { status, code: "invalid", field: data?.field });
+  // El backend explica en español qué campo falló; se muestra junto a ese campo.
+  if (status === 422) return new PurchaseError(typeof data?.detail === "string" ? data.detail : PURCHASE_MESSAGES.invalid, { status, code: "invalid", field: data?.field });
   return new PurchaseError(PURCHASE_MESSAGES.unavailable, { status, code: "unavailable" });
 }
 
@@ -80,6 +81,19 @@ export function createPurchasesApi({ baseUrl = "", fetchImpl } = {}) {
       const { data } = await request(`/api/admin/suppliers${queryString(filters)}`);
       if (!Array.isArray(data?.items)) throw new PurchaseError(PURCHASE_MESSAGES.unavailable, { code: "invalid_response" });
       return data;
+    },
+    /** El backend no expone GET por id: se recorre el listado hasta encontrarlo. */
+    async getSupplier(id) {
+      const target = Number(id);
+      for (let offset = 0; ; offset += 100) {
+        const { data } = await request(`/api/admin/suppliers${queryString({ limit: 100, offset })}`);
+        if (!Array.isArray(data?.items)) throw new PurchaseError(PURCHASE_MESSAGES.unavailable, { code: "invalid_response" });
+        const found = data.items.find((supplier) => supplier.id === target);
+        if (found) return found;
+        if (data.items.length < 100 || offset + 100 >= (data.total ?? 0)) {
+          throw new PurchaseError("El proveedor ya no está disponible.", { status: 404, code: "not_found" });
+        }
+      }
     },
     async createSupplier(payload) {
       const { data } = await request("/api/admin/suppliers", { method: "POST", body: payload });

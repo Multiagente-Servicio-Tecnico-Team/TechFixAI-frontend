@@ -26,7 +26,8 @@ import TicketAdminRoute from "../features/workshop/TicketAdminRoute.jsx";
 import PurchasesList from "../features/purchases/PurchasesList.jsx";
 import PurchaseCreate from "../features/purchases/PurchaseCreate.jsx";
 import PurchaseDetail from "../features/purchases/PurchaseDetail.jsx";
-import SupplierManager from "../features/purchases/SupplierManager.jsx";
+import SupplierList from "../features/purchases/SupplierList.jsx";
+import SupplierForm from "../features/purchases/SupplierForm.jsx";
 import CustomerQuotes from "../features/commerce/CustomerQuotes.jsx";
 import CustomerOrders from "../features/commerce/CustomerOrders.jsx";
 import CustomerManager from "../features/customers/CustomerManager.jsx";
@@ -74,7 +75,9 @@ export default function App() {
           <Route element={<RequireRole role="staff" accountRole="ADMIN" deniedStateKey="purchasesDenied" deniedTo="/taller/inventario"><Outlet /></RequireRole>}>
             <Route path="/taller/compras" element={<PurchasesList />} />
             <Route path="/taller/compras/nuevo" element={<PurchaseCreate />} />
-            <Route path="/taller/compras/proveedores" element={<SupplierManager />} />
+            <Route path="/taller/compras/proveedores" element={<SupplierList />} />
+            <Route path="/taller/compras/proveedores/nuevo" element={<SupplierForm />} />
+            <Route path="/taller/compras/proveedores/:id/editar" element={<SupplierForm />} />
             <Route path="/taller/compras/:id" element={<PurchaseDetail />} />
           </Route>
           <Route element={<RequireRole role="staff" accountRole="ADMIN" deniedStateKey="commerceDenied" deniedTo="/taller/inventario"><Outlet /></RequireRole>}>

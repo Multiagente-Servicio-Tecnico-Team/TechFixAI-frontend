@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { centsToInput, formatPEN, parseMoney } from "../../src/domain/money.js";
 import { EMAIL_RE, isMobilePhone, isStrongPassword, PASSWORD_RULES } from "../../src/domain/validation.js";
-import { TICKET_STATUS_LABEL } from "../../src/domain/tickets.js";
+import { REQUEST_TYPE_LABEL, TICKET_ORIGIN_LABEL, TICKET_STATUS_LABEL, ADMIN_TICKET_STATUS_LABEL, ADVANCE_PAYMENT_METHOD_LABEL, QUOTE_STATUS_LABEL } from "../../src/domain/tickets.js";
 import { fullName, nameFromEmail, normalizeEmail } from "../../src/domain/user.js";
 
 describe("dinero en céntimos", () => {
@@ -19,6 +19,11 @@ describe("dinero en céntimos", () => {
     expect(parseMoney("abc")).toBeNull();
     expect(centsToInput(11475)).toBe("114.75");
     expect(centsToInput(null)).toBe("");
+  });
+
+  it("acepta el límite NUMERIC(10,2) sin perder precisión", () => {
+    expect(parseMoney("99999999.99")).toBe(9999999999);
+    expect(parseMoney("100000000.00")).toBeNull();
   });
 });
 
@@ -51,5 +56,14 @@ describe("cuenta y tickets", () => {
   it("traduce los estados del esquema de base de datos", () => {
     expect(TICKET_STATUS_LABEL.QUOTED).toBe("Presupuesto enviado");
     expect(TICKET_STATUS_LABEL.CANCELLED).toBe("Cancelado");
+  });
+
+  it("traduce todos los códigos canónicos de tickets", () => {
+    expect(Object.keys(REQUEST_TYPE_LABEL)).toEqual(["REPAIR", "SALE", "PC_BUILD", "SUPPORT", "WARRANTY_CLAIM"]);
+    expect(Object.keys(ADMIN_TICKET_STATUS_LABEL)).toEqual(["NEW", "IN_DIAGNOSIS", "QUOTED", "PAYMENT_PENDING", "PAID", "IN_REPAIR", "READY_FOR_DELIVERY", "DELIVERED", "CANCELLED", "WARRANTY_IN_REVIEW"]);
+    expect(TICKET_STATUS_LABEL.NEW).toBe("Recibido");
+    expect(TICKET_ORIGIN_LABEL).toEqual({ MANUAL: "Presencial", ONLINE: "En línea", UNKNOWN: "Desconocido" });
+    expect(ADVANCE_PAYMENT_METHOD_LABEL.YAPE_PLIN).toBe("Yape/Plin");
+    expect(QUOTE_STATUS_LABEL.PENDING).toBe("Pendiente");
   });
 });

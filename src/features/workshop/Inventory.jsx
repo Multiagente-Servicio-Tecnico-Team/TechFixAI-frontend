@@ -5,7 +5,7 @@ import { ItemIcon, Pagination, Toast } from "../../shared/ui/ui.jsx";
 import { ConfirmDialog } from "../../shared/ui/ConfirmDialog.jsx";
 import { FormAlert } from "../../shared/ui/FormAlert.jsx";
 import { formatPEN } from "../../domain/money.js";
-import { isLowStock, PART_CATEGORIES } from "../../domain/inventory.js";
+import { isLowStock } from "../../domain/inventory.js";
 import { useInventory } from "./useInventory.js";
 
 const PAGE_SIZE = 4;
@@ -18,7 +18,7 @@ const sorters = {
 };
 
 export default function Inventory({ api }) {
-  const { parts, status, error, reload, remove } = useInventory(api);
+  const { parts, categories, status, error, categoryError, reload, remove } = useInventory(api);
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState("");
   const [onlyCritical, setOnlyCritical] = useState(false);
@@ -110,12 +110,13 @@ export default function Inventory({ api }) {
         <button type="button" aria-pressed={!category} className="toggle" onClick={() => reset(setCategory)("")}>
           Todos ({parts.length})
         </button>
-        {PART_CATEGORIES.map((c) => (
+        {categories.map((c) => (
           <button key={c} type="button" aria-pressed={category === c} className="toggle" onClick={() => reset(setCategory)(c)}>
             {c} ({parts.filter((p) => p.category === c).length})
           </button>
         ))}
       </div>
+      {categoryError && <p className="muted small" role="status">{categoryError}</p>}
 
       <p className="list-note"><span>Listado de componentes</span><span aria-live="polite">Mostrando {rows.length} de {filtered.length} ítems</span></p>
 

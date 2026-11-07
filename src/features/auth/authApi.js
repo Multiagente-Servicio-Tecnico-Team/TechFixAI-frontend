@@ -1,7 +1,7 @@
 /*
  * Cliente de autenticación del portal.
  *
- * - Con VITE_API_URL definido llama al backend: POST /registro, /login, /recuperar y /restablecer.
+ * - Con VITE_API_URL definido llama al backend: POST /auth/registro, /auth/login, /auth/recuperar y /auth/restablecer.
  * - Sin VITE_API_URL usa un simulador local para trabajar el frontend sin servidor.
  *
  * Reglas: la contraseña solo viaja en el cuerpo de la petición (HTTPS en producción); el hash
@@ -54,7 +54,7 @@ export function createAuthApi({ baseUrl = "", fetchImpl, delay = 450 } = {}) {
   async function post(path, body) {
     let res;
     try {
-      res = await doFetch(`${base}${path}`, {
+      res = await doFetch(`${base}/auth${path}`, {
         method: "POST",
         headers: { "Content-Type": "application/json", Accept: "application/json" },
         credentials: "include",
@@ -137,7 +137,7 @@ export function createAuthApi({ baseUrl = "", fetchImpl, delay = 450 } = {}) {
 export const authApi = createAuthApi({
   baseUrl: resolveApiBaseUrl(
     import.meta.env?.VITE_API_URL ?? "",
-    "/backend/auth",
+    "/backend",
     import.meta.env?.PROD === true,
   ),
 });

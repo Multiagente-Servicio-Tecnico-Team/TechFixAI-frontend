@@ -5,7 +5,7 @@ import { TriangleAlert } from "lucide-react";
  * Confirmación de una acción destructiva. El foco empieza en «Cancelar»; Esc o un clic fuera la cierran.
  * Mientras `busy` es verdadero no se puede cerrar ni confirmar dos veces.
  */
-export function ConfirmDialog({ open, title, children, confirmLabel = "Eliminar", busy = false, error, onConfirm, onCancel }) {
+export function ConfirmDialog({ open, title, children, confirmLabel = "Eliminar", busyLabel = "Eliminando…", busy = false, confirmDisabled = false, error, onConfirm, onCancel }) {
   const titleId = useId();
   const bodyId = useId();
   const cancelRef = useRef(null);
@@ -45,8 +45,8 @@ export function ConfirmDialog({ open, title, children, confirmLabel = "Eliminar"
         {error && <p className="dialog__error" role="alert">{error}</p>}
         <div className="dialog__actions">
           <button ref={cancelRef} type="button" className="btn" onClick={close} disabled={busy}>Cancelar</button>
-          <button ref={confirmRef} type="button" className="btn btn--danger" onClick={onConfirm} disabled={busy}>
-            {busy ? "Eliminando…" : confirmLabel}
+          <button ref={confirmRef} type="button" className="btn btn--danger" onClick={onConfirm} disabled={busy || confirmDisabled}>
+          {busy ? busyLabel : confirmLabel}
           </button>
         </div>
       </div>

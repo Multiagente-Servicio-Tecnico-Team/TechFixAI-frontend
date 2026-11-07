@@ -1,4 +1,4 @@
-// Estados y categorías de ticket. Los códigos (NEW, QUOTED…) son los del esquema de la base de datos.
+// Códigos de tickets del backend y sus etiquetas visibles en español.
 
 export const STAFF_STATUSES = [
   "Nuevo",
@@ -11,7 +11,19 @@ export const STAFF_STATUSES = [
 
 export const TICKET_CATEGORIES = ["Reparación", "Venta", "Soporte"];
 
-/** Estados de ticket del script de BD -> texto para el cliente. */
+export const REQUEST_TYPE_LABEL = {
+  REPAIR: "Reparación",
+  SALE: "Venta",
+  PC_BUILD: "Armado de PC",
+  SUPPORT: "Soporte",
+  WARRANTY_CLAIM: "Reclamo de garantía",
+};
+export const REQUEST_TYPE_CODES = Object.keys(REQUEST_TYPE_LABEL);
+export const ADVANCE_PAYMENT_METHOD_LABEL = { YAPE_PLIN: "Yape/Plin", CASH: "Efectivo", CARD: "Tarjeta" };
+export const TICKET_ORIGIN_LABEL = { MANUAL: "Presencial", ONLINE: "En línea", UNKNOWN: "Desconocido" };
+export const QUOTE_STATUS_LABEL = { PENDING: "Pendiente", ACCEPTED: "Aceptada", REJECTED: "Rechazada", EXPIRED: "Vencida" };
+
+/** Etiquetas históricas usadas por el portal cliente. */
 export const TICKET_STATUS_LABEL = {
   NEW: "Recibido",
   IN_DIAGNOSIS: "En diagnóstico",
@@ -24,3 +36,18 @@ export const TICKET_STATUS_LABEL = {
   DELIVERED: "Entregado",
   CANCELLED: "Cancelado",
 };
+
+/** Estados canónicos del panel administrativo de tickets. */
+export const ADMIN_TICKET_STATUS_LABEL = {
+  NEW: "Nuevo",
+  IN_DIAGNOSIS: "En diagnóstico",
+  QUOTED: "Presupuesto enviado",
+  PAYMENT_PENDING: "Pago pendiente",
+  PAID: "Pagado",
+  IN_REPAIR: "En reparación",
+  READY_FOR_DELIVERY: "Listo para despacho",
+  DELIVERED: "Entregado",
+  CANCELLED: "Cancelado",
+  WARRANTY_IN_REVIEW: "Garantía en revisión",
+};
+export const TICKET_STATUS_CODES = Object.keys(ADMIN_TICKET_STATUS_LABEL);

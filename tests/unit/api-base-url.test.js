@@ -3,7 +3,7 @@ import { resolveApiBaseUrl } from "../../src/shared/api/baseUrl.js";
 
 describe("URL base de cuentas y chat", () => {
   it("usa el proxy del mismo origen si producción no define URL", () => {
-    expect(resolveApiBaseUrl("", "/backend/auth", true)).toBe("/backend/auth");
+    expect(resolveApiBaseUrl("", "/backend", true)).toBe("/backend");
     expect(resolveApiBaseUrl("", "/backend", true)).toBe("/backend");
   });
 
@@ -11,18 +11,18 @@ describe("URL base de cuentas y chat", () => {
     expect(
       resolveApiBaseUrl(
         "https://backend.example.test/auth",
-        "/backend/auth",
+        "/backend",
         true,
       ),
-    ).toBe("/backend/auth");
+    ).toBe("/backend");
   });
 
   it("conserva URLs de desarrollo y rutas relativas de producción", () => {
     expect(
-      resolveApiBaseUrl("http://localhost:8000/auth", "/backend/auth", false),
-    ).toBe("http://localhost:8000/auth");
+      resolveApiBaseUrl("http://localhost:8000", "/backend", false),
+    ).toBe("http://localhost:8000");
     expect(
-      resolveApiBaseUrl("/backend/auth", "/backend/auth", true),
-    ).toBe("/backend/auth");
+      resolveApiBaseUrl("/backend", "/backend", true),
+    ).toBe("/backend");
   });
 });

@@ -12,7 +12,7 @@ describe("reglas del inventario", () => {
   });
 
   it("marca cada campo inválido sin devolver repuesto", () => {
-    const { errors, part } = validatePart({ sku: "ssd 1tb", name: "S", category: "Otra", stock: "-1", min: "x", price: "0" });
+    const { errors, part } = validatePart({ sku: "ssd 1tb", name: "S", category: "   ", stock: "-1", min: "x", price: "0" });
     expect(part).toBeNull();
     expect(Object.keys(errors).sort()).toEqual(["category", "min", "name", "price", "sku", "stock"]);
   });
@@ -28,7 +28,7 @@ describe("reglas del inventario", () => {
   });
 });
 
-const API_PART = { code: "RAM-16-D5", name: "RAM 16GB DDR5", category: "Memorias RAM", description: "Lenovo Legion", unit_price: "52.00", current_stock: 62, minimum_threshold: 10 };
+const API_PART = { id: 17, code: "RAM-16-D5", name: "RAM 16GB DDR5", category: "Memorias RAM", description: "Lenovo Legion", unit_price: "52.00", current_stock: 62, minimum_threshold: 10 };
 
 function fakeFetch(...responses) {
   return vi.fn().mockImplementation(async () => {
@@ -40,7 +40,7 @@ function fakeFetch(...responses) {
 describe("cliente de la API de inventario", () => {
   it("convierte entre la API y la pantalla con el precio como texto de dos decimales", () => {
     const part = fromApi(API_PART);
-    expect(part).toEqual({ sku: "RAM-16-D5", name: "RAM 16GB DDR5", category: "Memorias RAM", compat: "Lenovo Legion", stock: 62, min: 10, price: 5200, icon: "ram" });
+    expect(part).toEqual({ id: 17, sku: "RAM-16-D5", name: "RAM 16GB DDR5", category: "Memorias RAM", compat: "Lenovo Legion", stock: 62, min: 10, price: 5200, icon: "ram" });
     expect(toApi(part)).toEqual({ code: "RAM-16-D5", name: "RAM 16GB DDR5", category: "Memorias RAM", description: "Lenovo Legion", unit_price: "52.00", current_stock: 62, minimum_threshold: 10 });
   });
 
@@ -89,5 +89,63 @@ describe("cliente de la API de inventario", () => {
   it("un fallo de red se muestra como inventario no disponible", async () => {
     const api = createInventoryApi({ baseUrl: "http://api.local", fetchImpl: vi.fn().mockRejectedValue(new TypeError("Failed to fetch")) });
     await expect(api.list()).rejects.toMatchObject({ code: "network", message: INVENTORY_MESSAGES.unavailable });
+  });
+});
+
+
+describe("categorías dinámicas del inventario", () => {
+  it("acepta una categoría nueva no vacía y conserva su texto", () => {
+    const { errors, part } = validatePart({ ...FORM, category: "Procesadores y placas" });
+    expect(errors.category).toBeUndefined();
+    expect(part.category).toBe("Procesadores y placas");
+  });
+
+  it("rechaza una categoría vacía o mayor a 50 caracteres", () => {
+    const empty = validatePart({ ...FORM, category: "   " });
+    const tooLong = validatePart({ ...FORM, category: "x".repeat(51) });
+    expect(empty.errors.category).toBeDefined();
+    expect(tooLong.errors.category).toBeDefined();
+  });
+});
+
+describe("categorías y respuestas estrictas de la API", () => {
+  it("consulta las categorías del backend con la cookie de sesión", async () => {
+    const fetchImpl = fakeFetch({ status: 200, body: { categories: ["Procesadores", "Memorias RAM"] } });
+    const api = createInventoryApi({ baseUrl: "http://api.local", fetchImpl });
+
+    await expect(api.listCategories()).resolves.toEqual(["Procesadores", "Memorias RAM"]);
+    expect(fetchImpl.mock.calls[0][0]).toBe("http://api.local/api/inventory/categories");
+    expect(fetchImpl.mock.calls[0][1].credentials).toBe("include");
+  });
+
+  it("rechaza un payload de listado que no contiene parts como arreglo", async () => {
+    const api = createInventoryApi({
+      baseUrl: "http://api.local",
+      fetchImpl: fakeFetch({ status: 200, body: {} }),
+    });
+
+    await expect(api.list()).rejects.toMatchObject({ code: "invalid_response" });
+  });
+
+  it("rechaza una respuesta de categorías con valores que no son texto", async () => {
+    const api = createInventoryApi({
+      baseUrl: "http://api.local",
+      fetchImpl: fakeFetch({ status: 200, body: { categories: ["RAM", null] } }),
+    });
+
+    await expect(api.listCategories()).rejects.toMatchObject({ code: "invalid_response" });
+  });
+});
+
+
+
+describe("confirmación de escrituras de inventario", () => {
+  it.each(["create", "update"])("%s rechaza un cuerpo exitoso sin repuesto confirmado", async (method) => {
+    const api = createInventoryApi({
+      baseUrl: "http://api.local",
+      fetchImpl: fakeFetch({ status: method === "create" ? 201 : 200, body: {} }),
+    });
+
+    await expect(api[method](fromApi(API_PART))).rejects.toMatchObject({ code: "invalid_response" });
   });
 });

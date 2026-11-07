@@ -5,6 +5,7 @@ import { ItemIcon } from "../../shared/ui/ui.jsx";
 import { formatPEN, parseMoney } from "../../domain/money.js";
 import { useStore } from "../../state/store.jsx";
 import { chatApi } from "../chat/chatApi.js";
+import { normalizeCommercialTicket } from "../../domain/customerCommerce.js";
 
 const statusInfo = {
   NEW: { id: "received", label: "Recibido · En triage", tone: "blue" },
@@ -41,31 +42,33 @@ function cardFromDemo(ticket) {
 }
 
 function cardFromTicket(ticket) {
+  ticket = normalizeCommercialTicket(ticket);
   const state = statusInfo[ticket.status] || statusInfo.NEW;
-  const quote = ticket.quote;
-  const lines = quote ? [
-    { label: "Mano de obra", amount: parseMoney(quote.labor_cost) },
+  const quotes = ticket.quotes;
+  const lines = quotes.flatMap((quote, quoteIndex) => [
+    ...(quote.labor_cost ? [{ label: `Cotización ${quoteIndex + 1} · Mano de obra`, amount: parseMoney(quote.labor_cost) }] : []),
     ...quote.lines.map((line) => ({
-      label: `${line.name}${line.quantity > 1 ? ` × ${line.quantity}` : ""}`,
+      label: `Cotización ${quoteIndex + 1} · ${line.name}${line.quantity > 1 ? ` × ${line.quantity}` : ""}`,
       amount: parseMoney(line.subtotal),
     })),
-  ].filter((line) => line.amount !== null && line.amount > 0) : [];
+  ]).filter((line) => line.amount !== null && line.amount > 0);
+  const total = quotes.length ? quotes.map((quote) => parseMoney(quote.total_amount)).filter((amount) => amount !== null) : [];
   const date = ticket.created_at ? new Date(ticket.created_at) : null;
   return {
     id: ticket.code,
     when: date && !Number.isNaN(date.valueOf())
       ? date.toLocaleString("es-PE", { dateStyle: "medium", timeStyle: "short" })
       : "Fecha no disponible",
-    kind: requestLabels[ticket.request_type] || "Consulta",
+    kind: requestLabels[ticket.requestType] || "Consulta",
     device: ticket.title,
-    icon: ticket.request_type === "PC_BUILD" ? "monitor" : "laptop",
+    icon: ticket.requestType === "PC_BUILD" ? "monitor" : "laptop",
     summary: ticket.failure_description,
-    note: ticket.status === "QUOTED" ? "Tienes una cotización disponible." : "",
+    note: quotes.length ? `${quotes.length} ${quotes.length === 1 ? "cotización de servicio" : "cotizaciones de servicio"}.` : "",
     status: state.id,
     statusLabel: state.label,
     tone: state.tone,
     lines,
-    total: quote ? parseMoney(quote.total_amount) : null,
+    total: total.length ? total[total.length - 1] : null,
   };
 }
 
@@ -208,7 +211,7 @@ function TicketTag({ ticket: t, canApprove }) {
           {t.lines.map((line) => (
             <div key={line.label} className="budget__row"><span>{line.label}</span><span className="mono">{formatPEN(line.amount)}</span></div>
           ))}
-          <div className="budget__row budget__row--total"><span>Total</span><span className="mono">{formatPEN(t.total)}</span></div>
+          <div className="budget__row budget__row--total"><span>Total de la última cotización</span><span className="mono">{formatPEN(t.total)}</span></div>
         </div>
       )}
       {(t.status === "ready" || (canApprove && t.lines.length > 0)) && (

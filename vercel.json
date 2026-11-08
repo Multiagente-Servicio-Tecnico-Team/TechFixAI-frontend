@@ -3,7 +3,7 @@
   "rewrites": [
     {
       "source": "/backend/:path*",
-      "destination": "https://sistema-multiagente-de-servicio-t-cnico.onrender.com/:path*"
+      "destination": "https://techfixai-backend-5fb7.onrender.com/:path*"
     },
     {
       "source": "/(.*)",

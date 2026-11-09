@@ -36,10 +36,15 @@ integrante puede proponer cambios con un PR hacia `develop`.
 | `/taller/ventas` | Crear cotizaciones de venta, registrar aceptación manual, confirmar pagos externos y consultar ventas | API comercial; solo ADMIN; inventario usa IDs numéricos | `admin-commerce.test.jsx`, `customer-commerce-access.test.jsx` |
 | `/taller/inventario`, `/taller/inventario/*` | Consulta y mantenimiento de repuestos | API de inventario; demo sin URL en desarrollo y `/backend` en producción | `inventory.test.jsx`, `inventory.test.js` |
 | `/taller/contabilidad` | Listado con filtros, paginación y resumen de asientos (solo ADMIN) | Implementada; depende de `VITE_API_URL` o `/backend` en producción | `accounting-list.test.jsx`, `accounting-access.test.jsx` |
-| `/taller/contabilidad/nuevo` | Alta confirmada con balance debe/haber, revisión e idempotencia | Implementada; requiere API contable configurada | `accounting-create.test.jsx`, `accounting-domain.test.js`, `accounting-api.test.js` |
+| `/taller/contabilidad/nuevo` | Alta confirmada con balance debe/haber, revisión e idempotencia | Implementada; carga cuentas del plan, permite buscar por código/denominación y autocompleta la descripción con la cuenta padre; requiere API contable configurada | `accounting-create.test.jsx`, `accounting-domain.test.js`, `accounting-api.test.js` |
 | `/taller/contabilidad/:id` | Detalle, trazabilidad y reversión compensatoria (solo ADMIN) | Implementada; requiere API contable configurada | `accounting-detail.test.jsx`, `accounting-reversal.test.jsx` |
+| `/taller/contabilidad/planes` | Planes contables | Implementada; listado y selección explícita del plan predeterminado (ADMIN) | Pendiente de validación manual contra API |
+| `/taller/contabilidad/cuentas` | Catálogo de cuentas por plan | Implementada; búsqueda, filtros, alta/edición/desactivación e historial (ADMIN) | Pendiente de validación manual contra API |
+| `/taller/contabilidad/periodos`, `/taller/contabilidad/periodos/:year/:month/eventos` | Cierres mensuales e historial | Implementada; cierre y reapertura con motivo/auditoría (ADMIN) | Pendiente de validación manual contra API |
+| `/taller/contabilidad/informes/diario`, `/taller/contabilidad/informes/mayor`, `/taller/contabilidad/informes/balance` | Diario, mayor y balance de comprobación | Implementada; filtros, paginación y exportación CSV/XLSX (ADMIN) | Pendiente de validación manual contra API |
 | `/taller/compras`, `/taller/compras/:id` | Historial paginado y detalle de comprobante, movimientos y auditoría (solo ADMIN) | API backend con `VITE_API_URL`; no usa datos demo | Pendiente de cobertura automatizada |
 | `/taller/compras/nuevo` | Registro de compras con líneas de inventario/conceptos libres y recepciones | API de compras y catálogo real usan `VITE_API_URL`; recepción idempotente | Pendiente de cobertura automatizada |
+| `/taller/compras/ordenes`, `/taller/compras/ordenes/nuevo`, `/taller/compras/ordenes/:id` y `/:id/editar` | Consulta, filtros, borradores, emision, cancelacion y recepciones idempotentes (solo ADMIN); facturas vinculables al crearse | Contrato backend Spec 010; sin stock optimista ni datos demo | Pruebas pendientes |
 | `/taller/compras/proveedores` | Directorio de proveedores: búsqueda, filtro activo/inactivo, desactivación con confirmación y reactivación (solo ADMIN) | Implementada; API de compras con `VITE_API_URL`, sin datos demo | `suppliers.test.jsx`, `suppliers-domain.test.js`, `purchases-api.test.js` |
 | `/taller/compras/proveedores/nuevo`, `/:id/editar` | Alta y edición en página propia; errores del backend junto a su campo (RUC repetido, correo) | Implementada; la edición por enlace directo consulta `GET /api/admin/suppliers/{id}` | `suppliers.test.jsx` |
 | `/ayuda` | Soporte, preguntas frecuentes, estado y legales | Lista | — |
@@ -60,6 +65,10 @@ Implementación en `src/features/chat/useVoiceRecorder.js`, `chatApi.js` y `Live
 Pruebas: `chat-api-audio.test.js`, `voice-recorder.test.js`, `chat-audio.test.jsx` y
 `chat-audio-errors.test.jsx`. El contrato y requisitos canónicos se mantienen en el
 repositorio backend (ver `docs.md`).
+
+## Catálogo y consultas contables (Spec 009)
+
+Rutas ADMIN: `/taller/contabilidad/planes`, `/taller/contabilidad/cuentas`, `/taller/contabilidad/periodos`, `/taller/contabilidad/periodos/:year/:month/eventos` y `/taller/contabilidad/informes/diario`, `/taller/contabilidad/informes/mayor`, `/taller/contabilidad/informes/balance`. Las pantallas consumen planes, cuentas, vigencias, eventos, cierres mensuales y reportes paginados/exportables usando `src/features/accounting/accountingApi.js`. En el alta, al elegir un plan se carga la primera página de cuentas activas e imputables; escribir código o denominación aplica una búsqueda parcial en el backend. Al elegir cuenta, la descripción de línea se completa con la cuenta padre; si es una cuenta raíz, se usa su denominación. El campo continúa editable. Los asientos nuevos solo permiten cuentas vigentes para su fecha; el detalle conserva y señala snapshots históricos sin vínculo. Cierre/reapertura exige confirmación; reapertura requiere motivo. Exportar usa los filtros ya consultados y reconoce errores JSON como 413 sin descargarlos como archivos. Requiere las rutas y migraciones del Spec 009 backend y una sesión ADMIN. Build de producción ejecutado; revisión visual y recorrido manual contra backend quedan pendientes.
 
 ## Contabilidad del taller
 

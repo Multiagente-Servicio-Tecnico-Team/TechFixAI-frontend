@@ -74,9 +74,36 @@ export function useInventory(api = inventoryApi) {
     }
   }, [api, live, dispatch, storedParts]);
 
+  const applyStockResult = useCallback((partId, result) => {
+    if (!result?.changed || !Number.isInteger(result?.part?.current_stock)) return result;
+    // Reducer fusiona este parche con el repuesto vigente, incluso si un alta acaba de despacharse.
+    dispatch({ type: "savePart", part: { sku: result.part.code, stock: result.part.current_stock } });
+    return result;
+  }, [dispatch]);
+
+  const recordOpening = useCallback(async (partId, payload, idempotencyKey) => {
+    if (live) return applyStockResult(partId, await api.recordOpening(partId, payload, idempotencyKey));
+    const current = storedParts.find((part) => Number.isInteger(partId) ? part.id === partId : part.sku === partId);
+    if (!current) throw new Error("El repuesto ya no está disponible.");
+    const changed = current.stock !== payload.counted_stock;
+    const result = { part: { id: current.id ?? partId, code: current.sku, current_stock: changed ? payload.counted_stock : current.stock }, changed, movement: null };
+    if (changed) dispatch({ type: "savePart", part: { ...current, stock: result.part.current_stock } });
+    return result;
+  }, [api, applyStockResult, dispatch, live, storedParts]);
+
+  const adjustStock = useCallback(async (partId, payload, idempotencyKey) => {
+    if (live) return applyStockResult(partId, await api.adjustStock(partId, payload, idempotencyKey));
+    const current = storedParts.find((part) => Number.isInteger(partId) ? part.id === partId : part.sku === partId);
+    if (!current) throw new Error("El repuesto ya no está disponible.");
+    const changed = current.stock !== payload.counted_stock;
+    const result = { part: { id: current.id ?? partId, code: current.sku, current_stock: changed ? payload.counted_stock : current.stock }, changed, movement: null };
+    if (changed) dispatch({ type: "savePart", part: { ...current, stock: result.part.current_stock } });
+    return result;
+  }, [api, applyStockResult, dispatch, live, storedParts]);
+
   const parts = live && !loadedFromApi ? [] : storedParts;
   const visibleCategories = live
     ? categories
     : uniqueCategories([...categories, ...storedParts.map((part) => part.category)]);
-  return { parts, categories: visibleCategories, status, error, categoryError, reload, save, remove, live };
+  return { parts, categories: visibleCategories, status, error, categoryError, reload, save, remove, recordOpening, adjustStock, live };
 }

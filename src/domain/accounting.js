@@ -29,6 +29,20 @@ export function formatAccountingAmount(cents) {
   return `${sign}S/. ${whole}.${fraction}`;
 }
 
+export function isAccountingAccountValidForDate(account, operationDate) {
+  if (!account || account.status !== "ACTIVE" || account.is_postable !== true || !operationDate) return false;
+  if (account.effective_from && account.effective_from > operationDate) return false;
+  if (account.effective_to && account.effective_to < operationDate) return false;
+  return true;
+}
+
+export function validateAccountingAccountSelection(account, planId, operationDate) {
+  if (!account || Number(account.id) < 1) return "Selecciona una cuenta del catálogo.";
+  if (Number(account.plan_id) !== Number(planId)) return "La cuenta no pertenece al plan seleccionado.";
+  if (!isAccountingAccountValidForDate(account, operationDate)) return "La cuenta debe estar activa, ser imputable y estar vigente para la fecha del asiento.";
+  return "";
+}
+
 function amountOrZero(value) {
   if (value === "" || value === null || value === undefined) return 0n;
   return parseAccountingAmount(value);
@@ -60,13 +74,15 @@ export function validateEntryDraft(draft) {
   if (!String(draft.concept ?? "").trim() || String(draft.concept).length > 200) errors.concept = "El concepto es obligatorio y admite hasta 200 caracteres.";
   if (!String(draft.detail ?? "").trim() || String(draft.detail).length > 4000) errors.detail = "El detalle es obligatorio y admite hasta 4000 caracteres.";
   if (!Number.isInteger(Number(draft.category_id)) || Number(draft.category_id) < 1) errors.category_id = "Selecciona una categoría.";
+  if (!Number.isInteger(Number(draft.plan_id)) || Number(draft.plan_id) < 1) errors.plan_id = "Selecciona un plan contable.";
   if (!Array.isArray(draft.lines) || draft.lines.length < 2 || draft.lines.length > 100) {
     errors.lines = "El asiento requiere entre 2 y 100 líneas.";
   } else {
     const lineErrors = draft.lines.map((line) => {
       const issues = {};
-      if (!String(line.account_code ?? "").trim() || String(line.account_code).length > 40) issues.account_code = "El código admite entre 1 y 40 caracteres.";
-      if (!String(line.account_name ?? "").trim() || String(line.account_name).length > 200) issues.account_name = "El nombre admite entre 1 y 200 caracteres.";
+      const accountIssue = validateAccountingAccountSelection(line.account, draft.plan_id, draft.operation_date);
+      if (accountIssue) issues.account_id = accountIssue;
+      else if (Number(line.account_id) !== Number(line.account.id)) issues.account_id = "La cuenta seleccionada cambió. Vuelve a elegirla.";
       if (String(line.description ?? "").length > 1000) issues.description = "La descripción admite hasta 1000 caracteres.";
       return issues;
     });

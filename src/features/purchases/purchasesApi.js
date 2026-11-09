@@ -14,7 +14,7 @@ export class PurchaseError extends Error {
 export const PURCHASE_MESSAGES = Object.freeze({
   session: "Tu sesión terminó. Inicia sesión otra vez para gestionar Compras.",
   forbidden: "Solo administradores pueden acceder a Compras.",
-  notFound: "La compra o el proveedor ya no está disponible.",
+  notFound: "El registro solicitado ya no está disponible.",
   conflict: "No se pudo completar la operación por un conflicto con los datos actuales.",
   invalid: "Revisa los datos marcados e inténtalo de nuevo.",
   unavailable: "Compras no está disponible en este momento. Inténtalo de nuevo.",
@@ -76,6 +76,51 @@ export function createPurchasesApi({ baseUrl = "", fetchImpl } = {}) {
       const { data } = await request(`/api/admin/purchases/${encodeURIComponent(id)}`);
       if (!data?.purchase) throw new PurchaseError(PURCHASE_MESSAGES.unavailable, { code: "invalid_response" });
       return data.purchase;
+    },
+    async listPurchaseOrders(filters = {}) {
+      const { data } = await request(`/api/admin/purchase-orders${queryString(filters)}`);
+      if (!Array.isArray(data?.items)) throw new PurchaseError(PURCHASE_MESSAGES.unavailable, { code: "invalid_response" });
+      return data;
+    },
+    async getPurchaseOrder(id) {
+      const { data } = await request(`/api/admin/purchase-orders/${encodeURIComponent(id)}`);
+      if (!data?.order) throw new PurchaseError(PURCHASE_MESSAGES.unavailable, { code: "invalid_response" });
+      return data.order;
+    },
+    async createPurchaseOrder(payload) {
+      const { data } = await request("/api/admin/purchase-orders", { method: "POST", body: payload });
+      if (!data?.order) throw new PurchaseError(PURCHASE_MESSAGES.unavailable, { code: "invalid_response" });
+      return data.order;
+    },
+    async updatePurchaseOrder(id, payload) {
+      const { data } = await request(`/api/admin/purchase-orders/${encodeURIComponent(id)}`, { method: "PATCH", body: payload });
+      if (!data?.order) throw new PurchaseError(PURCHASE_MESSAGES.unavailable, { code: "invalid_response" });
+      return data.order;
+    },
+    async issuePurchaseOrder(id) {
+      const { data } = await request(`/api/admin/purchase-orders/${encodeURIComponent(id)}/issue`, { method: "POST" });
+      if (!data?.order) throw new PurchaseError(PURCHASE_MESSAGES.unavailable, { code: "invalid_response" });
+      return data.order;
+    },
+    async cancelPurchaseOrder(id, reason) {
+      const { data } = await request(`/api/admin/purchase-orders/${encodeURIComponent(id)}/cancel`, {
+        method: "POST", body: { reason },
+      });
+      if (!data?.order) throw new PurchaseError(PURCHASE_MESSAGES.unavailable, { code: "invalid_response" });
+      return data.order;
+    },
+    async listPurchaseOrderReceipts(id) {
+      const { data } = await request(`/api/admin/purchase-orders/${encodeURIComponent(id)}/receipts`);
+      if (!Array.isArray(data?.items)) throw new PurchaseError(PURCHASE_MESSAGES.unavailable, { code: "invalid_response" });
+      return data.items;
+    },
+    async receivePurchaseOrder(id, payload, idempotencyKey) {
+      if (!idempotencyKey) throw new PurchaseError("No se pudo preparar el reintento seguro de recepción.", { code: "idempotency_key_required" });
+      const { data, replayed } = await request(`/api/admin/purchase-orders/${encodeURIComponent(id)}/receipts`, {
+        method: "POST", body: payload, headers: { "Idempotency-Key": idempotencyKey },
+      });
+      if (!data?.receipt) throw new PurchaseError(PURCHASE_MESSAGES.unavailable, { code: "invalid_response" });
+      return { receipt: data.receipt, replayed };
     },
     async listSuppliers(filters = {}) {
       const { data } = await request(`/api/admin/suppliers${queryString(filters)}`);

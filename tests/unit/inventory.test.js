@@ -41,7 +41,7 @@ describe("cliente de la API de inventario", () => {
   it("convierte entre la API y la pantalla con el precio como texto de dos decimales", () => {
     const part = fromApi(API_PART);
     expect(part).toEqual({ id: 17, sku: "RAM-16-D5", name: "RAM 16GB DDR5", category: "Memorias RAM", compat: "Lenovo Legion", stock: 62, min: 10, price: 5200, icon: "ram" });
-    expect(toApi(part)).toEqual({ code: "RAM-16-D5", name: "RAM 16GB DDR5", category: "Memorias RAM", description: "Lenovo Legion", unit_price: "52.00", current_stock: 62, minimum_threshold: 10 });
+    expect(toApi(part)).toEqual({ code: "RAM-16-D5", name: "RAM 16GB DDR5", category: "Memorias RAM", description: "Lenovo Legion", unit_price: "52.00", minimum_threshold: 10 });
   });
 
   it("sin URL queda en modo demostración", () => {
@@ -71,6 +71,8 @@ describe("cliente de la API de inventario", () => {
     ]);
     expect(fetchImpl.mock.calls.every(([, init]) => init.credentials === "include")).toBe(true);
     expect(JSON.parse(fetchImpl.mock.calls[1][1].body).unit_price).toBe("52.00");
+    expect(JSON.parse(fetchImpl.mock.calls[1][1].body)).not.toHaveProperty("current_stock");
+    expect(JSON.parse(fetchImpl.mock.calls[2][1].body)).not.toHaveProperty("current_stock");
   });
 
   it.each([
@@ -89,6 +91,68 @@ describe("cliente de la API de inventario", () => {
   it("un fallo de red se muestra como inventario no disponible", async () => {
     const api = createInventoryApi({ baseUrl: "http://api.local", fetchImpl: vi.fn().mockRejectedValue(new TypeError("Failed to fetch")) });
     await expect(api.list()).rejects.toMatchObject({ code: "network", message: INVENTORY_MESSAGES.unavailable });
+  });
+
+  it("registra una apertura con ID numérico y conserva la clave idempotente enviada", async () => {
+    const movement = { id: 4, part_id: 17, code_snapshot: "RAM-16-D5", name_snapshot: "RAM 16GB DDR5", movement_type: "OPENING_BALANCE", quantity_delta: 8, stock_before: 0, stock_after: 8, reason: "Conteo inicial", actor_kind: "USER", actor_user_id: 2, actor_name: "Carlos", created_at: "2026-11-08T12:00:00Z", source_type: null, source_id: null, is_before_cutover: false };
+    const fetchImpl = fakeFetch(
+      { status: 201, body: { part: { id: 17, code: "RAM-16-D5", current_stock: 8 }, changed: true, movement } },
+      { status: 201, body: { part: { id: 17, code: "RAM-16-D5", current_stock: 8 }, changed: true, movement } },
+    );
+    const api = createInventoryApi({ baseUrl: "http://api.local", fetchImpl });
+    const payload = { counted_stock: 8, reason: " Conteo inicial " };
+    const key = "55e49c27-1f5b-4bc8-a51f-02f1ad3e5e06";
+
+    await api.recordOpening(17, payload, key);
+    await api.recordOpening(17, payload, key);
+
+    expect(fetchImpl.mock.calls.map(([url]) => url)).toEqual([
+      "http://api.local/api/inventory/parts/17/opening-balance",
+      "http://api.local/api/inventory/parts/17/opening-balance",
+    ]);
+    expect(fetchImpl.mock.calls[0][1].headers["Idempotency-Key"]).toBe(key);
+    expect(fetchImpl.mock.calls[1][1].headers["Idempotency-Key"]).toBe(key);
+    expect(JSON.parse(fetchImpl.mock.calls[0][1].body)).toEqual({ counted_stock: 8, reason: "Conteo inicial" });
+    expect(fetchImpl.mock.calls.every(([, init]) => init.credentials === "include")).toBe(true);
+  });
+
+  it("consulta historial con filtros y paginación por ID numérico", async () => {
+    const fetchImpl = fakeFetch({ status: 200, body: { items: [], total: 0, limit: 50, offset: 0 } });
+    const api = createInventoryApi({ baseUrl: "http://api.local", fetchImpl });
+    await expect(api.listMovements(17, { movement_type: "ADJUSTMENT_IN", from_date: "2026-11-01", limit: 50, offset: 0 }))
+      .resolves.toMatchObject({ items: [], total: 0, limit: 50, offset: 0 });
+    expect(fetchImpl.mock.calls[0][0]).toBe("http://api.local/api/inventory/parts/17/movements?movement_type=ADJUSTMENT_IN&from_date=2026-11-01&limit=50&offset=0");
+  });
+
+  it("envía un conteo físico y clave idempotente al endpoint de ajustes", async () => {
+    const fetchImpl = fakeFetch({ status: 201, body: { part: { id: 17, code: "RAM-16-D5", current_stock: 15 }, changed: true, movement: null } });
+    const api = createInventoryApi({ baseUrl: "http://api.local", fetchImpl });
+    await expect(api.adjustStock(17, { counted_stock: 15, reason: "Conteo físico" }, "55e49c27-1f5b-4bc8-a51f-02f1ad3e5e06"))
+      .resolves.toMatchObject({ part: { id: 17, current_stock: 15 }, changed: true });
+    const [url, init] = fetchImpl.mock.calls[0];
+    expect(url).toBe("http://api.local/api/inventory/parts/17/adjustments");
+    expect(init.headers["Idempotency-Key"]).toBe("55e49c27-1f5b-4bc8-a51f-02f1ad3e5e06");
+    expect(JSON.parse(init.body)).toEqual({ counted_stock: 15, reason: "Conteo físico" });
+  });
+
+  it("rechaza una página de movimientos con forma inválida", async () => {
+    const api = createInventoryApi({ baseUrl: "http://api.local", fetchImpl: fakeFetch({ status: 200, body: { items: "no es una lista" } }) });
+    await expect(api.listMovements(17)).rejects.toMatchObject({ code: "invalid_response" });
+  });
+
+  it("traduce el conflicto de retiro por reservas sin describirlo como SKU duplicado", async () => {
+    const api = createInventoryApi({ baseUrl: "http://api.local", fetchImpl: fakeFetch({ status: 409, body: { code: "reserved_stock", detail: "unidades reservadas" } }) });
+    await expect(api.remove("RAM-16-D5")).rejects.toMatchObject({ code: "reserved_stock", message: INVENTORY_MESSAGES.removeReserved });
+  });
+
+  it.each([
+    ["reserved_stock", INVENTORY_MESSAGES.reservedStock],
+    ["opening_exists", INVENTORY_MESSAGES.openingExists],
+    ["idempotency_conflict", INVENTORY_MESSAGES.idempotencyConflict],
+  ])("traduce el conflicto %s sin tratarlo como SKU duplicado", async (code, message) => {
+    const api = createInventoryApi({ baseUrl: "http://api.local", fetchImpl: fakeFetch({ status: 409, body: { code, detail: "detalle interno" } }) });
+    await expect(api.adjustStock(17, { counted_stock: 0, reason: "Conteo" }, "55e49c27-1f5b-4bc8-a51f-02f1ad3e5e06"))
+      .rejects.toMatchObject({ code, message });
   });
 });
 

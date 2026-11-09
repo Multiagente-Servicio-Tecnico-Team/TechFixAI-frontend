@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { ArrowLeft, CircleCheck, LoaderCircle } from "lucide-react";
 import { calculateEntryTotals, formatAccountingAmount, formatAccountingDecimal, parseAccountingAmount, validateEntryDraft } from "../../domain/accounting.js";
@@ -14,18 +14,18 @@ function localDate() {
 }
 
 function blankLine() {
-  return { account_code: "", account_name: "", description: "", debit: "", credit: "" };
+  return { account_id: "", account: null, account_code: "", account_name: "", description: "", debit: "", credit: "" };
 }
 
 function toPayload(draft) {
   return {
     operation_date: draft.operation_date,
+    plan_id: Number(draft.plan_id),
     concept: draft.concept.trim(),
     detail: draft.detail.trim(),
     category_id: Number(draft.category_id),
     lines: draft.lines.map((line) => ({
-      account_code: line.account_code.trim(),
-      account_name: line.account_name.trim(),
+      account_id: Number(line.account_id),
       description: line.description.trim() || null,
       debit: formatAccountingDecimal(parseAccountingAmount(line.debit || "0") ?? 0n),
       credit: formatAccountingDecimal(parseAccountingAmount(line.credit || "0") ?? 0n),
@@ -39,29 +39,37 @@ export default function AccountingCreate({ api = defaultApi }) {
   const [categories, setCategories] = useState([]);
   const [categoryState, setCategoryState] = useState("loading");
   const [categoryError, setCategoryError] = useState("");
-  const [draft, setDraft] = useState({ operation_date: localDate(), concept: "", detail: "", category_id: "", lines: [blankLine(), blankLine()] });
+  const [plans, setPlans] = useState([]);
+  const [planError, setPlanError] = useState("");
+  const [draft, setDraft] = useState({ operation_date: localDate(), plan_id: "", concept: "", detail: "", category_id: "", lines: [blankLine(), blankLine()] });
   const [errors, setErrors] = useState({});
   const [formError, setFormError] = useState("");
   const [reviewOpen, setReviewOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [pendingRequest, setPendingRequest] = useState(null);
   const [created, setCreated] = useState(null);
+  const [periodConflict, setPeriodConflict] = useState(null);
 
   const totals = useMemo(() => calculateEntryTotals(draft.lines), [draft.lines]);
 
-  const loadCategories = async () => {
+  const loadCategories = useCallback(async () => {
     setCategoryState("loading");
     setCategoryError("");
+    setPlanError("");
     try {
-      const result = await api.listCategories();
+      const [result, planResult] = await Promise.all([api.listCategories(), api.listPlans()]);
+      const availablePlans = planResult?.items ?? [];
       setCategories(result?.items ?? []);
+      setPlans(availablePlans);
+      setDraft((current) => ({ ...current, plan_id: current.plan_id || String(availablePlans.find((plan) => plan.is_default)?.id ?? availablePlans[0]?.id ?? "") }));
       setCategoryState("ready");
     } catch (error) {
       if (error.code === "session_required") { setCategories([]); navigate("/taller/acceso", { replace: true, state: { from: location.pathname } }); return; }
+      if (error.code === "forbidden") { setCategories([]); setPlans([]); }
       setCategoryError(error.message);
       setCategoryState("error");
     }
-  };
+  }, [api, location.pathname, navigate]);
 
   useEffect(() => { loadCategories(); }, [api]);
 
@@ -70,9 +78,14 @@ export default function AccountingCreate({ api = defaultApi }) {
     setErrors({});
     setFormError("");
     setPendingRequest(null);
+    setPeriodConflict(null);
   };
 
   const changeLines = (lines) => changeDraft({ lines });
+  const changePlan = (planId) => changeDraft({
+    plan_id: planId,
+    lines: draft.lines.map((line) => ({ ...line, account_id: "", account: null, account_code: "", account_name: "" })),
+  });
 
   const review = (event) => {
     event.preventDefault();
@@ -99,7 +112,20 @@ export default function AccountingCreate({ api = defaultApi }) {
       setPendingRequest(null);
     } catch (error) {
       setReviewOpen(false);
-      if (error.code === "session_required") { setDraft({ operation_date: localDate(), concept: "", detail: "", category_id: "", lines: [blankLine(), blankLine()] }); navigate("/taller/acceso", { replace: true, state: { from: location.pathname } }); return; }
+      if (error.code === "session_required") { setDraft({ operation_date: localDate(), plan_id: "", concept: "", detail: "", category_id: "", lines: [blankLine(), blankLine()] }); navigate("/taller/acceso", { replace: true, state: { from: location.pathname } }); return; }
+      if (error.code === "forbidden") { setDraft({ operation_date: localDate(), plan_id: "", concept: "", detail: "", category_id: "", lines: [blankLine(), blankLine()] }); setPlans([]); setCategories([]); setCategoryState("error"); }
+      if (error.status === 409 || error.code === "conflict") {
+        let period = null;
+        try {
+          const year = draft.operation_date.slice(0, 4);
+          const month = draft.operation_date.slice(5, 7);
+          const result = await api.listPeriods({ from_period: `${year}-${month}`, to_period: `${year}-${month}`, limit: 1, offset: 0 });
+          period = result?.items?.[0] ?? { year: Number(year), month: Number(month), status: "sin registro de periodo" };
+        } catch { /* El conflicto sigue siendo claro aunque no se pueda refrescar la lista. */ }
+        setPeriodConflict(period);
+        setFormError("El asiento no se registró: el periodo o una cuenta cambió. Actualiza el estado antes de volver a intentarlo.");
+        return;
+      }
       setFormError(error.message);
     } finally {
       setSubmitting(false);
@@ -136,7 +162,7 @@ export default function AccountingCreate({ api = defaultApi }) {
       <p className="muted">Al registrarlo quedará confirmado. No podrás editarlo ni eliminarlo; una corrección se registra mediante una reversión.</p>
       <FormAlert>{formError}</FormAlert>
 
-      {categoryState === "loading" && <p className="empty" role="status">Cargando categorías…</p>}
+      {categoryState === "loading" && <p className="empty" role="status">Cargando categorías y planes…</p>}
       {categoryState === "error" && (
         <div>
           <FormAlert>{categoryError}</FormAlert>
@@ -146,11 +172,17 @@ export default function AccountingCreate({ api = defaultApi }) {
 
       {categoryState === "ready" && (
         <form className="accounting-form" onSubmit={review} noValidate aria-busy={submitting}>
+          {planError && <FormAlert>{planError}</FormAlert>}
           <section className="jobtag accounting-section">
             <h2 className="subtitle">Datos del asiento</h2>
             <div className="grid-2">
               <Field label="Fecha de operación" htmlFor="operation-date" required error={errors.operation_date}>
                 <input id="operation-date" type="date" className="input" value={draft.operation_date} disabled={submitting} onChange={(event) => changeDraft({ operation_date: event.target.value })} />
+              </Field>
+              <Field label="Plan contable" htmlFor="accounting-plan" required error={errors.plan_id}>
+                <select id="accounting-plan" className="input" value={draft.plan_id} disabled={submitting || plans.length === 0} onChange={(event) => changePlan(event.target.value)}>
+                  <option value="">Selecciona un plan</option>{plans.map((plan) => <option key={plan.id} value={plan.id}>{plan.name}{plan.is_default ? " (predeterminado)" : ""}</option>)}
+                </select>
               </Field>
               <Field label="Categoría" htmlFor="accounting-category" required error={errors.category_id}>
                 <select id="accounting-category" className="input" value={draft.category_id} disabled={submitting} onChange={(event) => changeDraft({ category_id: event.target.value })}>
@@ -167,17 +199,18 @@ export default function AccountingCreate({ api = defaultApi }) {
             </div>
           </section>
 
-          <EntryLinesEditor lines={draft.lines} onChange={changeLines} disabled={submitting} errors={errors.line_fields} totals={totals} />
+          <EntryLinesEditor lines={draft.lines} onChange={changeLines} disabled={submitting} errors={errors.line_fields} totals={totals} planId={draft.plan_id} operationDate={draft.operation_date} onSessionExpired={() => navigate("/taller/acceso", { replace: true, state: { from: location.pathname } })} />
           {errors.lines && <p className="field__error" role="alert">{errors.lines}</p>}
           {errors.balance && <p className="field__error" role="alert">{errors.balance}</p>}
           <div className="accounting-form__actions">
-            <button type="submit" className="btn btn--primary btn--lg" disabled={categories.length === 0 || submitting}>
+            <button type="submit" className="btn btn--primary btn--lg" disabled={categories.length === 0 || plans.length === 0 || submitting}>
               {submitting ? <><LoaderCircle size={17} className="spin" aria-hidden="true" /> Guardando…</> : "Revisar y registrar"}
             </button>
             {pendingRequest && formError && <button type="button" className="btn" disabled={submitting} onClick={confirmCreate}>Reintentar registro</button>}
           </div>
         </form>
       )}
+      {periodConflict && <div className="jobtag accounting-period-conflict" role="status"><strong>Estado actualizado: {String(periodConflict.year).padStart(4, "0")}-{String(periodConflict.month).padStart(2, "0")} · {periodConflict.status === "CLOSED" ? "Cerrado" : periodConflict.status === "OPEN" ? "Abierto" : periodConflict.status}</strong><span>El asiento no se guardó. Revisa la fecha, el periodo y las cuentas antes de reintentar.</span><Link to="/taller/contabilidad/periodos">Administrar periodos</Link></div>}
 
       <ConfirmDialog
         open={reviewOpen}
@@ -193,6 +226,7 @@ export default function AccountingCreate({ api = defaultApi }) {
           <dl>
             <div><dt>Concepto</dt><dd>{draft.concept}</dd></div>
             <div><dt>Fecha</dt><dd>{draft.operation_date}</dd></div>
+            <div><dt>Plan</dt><dd>{plans.find((plan) => String(plan.id) === String(draft.plan_id))?.name ?? "—"}</dd></div>
             <div><dt>Debe</dt><dd>{formatAccountingAmount(totals.debit)}</dd></div>
             <div><dt>Haber</dt><dd>{formatAccountingAmount(totals.credit)}</dd></div>
           </dl>

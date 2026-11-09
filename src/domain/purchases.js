@@ -7,6 +7,56 @@ export const PURCHASE_STATUS_LABELS = Object.freeze({
   CANCELLED: "Cancelada",
 });
 
+export const PURCHASE_ORDER_STATUS_LABELS = Object.freeze({
+  DRAFT: "Borrador",
+  ISSUED: "Emitida",
+  PARTIALLY_RECEIVED: "Recepción parcial",
+  RECEIVED: "Recibida",
+  CANCELLED: "Cancelada",
+});
+
+export function canEditPurchaseOrder(status) {
+  return status === "DRAFT";
+}
+
+export function canIssuePurchaseOrder(status) {
+  return status === "DRAFT";
+}
+
+export function canReceivePurchaseOrder(status) {
+  return status === "ISSUED" || status === "PARTIALLY_RECEIVED";
+}
+
+export function canCancelPurchaseOrder(status) {
+  return status === "DRAFT" || status === "ISSUED" || status === "PARTIALLY_RECEIVED";
+}
+
+export function validatePurchaseOrderDraft(draft) {
+  const errors = {};
+  if (!Number.isInteger(Number(draft.supplier_id)) || Number(draft.supplier_id) < 1) {
+    errors.supplier_id = "Selecciona un proveedor activo.";
+  }
+  if (!Array.isArray(draft.items) || draft.items.length < 1) {
+    errors.items = "Agrega al menos una línea.";
+  }
+  if (draft.notes?.length > 2000) errors.notes = "Las notas no pueden superar 2000 caracteres.";
+  (draft.items ?? []).forEach((line, index) => {
+    if (!line.description?.trim() || line.description.trim().length > 300) {
+      errors[`items.${index}.description`] = "La descripción es obligatoria (máximo 300 caracteres).";
+    }
+    if (line.spare_part_id !== null && line.spare_part_id !== undefined && (!Number.isInteger(Number(line.spare_part_id)) || Number(line.spare_part_id) < 1)) {
+      errors[`items.${index}.spare_part_id`] = "Selecciona un repuesto válido del inventario.";
+    }
+    if (!Number.isInteger(Number(line.quantity)) || Number(line.quantity) < 1) {
+      errors[`items.${index}.quantity`] = "Ingresa una cantidad entera mayor que cero.";
+    }
+    if (parsePurchaseMoney(line.unit_cost) === null) {
+      errors[`items.${index}.unit_cost`] = "Ingresa un costo con dos decimales.";
+    }
+  });
+  return { valid: Object.keys(errors).length === 0, errors };
+}
+
 export const PAYMENT_STATUS_LABELS = Object.freeze({ PENDING: "Pendiente", PAID: "Pagada" });
 export const PAYMENT_METHOD_LABELS = Object.freeze({ TRANSFER: "Transferencia", CASH: "Efectivo", CARD: "Tarjeta", OTHER: "Otro" });
 export const DOCUMENT_TYPE_LABELS = Object.freeze({ FACTURA: "Factura", BOLETA: "Boleta", RECIBO: "Recibo", NOTA_CREDITO: "Nota de crédito", OTRO: "Otro" });

@@ -1,12 +1,13 @@
-﻿import { useMemo, useState } from "react";
-import { Link } from "react-router-dom";
-import { Laptop, Pencil, PlusCircle, RotateCcw, Search, Trash2, TriangleAlert } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { History, Laptop, Pencil, PlusCircle, RotateCcw, Search, SlidersHorizontal, Trash2, TriangleAlert } from "lucide-react";
 import { ItemIcon, Pagination, Toast } from "../../shared/ui/ui.jsx";
 import { ConfirmDialog } from "../../shared/ui/ConfirmDialog.jsx";
 import { FormAlert } from "../../shared/ui/FormAlert.jsx";
 import { formatPEN } from "../../domain/money.js";
 import { isLowStock } from "../../domain/inventory.js";
 import { useInventory } from "./useInventory.js";
+import StockAdjustmentDialog from "./StockAdjustmentDialog.jsx";
 
 const PAGE_SIZE = 4;
 const sorters = {
@@ -18,7 +19,9 @@ const sorters = {
 };
 
 export default function Inventory({ api }) {
-  const { parts, categories, status, error, categoryError, reload, remove } = useInventory(api);
+  const { parts, categories, status, error, categoryError, reload, remove, adjustStock, live } = useInventory(api);
+  const location = useLocation();
+  const navigate = useNavigate();
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState("");
   const [onlyCritical, setOnlyCritical] = useState(false);
@@ -28,8 +31,19 @@ export default function Inventory({ api }) {
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState("");
   const [toast, setToast] = useState("");
+  const [retiredPart, setRetiredPart] = useState(null);
+  const [adjusting, setAdjusting] = useState(null);
+  const [adjustingBusy, setAdjustingBusy] = useState(false);
+  const [adjustError, setAdjustError] = useState("");
 
-  const totalUnits = parts.reduce((s, p) => s + p.stock, 0);
+  useEffect(() => {
+    const retired = location.state?.retiredPart;
+    if (!retired) return;
+    setRetiredPart(retired);
+    navigate(location.pathname, { replace: true, state: null });
+  }, [location.pathname, location.state, navigate]);
+
+  const totalUnits = parts.reduce((sum, part) => sum + part.stock, 0);
   const critical = parts.filter(isLowStock);
 
   const askDelete = (part) => {
@@ -38,9 +52,10 @@ export default function Inventory({ api }) {
   };
   const confirmDelete = async () => {
     setDeleting(true);
+    setDeleteError("");
     try {
       await remove(pending.sku);
-      setToast(`Repuesto ${pending.sku} eliminado del inventario.`);
+      setRetiredPart({ id: pending.id, sku: pending.sku, name: pending.name });
       setPending(null);
     } catch (err) {
       setDeleteError(err.message);
@@ -49,13 +64,29 @@ export default function Inventory({ api }) {
     }
   };
 
+  const submitAdjustment = async (payload, idempotencyKey) => {
+    setAdjustingBusy(true);
+    setAdjustError("");
+    try {
+      const result = await adjustStock(adjusting.id ?? adjusting.sku, payload, idempotencyKey);
+      setAdjusting(null);
+      setToast(result.changed
+        ? `Stock de ${adjusting.sku} actualizado a ${result.part.current_stock} unidades.`
+        : `El conteo coincide con el stock de ${adjusting.sku}; no hubo variación.`);
+    } catch (err) {
+      setAdjustError(err.message);
+    } finally {
+      setAdjustingBusy(false);
+    }
+  };
+
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
     return parts
-      .filter((p) =>
-        (!category || p.category === category) &&
-        (!onlyCritical || isLowStock(p)) &&
-        (!q || `${p.sku} ${p.name} ${p.compat}`.toLowerCase().includes(q))
+      .filter((part) =>
+        (!category || part.category === category) &&
+        (!onlyCritical || isLowStock(part)) &&
+        (!q || `${part.sku} ${part.name} ${part.compat}`.toLowerCase().includes(q))
       )
       .sort(sorters[sort].fn);
   }, [parts, query, category, onlyCritical, sort]);
@@ -63,13 +94,11 @@ export default function Inventory({ api }) {
   const pages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const current = Math.min(page, pages);
   const rows = filtered.slice((current - 1) * PAGE_SIZE, current * PAGE_SIZE);
-  const reset = (fn) => (v) => { fn(v); setPage(1); };
-
-  // Con el orden por defecto se muestran estantes por categoría; con otro orden, una sola lista para que se note.
+  const reset = (fn) => (value) => { fn(value); setPage(1); };
   const shelves = sort === "relevance"
-    ? [...new Set(rows.map((p) => p.category || "Sin categoría"))].map((name) => ({
+    ? [...new Set(rows.map((part) => part.category || "Sin categoría"))].map((name) => ({
         name,
-        parts: rows.filter((p) => (p.category || "Sin categoría") === name),
+        parts: rows.filter((part) => (part.category || "Sin categoría") === name),
       }))
     : rows.length ? [{ name: sorters[sort].label, parts: rows }] : [];
 
@@ -77,96 +106,68 @@ export default function Inventory({ api }) {
     <div className="page">
       <div className="page-head">
         <h1 className="title">Inventario de Repuestos</h1>
-        <Link to="/taller/inventario/nuevo" className="btn btn--primary">
-          <PlusCircle size={17} aria-hidden="true" /> Nuevo Repuesto (SKU)
-        </Link>
+        <Link to="/taller/inventario/nuevo" className="btn btn--primary"><PlusCircle size={17} aria-hidden="true" /> Nuevo Repuesto (SKU)</Link>
       </div>
+
+      {!live && <p className="inventory-demo-note" role="note">Modo demostración: los cambios se conservan solo en memoria y no se guardan en el backend.</p>}
+      {retiredPart && (
+        <div className="inventory-retired-notice" role="status">
+          <span>{retiredPart.name || `Repuesto ${retiredPart.sku}`} fue retirado del catálogo activo.</span>
+          {live && Number.isInteger(retiredPart.id) && <Link to={`/taller/inventario/${retiredPart.id}/movimientos`}>Consultar su historial</Link>}
+          <button type="button" className="icon-btn" aria-label="Cerrar aviso de retiro" onClick={() => setRetiredPart(null)}>×</button>
+        </div>
+      )}
 
       <div className="alerts">
         <button type="button" className="alert-btn" onClick={() => reset(setOnlyCritical)(!onlyCritical)} aria-pressed={onlyCritical}>
           <span><TriangleAlert size={18} aria-hidden="true" /> Alertas de stock crítico<br /><small>{onlyCritical ? "Mostrando críticos" : "Reponer urgente"}</small></span>
           <strong>{critical.length}</strong>
         </button>
-        <div className="total-box">
-          <span>Stock total de repuestos<span>{parts.length} SKU activos</span></span>
-          <strong>{totalUnits.toLocaleString("en-US")}</strong>
-        </div>
+        <div className="total-box"><span>Stock total de repuestos<span>{parts.length} SKU activos</span></span><strong>{totalUnits.toLocaleString("en-US")}</strong></div>
       </div>
 
       <div className="tools">
-        <label className="search">
-          <Search size={18} aria-hidden="true" />
-          <input type="search" placeholder="Buscar por SKU (ej. SSD-NVME-2TB), descripción o marca..." value={query} onChange={(e) => reset(setQuery)(e.target.value)} aria-label="Buscar repuestos" />
-        </label>
-        <select className="select-tool" value={onlyCritical ? "critical" : "all"} onChange={(e) => reset(setOnlyCritical)(e.target.value === "critical")} aria-label="Filtros">
-          <option value="all">Todos los estados</option>
-          <option value="critical">Solo stock crítico</option>
+        <label className="search"><Search size={18} aria-hidden="true" /><input type="search" placeholder="Buscar por SKU (ej. SSD-NVME-2TB), descripción o marca..." value={query} onChange={(event) => reset(setQuery)(event.target.value)} aria-label="Buscar repuestos" /></label>
+        <select className="select-tool" value={onlyCritical ? "critical" : "all"} onChange={(event) => reset(setOnlyCritical)(event.target.value === "critical")} aria-label="Filtros">
+          <option value="all">Todos los estados</option><option value="critical">Solo stock crítico</option>
         </select>
-        <select className="select-tool" value={sort} onChange={(e) => setSort(e.target.value)} aria-label="Ordenar">
-          {Object.entries(sorters).map(([k, s]) => <option key={k} value={k}>{s.label}</option>)}
+        <select className="select-tool" value={sort} onChange={(event) => setSort(event.target.value)} aria-label="Ordenar">
+          {Object.entries(sorters).map(([key, sorter]) => <option key={key} value={key}>{sorter.label}</option>)}
         </select>
       </div>
       <div className="toggle-group" role="group" aria-label="Categoría">
-        <button type="button" aria-pressed={!category} className="toggle" onClick={() => reset(setCategory)("")}>
-          Todos ({parts.length})
-        </button>
-        {categories.map((c) => (
-          <button key={c} type="button" aria-pressed={category === c} className="toggle" onClick={() => reset(setCategory)(c)}>
-            {c} ({parts.filter((p) => p.category === c).length})
-          </button>
-        ))}
+        <button type="button" aria-pressed={!category} className="toggle" onClick={() => reset(setCategory)("")}>Todos ({parts.length})</button>
+        {categories.map((name) => <button key={name} type="button" aria-pressed={category === name} className="toggle" onClick={() => reset(setCategory)(name)}>{name} ({parts.filter((part) => part.category === name).length})</button>)}
       </div>
       {categoryError && <p className="muted small" role="status">{categoryError}</p>}
-
       <p className="list-note"><span>Listado de componentes</span><span aria-live="polite">Mostrando {rows.length} de {filtered.length} ítems</span></p>
 
       {status === "loading" && <p className="empty" role="status">Cargando inventario…</p>}
-      {status === "error" && (
-        <div className="retry">
-          <FormAlert>{error}</FormAlert>
-          <button type="button" className="btn btn--sm" onClick={reload}><RotateCcw size={14} aria-hidden="true" /> Reintentar</button>
-        </div>
-      )}
-      {status === "ready" && rows.length === 0 && (
-        <p className="empty">{parts.length ? "No hay repuestos con estos filtros." : "Todavía no hay repuestos registrados."}</p>
-      )}
+      {status === "error" && <div className="retry"><FormAlert>{error}</FormAlert><button type="button" className="btn btn--sm" onClick={reload}><RotateCcw size={14} aria-hidden="true" /> Reintentar</button></div>}
+      {status === "ready" && rows.length === 0 && <p className="empty">{parts.length ? "No hay repuestos con estos filtros." : "Todavía no hay repuestos registrados."}</p>}
 
       {shelves.map((shelf) => (
         <section key={shelf.name} className="shelf" aria-label={`Estante ${shelf.name}`}>
           <h2 className="shelf__title">{shelf.name}</h2>
           <ul className="bins">
-            {shelf.parts.map((p) => {
-              const low = isLowStock(p);
-              const scale = Math.max(p.min * 4, p.stock, 1);
+            {shelf.parts.map((part) => {
+              const low = isLowStock(part);
+              const scale = Math.max(part.min * 4, part.stock, 1);
               return (
-                <li key={p.sku} className={`jobtag bin${low ? " jobtag--alert" : ""}`}>
-                  <div className="bin__top">
-                    <ItemIcon name={p.icon} size={20} />
-                    <div>
-                      <p className="bin__name">{p.name}</p>
-                      <p className="bin__sku">SKU: {p.sku}</p>
-                    </div>
-                  </div>
-                  {p.compat && <p className="bin__compat"><Laptop size={14} aria-hidden="true" /> {p.compat}</p>}
+                <li key={part.sku} className={`jobtag bin${low ? " jobtag--alert" : ""}`}>
+                  <div className="bin__top"><ItemIcon name={part.icon} size={20} /><div><p className="bin__name">{part.name}</p><p className="bin__sku">SKU: {part.sku}</p></div></div>
+                  {part.compat && <p className="bin__compat"><Laptop size={14} aria-hidden="true" /> {part.compat}</p>}
                   <div className={`gauge${low ? " gauge--low" : ""}`}>
-                    <div className="gauge__bar" aria-hidden="true">
-                      <span className="gauge__fill" style={{ width: `${(p.stock / scale) * 100}%` }} />
-                      <span className="gauge__min" style={{ left: `${(p.min / scale) * 100}%` }} />
-                    </div>
-                    <div className="gauge__row">
-                      <span><strong>{p.stock} u.</strong> libres · mínimo {p.min}</span>
-                      <span className={`stamp ${low ? "stamp--danger" : "stamp--ok"}`}>{low ? "Stock crítico" : "En stock"}</span>
-                    </div>
+                    <div className="gauge__bar" aria-hidden="true"><span className="gauge__fill" style={{ width: `${(part.stock / scale) * 100}%` }} /><span className="gauge__min" style={{ left: `${(part.min / scale) * 100}%` }} /></div>
+                    <div className="gauge__row"><span><strong>{part.stock} u.</strong> libres · mínimo {part.min}</span><span className={`stamp ${low ? "stamp--danger" : "stamp--ok"}`}>{low ? "Stock crítico" : "En stock"}</span></div>
                   </div>
                   <div className="bin__foot">
-                    <span className="bin__price">{formatPEN(p.price)}</span>
+                    <span className="bin__price">{formatPEN(part.price)}</span>
                     <div className="bin__tools">
-                      <Link to={`/taller/inventario/${encodeURIComponent(p.sku)}/editar`} className="icon-btn" aria-label={`Editar ${p.sku}`} title="Editar">
-                        <Pencil size={17} />
-                      </Link>
-                      <button type="button" className="icon-btn icon-btn--danger" aria-label={`Eliminar ${p.sku}`} title="Eliminar" onClick={() => askDelete(p)}>
-                        <Trash2 size={17} />
-                      </button>
+                      <button type="button" className="icon-btn" aria-label={`Ajustar stock ${part.sku}`} title="Ajustar stock" onClick={() => { setAdjustError(""); setAdjusting(part); }}><SlidersHorizontal size={17} aria-hidden="true" /></button>
+                      {live && Number.isInteger(part.id) && <Link to={`/taller/inventario/${part.id}/movimientos`} className="icon-btn" aria-label={`Historial ${part.sku}`} title="Historial de movimientos"><History size={17} aria-hidden="true" /></Link>}
+                      <Link to={`/taller/inventario/${encodeURIComponent(part.sku)}/editar`} className="icon-btn" aria-label={`Editar ${part.sku}`} title="Editar"><Pencil size={17} aria-hidden="true" /></Link>
+                      <button type="button" className="icon-btn icon-btn--danger" aria-label={`Retirar ${part.sku}`} title="Retirar del catálogo" onClick={() => askDelete(part)}><Trash2 size={17} aria-hidden="true" /></button>
                     </div>
                   </div>
                 </li>
@@ -177,22 +178,10 @@ export default function Inventory({ api }) {
       ))}
 
       <Pagination page={current} pages={pages} onChange={setPage} label={`Página ${current} de ${pages}`} />
-
-      <ConfirmDialog
-        open={Boolean(pending)}
-        title="¿Eliminar este repuesto?"
-        busy={deleting}
-        error={deleteError}
-        onConfirm={confirmDelete}
-        onCancel={() => setPending(null)}
-      >
-        {pending && (
-          <p>
-            Se quitará <strong>{pending.name}</strong> (SKU <span className="mono">{pending.sku}</span>) del inventario.
-            Esta acción no se puede deshacer.
-          </p>
-        )}
+      <ConfirmDialog open={Boolean(pending)} title="¿Retirar este repuesto del catálogo?" confirmLabel="Retirar" busyLabel="Retirando…" busy={deleting} error={deleteError} onConfirm={confirmDelete} onCancel={() => setPending(null)}>
+        {pending && <p>Se retirará <strong>{pending.name}</strong> (SKU <span className="mono">{pending.sku}</span>) del catálogo activo. Si tiene movimientos, el historial se conservará.</p>}
       </ConfirmDialog>
+      <StockAdjustmentDialog part={adjusting} onClose={() => setAdjusting(null)} onSubmit={submitAdjustment} busy={adjustingBusy} error={adjustError} />
       <Toast message={toast} onDone={() => setToast("")} />
     </div>
   );

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { ArrowLeft, Plus, Trash2 } from "lucide-react";
 import { calculateLineGrossCents, formatPurchaseMoney, parsePurchaseMoney, PAYMENT_METHOD_LABELS, PAYMENT_STATUS_LABELS, validatePurchaseDraft } from "../../domain/purchases.js";
 import { BackLink, Field } from "../../shared/ui/ui.jsx";
@@ -11,14 +11,19 @@ const today = () => {
   const now = new Date();
   return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
 };
-const blankLine = () => ({ key: globalThis.crypto?.randomUUID?.() ?? `${Date.now()}-${Math.random()}`, type: "free", spare_part_id: null, code_snapshot: null, description: "", quantity: "1", unit_cost: "", discount_amount: "0.00", tax_amount: "0.00" });
-const initialDraft = () => ({ supplier_id: "", document_type: "FACTURA", document_series: "", document_number: "", issue_date: today(), due_date: "", payment_method: "TRANSFER", payment_status: "PENDING", other_charges: "0.00", notes: "", items: [blankLine()] });
+const blankLine = () => ({ key: globalThis.crypto?.randomUUID?.() ?? `${Date.now()}-${Math.random()}`, type: "free", spare_part_id: null, purchase_order_item_id: null, code_snapshot: null, description: "", quantity: "1", unit_cost: "", discount_amount: "0.00", tax_amount: "0.00" });
+const initialDraft = () => ({ supplier_id: "", purchase_order_id: "", document_type: "FACTURA", document_series: "", document_number: "", issue_date: today(), due_date: "", payment_method: "TRANSFER", payment_status: "PENDING", other_charges: "0.00", notes: "", items: [blankLine()] });
 
 export default function PurchaseCreate({ api = defaultApi, catalogApi = inventoryApi }) {
   const navigate = useNavigate();
   const location = useLocation();
+  const [searchParams] = useSearchParams();
+  const requestedOrderId = searchParams.get("purchase_order_id");
   const [draft, setDraft] = useState(initialDraft);
   const [suppliers, setSuppliers] = useState([]);
+  const [purchaseOrders, setPurchaseOrders] = useState([]);
+  const [selectedOrder, setSelectedOrder] = useState(null);
+  const [orderState, setOrderState] = useState("loading");
   const [catalog, setCatalog] = useState([]);
   const [supplierState, setSupplierState] = useState("loading");
   const [catalogState, setCatalogState] = useState(catalogApi.mode === "api" ? "loading" : "unconfigured");
@@ -36,6 +41,14 @@ export default function PurchaseCreate({ api = defaultApi, catalogApi = inventor
       setSupplierState(apiError.code === "unconfigured" ? "unconfigured" : "error");
       setError(apiError.message);
     });
+    api.listPurchaseOrders({ limit: 100, offset: 0 }).then((response) => {
+      setPurchaseOrders((response.items ?? []).filter((order) => order.status !== "CANCELLED"));
+      setOrderState("ready");
+    }).catch((apiError) => {
+      if (apiError.code === "session_required") navigate("/taller/acceso", { replace: true, state: { from: location.pathname } });
+      setPurchaseOrders([]);
+      setOrderState("error");
+    });
     if (catalogApi.mode !== "api") { setCatalog([]); setCatalogState("unconfigured"); return; }
     catalogApi.list().then((parts) => {
       setCatalog(parts.filter((part) => Number.isInteger(part.id) && part.id > 0));
@@ -47,6 +60,25 @@ export default function PurchaseCreate({ api = defaultApi, catalogApi = inventor
     });
   }, [api, catalogApi, navigate, location]);
 
+  useEffect(() => {
+    if (!requestedOrderId || api.mode === "unconfigured") return;
+    let alive = true;
+    api.getPurchaseOrder(requestedOrderId).then((order) => {
+      if (!alive) return;
+      if (order.status === "CANCELLED") {
+        setError("No se puede asociar un comprobante nuevo a una orden cancelada.");
+        return;
+      }
+      setSelectedOrder(order);
+      setDraft((current) => ({ ...current, purchase_order_id: String(order.id), supplier_id: String(order.supplier_id) }));
+    }).catch((apiError) => {
+      if (!alive) return;
+      if (apiError.code === "session_required") navigate("/taller/acceso", { replace: true, state: { from: location.pathname } });
+      setError(apiError.message);
+    });
+    return () => { alive = false; };
+  }, [api, requestedOrderId, navigate, location]);
+
   const validation = useMemo(() => validatePurchaseDraft(draft), [draft]);
   const updateDraft = (changes) => { setDraft((current) => ({ ...current, ...changes })); setErrors({}); setError(""); };
   const updateLine = (index, changes) => updateDraft({ items: draft.items.map((line, lineIndex) => lineIndex === index ? { ...line, ...changes } : line) });
@@ -55,13 +87,43 @@ export default function PurchaseCreate({ api = defaultApi, catalogApi = inventor
     updateLine(index, part ? { type: "catalog", spare_part_id: part.id, code_snapshot: part.sku, description: part.name } : { type: "free", spare_part_id: null, code_snapshot: null, description: "" });
   };
 
+  const choosePurchaseOrder = async (rawId) => {
+    if (!rawId) {
+      setSelectedOrder(null);
+      updateDraft({ purchase_order_id: "", items: draft.items.map((line) => ({ ...line, purchase_order_item_id: null })) });
+      return;
+    }
+    setError("");
+    try {
+      const order = await api.getPurchaseOrder(rawId);
+      if (order.status === "CANCELLED") {
+        setError("No se puede asociar un comprobante nuevo a una orden cancelada.");
+        return;
+      }
+      setSelectedOrder(order);
+      updateDraft({ purchase_order_id: String(order.id), supplier_id: String(order.supplier_id), items: draft.items.map((line) => ({ ...line, purchase_order_item_id: null })) });
+    } catch (apiError) {
+      if (apiError.code === "session_required") navigate("/taller/acceso", { replace: true, state: { from: location.pathname } });
+      setError(apiError.message);
+    }
+  };
+
   const submit = async (event) => {
     event.preventDefault();
     const checked = validatePurchaseDraft(draft);
     setErrors(checked.errors);
     if (!checked.valid) return;
+    if (requestedOrderId && !selectedOrder) {
+      setError("No se pudo validar la orden solicitada. Actualiza la página antes de guardar el comprobante.");
+      return;
+    }
+    if (selectedOrder && Number(draft.supplier_id) !== Number(selectedOrder.supplier_id)) {
+      setError("El proveedor del comprobante debe coincidir con el de la orden.");
+      return;
+    }
     const payload = {
       supplier_id: Number(draft.supplier_id),
+      purchase_order_id: draft.purchase_order_id ? Number(draft.purchase_order_id) : null,
       document_type: draft.document_type,
       document_series: draft.document_series.trim() || null,
       document_number: draft.document_number.trim(),
@@ -73,6 +135,7 @@ export default function PurchaseCreate({ api = defaultApi, catalogApi = inventor
       notes: draft.notes.trim() || null,
       items: draft.items.map((line) => ({
         spare_part_id: line.type === "catalog" ? line.spare_part_id : null,
+        purchase_order_item_id: line.purchase_order_item_id ? Number(line.purchase_order_item_id) : null,
         description: line.description.trim(),
         quantity: Number(line.quantity),
         unit_cost: line.unit_cost,
@@ -103,7 +166,14 @@ export default function PurchaseCreate({ api = defaultApi, catalogApi = inventor
     <form className="purchases-form" onSubmit={submit} noValidate>
       <section className="jobtag purchases-form__section"><h2 className="subtitle">Proveedor y comprobante</h2>
         <div className="grid-2">
-          <Field label="Proveedor" htmlFor="purchase-supplier" required error={errors.supplier_id}><select className="input" id="purchase-supplier" value={draft.supplier_id} disabled={supplierState !== "ready"} onChange={(event) => updateDraft({ supplier_id: event.target.value })}><option value="">Selecciona proveedor</option>{suppliers.map((supplier) => <option key={supplier.id} value={supplier.id}>{supplier.name}{supplier.tax_id ? ` · ${supplier.tax_id}` : ""}</option>)}</select><Link className="purchases-inline-link" to="/taller/compras/proveedores">Gestionar proveedores</Link></Field>
+          <Field label="Proveedor" htmlFor="purchase-supplier" required error={errors.supplier_id}><select className="input" id="purchase-supplier" value={draft.supplier_id} disabled={supplierState !== "ready" || Boolean(selectedOrder)} onChange={(event) => updateDraft({ supplier_id: event.target.value })}><option value="">Selecciona proveedor</option>{suppliers.map((supplier) => <option key={supplier.id} value={supplier.id}>{supplier.name}{supplier.tax_id ? ` · ${supplier.tax_id}` : ""}</option>)}</select><Link className="purchases-inline-link" to="/taller/compras/proveedores">Gestionar proveedores</Link></Field>
+          <Field label="Orden de compra (opcional)" htmlFor="purchase-order-link">
+            <select className="input" id="purchase-order-link" value={draft.purchase_order_id} disabled={orderState !== "ready" || Boolean(requestedOrderId)} onChange={(event) => choosePurchaseOrder(event.target.value)}>
+              <option value="">Sin orden asociada</option>
+              {purchaseOrders.map((order) => <option key={order.id} value={order.id}>Orden #{order.id} · {order.supplier_name} · {order.status}</option>)}
+            </select>
+            {orderState === "error" && <span className="field__hint">No se pudieron cargar órdenes; puedes registrar el comprobante sin asociarlo.</span>}
+          </Field>
           <Field label="Tipo de comprobante" htmlFor="purchase-document-type" required error={errors.document_type}><select className="input" id="purchase-document-type" value={draft.document_type} onChange={(event) => updateDraft({ document_type: event.target.value })}><option value="FACTURA">Factura</option><option value="BOLETA">Boleta</option><option value="RECIBO">Recibo</option><option value="NOTA_CREDITO">Nota de crédito</option><option value="OTRO">Otro</option></select></Field>
           <Field label="Serie" htmlFor="purchase-series"><input className="input" id="purchase-series" maxLength={30} value={draft.document_series} onChange={(event) => updateDraft({ document_series: event.target.value })} /></Field>
           <Field label="Número" htmlFor="purchase-number" required error={errors.document_number}><input className="input" id="purchase-number" maxLength={40} value={draft.document_number} onChange={(event) => updateDraft({ document_number: event.target.value })} /></Field>
@@ -125,9 +195,10 @@ export default function PurchaseCreate({ api = defaultApi, catalogApi = inventor
         {errors.items && <FormAlert>{errors.items}</FormAlert>}
         {draft.items.map((line, index) => <fieldset className="jobtag purchases-line-form" key={line.key}><legend>Línea {index + 1}</legend>
           <div className="grid-2">
-            <Field label="Tipo de línea" htmlFor={`purchase-line-type-${index}`}><select className="input" id={`purchase-line-type-${index}`} value={line.type} onChange={(event) => updateLine(index, { type: event.target.value, spare_part_id: null, code_snapshot: null, description: "" })}><option value="free">Concepto libre</option><option value="catalog" disabled={catalogState !== "ready" || !catalog.length}>Repuesto del inventario</option></select></Field>
+            <Field label="Tipo de línea" htmlFor={`purchase-line-type-${index}`}><select className="input" id={`purchase-line-type-${index}`} value={line.type} onChange={(event) => updateLine(index, { type: event.target.value, spare_part_id: null, purchase_order_item_id: null, code_snapshot: null, description: "" })}><option value="free">Concepto libre</option><option value="catalog" disabled={catalogState !== "ready" || !catalog.length}>Repuesto del inventario</option></select></Field>
             {line.type === "catalog" && <Field label="Repuesto" htmlFor={`purchase-part-${index}`} required error={errors[`items.${index}.spare_part_id`]}><select className="input" id={`purchase-part-${index}`} value={line.spare_part_id ?? ""} onChange={(event) => chooseCatalogItem(index, event.target.value)}><option value="">Selecciona repuesto</option>{catalog.map((part) => <option key={part.id} value={part.id}>{part.name} · {part.sku} · stock {part.stock}</option>)}</select></Field>}
             <Field label="Descripción" htmlFor={`purchase-description-${index}`} required error={errors[`items.${index}.description`]}><input className="input" id={`purchase-description-${index}`} maxLength={300} value={line.description} onChange={(event) => updateLine(index, { description: event.target.value })} /></Field>
+            {selectedOrder && <Field label="Línea de orden (opcional)" htmlFor={`purchase-order-line-${index}`}><select className="input" id={`purchase-order-line-${index}`} value={line.purchase_order_item_id ?? ""} onChange={(event) => updateLine(index, { purchase_order_item_id: event.target.value ? Number(event.target.value) : null })}><option value="">Sin conciliar</option>{(selectedOrder.items ?? []).map((orderLine) => <option key={orderLine.id} value={orderLine.id}>#{orderLine.id} · {orderLine.description_snapshot ?? orderLine.code_snapshot ?? "Línea"} · pendiente {orderLine.quantity_pending}</option>)}</select></Field>}
             <Field label="Cantidad" htmlFor={`purchase-quantity-${index}`} required error={errors[`items.${index}.quantity`]}><input className="input" id={`purchase-quantity-${index}`} inputMode="decimal" value={line.quantity} onChange={(event) => updateLine(index, { quantity: event.target.value })} /></Field>
             <Field label="Costo unitario (S/)" htmlFor={`purchase-cost-${index}`} required error={errors[`items.${index}.unit_cost`]}><input className="input" id={`purchase-cost-${index}`} inputMode="decimal" placeholder="0.00" value={line.unit_cost} onChange={(event) => updateLine(index, { unit_cost: event.target.value })} /></Field>
             <Field label="Descuento (S/)" htmlFor={`purchase-discount-${index}`} error={errors[`items.${index}.discount_amount`]}><input className="input" id={`purchase-discount-${index}`} inputMode="decimal" value={line.discount_amount} onChange={(event) => updateLine(index, { discount_amount: event.target.value })} /></Field>
@@ -138,7 +209,7 @@ export default function PurchaseCreate({ api = defaultApi, catalogApi = inventor
       </section>
 
       <section className="jobtag purchases-totals"><h2 className="subtitle">Previsualización</h2><dl><div><dt>Subtotal</dt><dd>{formatPurchaseMoney(totals.subtotal)}</dd></div><div><dt>Descuentos</dt><dd>− {formatPurchaseMoney(totals.discounts)}</dd></div><div><dt>Impuestos</dt><dd>{formatPurchaseMoney(totals.taxes)}</dd></div><div><dt>Otros cargos</dt><dd>{formatPurchaseMoney(totals.charges)}</dd></div><div className="purchases-grand-total"><dt>Total estimado · PEN</dt><dd>{formatPurchaseMoney(totals.total)}</dd></div></dl><p className="muted">El backend confirma y calcula el total definitivo. Guardar la compra no cambia el stock.</p></section>
-      <div className="btn-row"><Link className="btn" to="/taller/compras">Cancelar</Link><button className="btn btn--primary" type="submit" disabled={submitting || supplierState !== "ready"}>{submitting ? "Guardando…" : "Registrar compra"}</button></div>
+      <div className="btn-row"><Link className="btn" to="/taller/compras">Cancelar</Link><button className="btn btn--primary" type="submit" disabled={submitting || supplierState !== "ready" || Boolean(requestedOrderId && !selectedOrder)}>{submitting ? "Guardando…" : "Registrar compra"}</button></div>
     </form>
   </div>;
 }

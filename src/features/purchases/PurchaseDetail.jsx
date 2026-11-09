@@ -39,7 +39,7 @@ export default function PurchaseDetail({ api = defaultApi }) {
     const received = receivedByLine[line.id] ?? 0n;
     return { ...line, ordered, received, pending: ordered > received ? ordered - received : 0n };
   }).filter((line) => line.pending > 0n);
-  const canReceive = ["REGISTERED", "PARTIALLY_RECEIVED"].includes(purchase?.status) && receivableLines.length > 0;
+  const canReceive = !purchase?.purchase_order_id && ["REGISTERED", "PARTIALLY_RECEIVED"].includes(purchase?.status) && receivableLines.length > 0;
   const canCancel = purchase?.status === "REGISTERED" && !(purchase?.receipts?.length);
 
   const changeReceiptAmount = (lineId, value) => {
@@ -107,6 +107,7 @@ export default function PurchaseDetail({ api = defaultApi }) {
       <div className="purchases-card__top"><span className={`badge ${purchase.status === "RECEIVED" ? "badge--ok" : purchase.status === "CANCELLED" ? "badge--warn" : ""}`}>{PURCHASE_STATUS_LABELS[purchase.status] ?? purchase.status}</span><span className="badge">Pago: {PAYMENT_STATUS_LABELS[purchase.payment_status] ?? purchase.payment_status}</span></div>
       <dl className="purchases-detail__grid">
         <Datum label="Proveedor">{purchase.supplier_name}</Datum><Datum label="RUC / identificación">{purchase.supplier_tax_id || "—"}</Datum>
+        <Datum label="Orden asociada">{purchase.purchase_order_id ? <Link to={`/taller/compras/ordenes/${purchase.purchase_order_id}`}>Ver orden #{purchase.purchase_order_id}</Link> : "Sin orden"}</Datum>
         <Datum label="Fecha de emisión">{purchase.issue_date}</Datum><Datum label="Fecha de vencimiento">{purchase.due_date || "—"}</Datum>
         <Datum label="Método de pago">{PAYMENT_METHOD_LABELS[purchase.payment_method] ?? purchase.payment_method}</Datum><Datum label="Responsable">{purchase.responsible_name}</Datum>
         <Datum label="Registrada">{dateTime(purchase.created_at)}</Datum><Datum label="Moneda">{purchase.currency || "PEN"}</Datum>
@@ -123,6 +124,7 @@ export default function PurchaseDetail({ api = defaultApi }) {
       </article>)}
     </section>
 
+    {purchase.purchase_order_id && <p className="purchases-notice" role="status">La recepción de esta compra se registra desde su orden asociada para evitar duplicar movimientos de inventario.</p>}
     {canReceive && <section className="purchases-section"><h2 className="subtitle">Confirmar recepción</h2><p className="muted">El stock cambia únicamente cuando el backend confirma esta operación.</p>
       {receiptError && <FormAlert>{receiptError}</FormAlert>}{receiptMessage && <p className="purchases-success" role="status">{receiptMessage}</p>}
       {!reviewingReceipt ? <div className="jobtag purchases-receive-form">{receivableLines.map((line) => <Field key={line.id} label={`${line.description} · pendiente ${milliToQuantity(line.pending)}`} htmlFor={`receive-${line.id}`}><input className="input" id={`receive-${line.id}`} inputMode="decimal" min="0" step={line.spare_part_id ? "1" : "0.001"} value={receiptAmounts[line.id] ?? milliToQuantity(line.pending)} onChange={(event) => changeReceiptAmount(line.id, event.target.value)} /></Field>)}<button className="btn btn--primary" type="button" onClick={reviewReceipt}>Revisar cantidades</button></div> : <div className="jobtag purchases-receipt-review"><h3>Revisa la recepción</h3><ul>{receivableLines.map((line) => <li key={line.id}>{line.description}: {receiptAmounts[line.id] ?? milliToQuantity(line.pending)} de {milliToQuantity(line.pending)} pendiente(s)</li>)}</ul><div className="btn-row"><button className="btn" type="button" disabled={busy} onClick={() => setReviewingReceipt(false)}>Volver a editar</button><button className="btn btn--primary" type="button" disabled={busy} onClick={confirmReceipt}>{busy ? "Confirmando…" : "Confirmar recepción"}</button></div></div>}

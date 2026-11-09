@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { Plus, Search } from "lucide-react";
+import { BookOpen, CalendarDays, FileBarChart, Plus, Search } from "lucide-react";
 import { formatAccountingAmount, parseAccountingAmount } from "../../domain/accounting.js";
 import { Field, Pagination } from "../../shared/ui/ui.jsx";
 import { FormAlert } from "../../shared/ui/FormAlert.jsx";
@@ -30,6 +30,7 @@ export default function AccountingList({ api = defaultApi }) {
       setResult(data); setCategories(categoryData.items ?? []); setState("ready");
     } catch (e) {
       if (e.code === "session_required") { setResult({ items: [], total: 0, limit: 50, offset: 0 }); navigate("/taller/acceso", { replace: true, state: { from: location.pathname } }); return; }
+      if (e.code === "forbidden") { setResult({ items: [], total: 0, limit: 50, offset: 0 }); setCategories([]); }
       setError(e.message); setState("error");
     }
   };
@@ -42,6 +43,12 @@ export default function AccountingList({ api = defaultApi }) {
 
   return <div className="page accounting-page">
     <div className="page-head"><div><p className="kicker">REGISTRO INTERNO · PEN</p><h1 className="title">Contabilidad</h1><p className="muted">Asientos y trazabilidad del taller</p></div><Link className="btn btn--primary" to="/taller/contabilidad/nuevo"><Plus size={16} aria-hidden="true"/> Nuevo asiento</Link></div>
+    <nav className="accounting-shortcuts" aria-label="Herramientas de contabilidad">
+      <Link className="btn" to="/taller/contabilidad/planes"><BookOpen size={16} aria-hidden="true" /> Planes</Link>
+      <Link className="btn" to="/taller/contabilidad/cuentas"><BookOpen size={16} aria-hidden="true" /> Cuentas</Link>
+      <Link className="btn" to="/taller/contabilidad/periodos"><CalendarDays size={16} aria-hidden="true" /> Periodos</Link>
+      <Link className="btn" to="/taller/contabilidad/informes/diario"><FileBarChart size={16} aria-hidden="true" /> Informes</Link>
+    </nav>
     <form className="jobtag accounting-filters" onSubmit={apply}>
       <div className="grid-2">
         <Field label="Desde" htmlFor="accounting-from"><input className="input" id="accounting-from" type="date" value={filters.from_date} max={filters.to_date || undefined} onChange={e => setFilters({...filters, from_date:e.target.value})}/></Field>

@@ -27,12 +27,13 @@ integrante puede proponer cambios con un PR hacia `develop`.
 | `/portal/acceso` | Inicio de sesión (vuelve a la página protegida pedida) | Lista | `login.test.jsx` |
 | `/portal/recuperar`, `/portal/restablecer` | Recuperar y restablecer contraseña | Lista | `recovery.test.jsx` |
 | `/portal/asistente` | Chat con los agentes: selector de patrón, presupuesto con aceptar/rechazar, ticket | Lista (depende del backend) | `chat.test.jsx`, `consultation.test.jsx` |
-| `/portal/tickets` | «Mis Tickets» del cliente | Conectada; el backend falla con tickets presupuestados | `consultation.test.jsx` |
+| `/portal/tickets` | «Mis Tickets» del cliente | Conectada; muestra cotizaciones y diagnósticos técnicos de los tickets propios devueltos por el backend | `consultation.test.jsx` |
 | `/portal/cotizaciones` | Cotizaciones propias de servicio y venta, detalle y aceptación | API de comercio; sesión CUSTOMER | `customer-quotes.test.jsx` |
 | `/portal/compras` | Pagos y ventas propias confirmadas por backend | API de comercio; solo lectura para CUSTOMER | `customer-quotes.test.jsx` |
 | `/taller/acceso`, `/taller` | Banco con cola, filtros, estados y exportación para `ADMIN` | API administrativa con `VITE_API_URL`; demo si no hay URL en desarrollo | `workshop.test.jsx`, `admin-ticket-workshop.test.jsx`, `admin-ticket-access.test.jsx` |
 | `/taller/tickets/nuevo`, `/taller/tickets/:id` | Alta presencial y detalle con cotización de solo lectura | API administrativa; protegido para `ADMIN` | `admin-ticket-create.test.jsx`, `admin-ticket-detail.test.jsx` |
 | `/taller/clientes` | Buscar, crear y editar clientes comerciales; distingue clientes manuales y perfiles vinculados | API comercial; solo ADMIN; no crea cuentas de acceso | `admin-customers.test.jsx`, `customer-commerce-access.test.jsx` |
+| `/taller/asistente` | Chat ADMIN por texto y voz; consulta operaciones y prepara propuestas que requieren confirmación | API `/api/admin/chat*`; protegido para `ADMIN`; sin modo demo | Cobertura automatizada pendiente |
 | `/taller/ventas` | Crear cotizaciones de venta, registrar aceptación manual, confirmar pagos externos y consultar ventas | API comercial; solo ADMIN; inventario usa IDs numéricos | `admin-commerce.test.jsx`, `customer-commerce-access.test.jsx` |
 | `/taller/inventario`, `/taller/inventario/*` | Consulta y mantenimiento de repuestos | API de inventario; demo sin URL en desarrollo y `/backend` en producción | `inventory.test.jsx`, `inventory.test.js` |
 | `/taller/contabilidad` | Listado con filtros, paginación y resumen de asientos (solo ADMIN) | Implementada; depende de `VITE_API_URL` o `/backend` en producción | `accounting-list.test.jsx`, `accounting-access.test.jsx` |

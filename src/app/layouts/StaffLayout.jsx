@@ -1,5 +1,5 @@
 import { Link, NavLink, Outlet, useLocation } from "react-router-dom";
-import { Archive, BadgeDollarSign, BookOpen, ExternalLink, PlusCircle, ShoppingCart, Users, Wrench } from "lucide-react";
+import { Archive, BadgeDollarSign, BookOpen, ExternalLink, MessageSquareText, PlusCircle, ShoppingCart, Users, Wrench } from "lucide-react";
 import Logo from "../../shared/ui/Logo.jsx";
 import ThemeToggle from "../../shared/ui/ThemeToggle.jsx";
 import { useStore } from "../../state/store.jsx";
@@ -14,6 +14,7 @@ export default function StaffLayout() {
   const accountingDenied = useLocation().state?.accountingDenied;
   const purchasesDenied = useLocation().state?.purchasesDenied;
   const commerceDenied = useLocation().state?.commerceDenied;
+  const adminChatDenied = useLocation().state?.adminChatDenied;
   // «Banco» sigue activo en el detalle de un ticket, pero no al crear uno.
   const onBench = pathname === "/taller" || (pathname.startsWith("/taller/tickets") && pathname !== "/taller/tickets/nuevo");
 
@@ -25,6 +26,7 @@ export default function StaffLayout() {
           {canManageTickets && <NavLink to="/taller" end aria-current={onBench ? "page" : undefined} className={() => `tabs__link${onBench ? " is-active" : ""}`}><Wrench size={17} aria-hidden="true" /> Banco</NavLink>}
           <NavLink to="/taller/inventario" className={({ isActive }) => `tabs__link${isActive ? " is-active" : ""}`}><Archive size={17} aria-hidden="true" /> Repuestos</NavLink>
           {canManageTickets && <NavLink to="/taller/tickets/nuevo" className={({ isActive }) => `tabs__link tabs__link--cta${isActive ? " is-active" : ""}`}><PlusCircle size={17} aria-hidden="true" /> Nuevo Ticket</NavLink>}
+          {isAdmin && <NavLink to="/taller/asistente" className={({ isActive }) => `tabs__link tabs__link--admin-chat${isActive ? " is-active" : ""}`}><MessageSquareText size={17} aria-hidden="true" /> Asistente</NavLink>}
           {isAdmin && <NavLink to="/taller/contabilidad" className={({ isActive }) => `tabs__link tabs__link--accounting${isActive ? " is-active" : ""}`}><BookOpen size={17} aria-hidden="true" /> Contabilidad</NavLink>}
           {isAdmin && <NavLink to="/taller/compras" className={({ isActive }) => `tabs__link tabs__link--purchases${isActive ? " is-active" : ""}`}><ShoppingCart size={17} aria-hidden="true" /> Compras</NavLink>}
           {isAdmin && <NavLink to="/taller/clientes" className={({ isActive }) => `tabs__link tabs__link--admin-extension${isActive ? " is-active" : ""}`}><Users size={17} aria-hidden="true" /> Clientes</NavLink>}
@@ -45,6 +47,7 @@ export default function StaffLayout() {
         {accountingDenied && <div className="form-alert" role="alert">Solo administradores pueden acceder a Contabilidad.</div>}
         {purchasesDenied && <div className="form-alert" role="alert">Solo administradores pueden acceder a Compras.</div>}
         {commerceDenied && <div className="form-alert" role="alert">Solo administradores pueden gestionar clientes y ventas.</div>}
+        {adminChatDenied && <div className="form-alert" role="alert">Solo administradores pueden usar el asistente administrativo.</div>}
         <Outlet />
       </main>
     </div>

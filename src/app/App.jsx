@@ -43,6 +43,7 @@ import CustomerQuotes from "../features/commerce/CustomerQuotes.jsx";
 import CustomerOrders from "../features/commerce/CustomerOrders.jsx";
 import CustomerManager from "../features/customers/CustomerManager.jsx";
 import AdminCommerce from "../features/commerce/AdminCommerce.jsx";
+import AdminChat from "../features/chat/AdminChat.jsx";
 
 export default function App() {
   return (
@@ -79,6 +80,9 @@ export default function App() {
           <Route path="/taller/inventario/:partId/movimientos" element={<InventoryMovements />} />
           <Route path="/taller/inventario/nuevo" element={<PartForm />} />
           <Route path="/taller/inventario/:sku/editar" element={<PartForm />} />
+          <Route element={<RequireRole role="staff" accountRole="ADMIN" deniedStateKey="adminChatDenied"><Outlet /></RequireRole>}>
+            <Route path="/taller/asistente" element={<AdminChat />} />
+          </Route>
           <Route element={<RequireRole role="staff" accountRole="ADMIN"><Outlet /></RequireRole>}>
             <Route path="/taller/contabilidad" element={<AccountingList />} />
             <Route path="/taller/contabilidad/nuevo" element={<AccountingCreate />} />

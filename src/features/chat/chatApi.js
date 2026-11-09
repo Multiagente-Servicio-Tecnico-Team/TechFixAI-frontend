@@ -6,6 +6,7 @@
  * - Sin VITE_API_URL el asistente sigue en modo demostración.
  */
 import { resolveApiBaseUrl } from "../../shared/api/baseUrl.js";
+import { audioFilename } from "./voiceAudio.js";
 
 export class ChatError extends Error {
   constructor(message, { status = 0, code = "error" } = {}) {
@@ -64,18 +65,6 @@ function toChatError(status, data) {
   }
   return new ChatError(CHAT_MESSAGES.unavailable, { status, code: data?.code || "unavailable" });
 }
-
-const AUDIO_EXTENSIONS = {
-  "audio/flac": "flac",
-  "audio/mpeg": "mp3",
-  "audio/mp4": "m4a",
-  "audio/mpga": "mpga",
-  "audio/ogg": "ogg",
-  "audio/wav": "wav",
-  "audio/x-wav": "wav",
-  "audio/webm": "webm",
-  "video/mp4": "mp4",
-};
 
 export function createChatApi({ baseUrl = "", fetchImpl } = {}) {
   const base = baseUrl.replace(/\/+$/, "");
@@ -138,9 +127,7 @@ export function createChatApi({ baseUrl = "", fetchImpl } = {}) {
       requestId = globalThis.crypto?.randomUUID?.(),
     }) {
       const form = new FormData();
-      const mimeType = String(audio?.type || "").split(";", 1)[0].trim().toLowerCase();
-      const extension = AUDIO_EXTENSIONS[mimeType] || "webm";
-      form.append("audio", audio, `grabacion.${extension}`);
+      form.append("audio", audio, audioFilename(audio));
       form.append("duration_ms", String(durationMs));
       form.append("pattern", pattern);
       form.append("request_id", requestId || "");

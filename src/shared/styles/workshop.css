@@ -33,6 +33,9 @@
 .detail__move .field { flex: 1 1 220px; max-width: 320px; }
 .detail__cols { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px 28px; padding-top: 16px; border-top: var(--rule) solid var(--text); }
 .ticket-detail__quote, .ticket-detail__audit { margin-top: 18px; padding-top: 14px; border-top: var(--rule) solid var(--text); }
+.ticket-detail__diagnosis { display: grid; gap: 10px; margin-top: 18px; padding: 14px; border: 1px solid var(--line); background: var(--surface); }
+.ticket-detail__diagnosis .commerce-card__head { align-items: center; }
+.ticket-detail__diagnosis .subtitle { margin: 0; }
 .ticket-detail__quote .detail__cols { grid-template-columns: repeat(auto-fit, minmax(min(100%, 180px), 1fr)); }
 .ticket-detail__audit ol { display: grid; gap: 10px; margin: 0; padding-left: 22px; }
 .ticket-detail__audit li { overflow-wrap: anywhere; }
@@ -216,11 +219,11 @@
   .intake__side { position: static; }
   .detail__cols { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
+@media (max-width: 1100px) {
+  .tabs__link--accounting, .tabs__link--purchases, .tabs__link--admin-extension { display: none; }
+  .accounting-menu-link, .purchases-menu-link { display: flex; }
+}
 @media (max-width: 760px) {
-  .tabs__link--accounting { display: none; }
-  .tabs__link--purchases { display: none; }
-  .accounting-menu-link { display: flex; }
-  .purchases-menu-link { display: flex; }
   .station__picker { display: grid; gap: 2px; font-size: var(--size-sm); font-weight: 700; }
   .board { grid-template-columns: minmax(0, 1fr); overflow-x: visible; }
   .station { display: none; }
@@ -229,8 +232,8 @@
   .detail__top { padding-right: 24px; }
   .purchases-search { align-items: stretch; flex-direction: column; }
 }
-@media (min-width: 761px) {
-  .accounting-menu-link { display: none; }
+@media (min-width: 1101px) {
+  .accounting-menu-link, .purchases-menu-link { display: none; }
 }
 /* Proveedores: misma ficha que los repuestos del inventario. */
 .supplier-card { display: grid; gap: 10px; align-content: start; }

@@ -20,6 +20,7 @@ function dateLabel(value) {
 
 const auditLabel = { CREATED: "Ticket creado", UPDATED: "Ticket actualizado", STATUS_CHANGED: "Estado actualizado", CANCELLED: "Ticket cancelado", QUOTE_CREATED: "Cotización registrada" };
 const quoteTypeLabel = { REPAIR: "Reparación", DIRECT_SALE: "Venta directa", PC_BUILD: "Armado de PC" };
+const diagnosisTypeLabel = { NONE: "Sin diagnóstico", HARDWARE: "Hardware", SOFTWARE: "Software", HYBRID: "Hardware y software" };
 const SERVICE_REPAIR_TYPES = new Set(["REPAIR", "SUPPORT", "WARRANTY_CLAIM"]);
 
 export default function TicketDetail() {
@@ -231,6 +232,12 @@ export default function TicketDetail() {
             <Datum label="Estado de pago"><span className="ok-text"><CircleCheck size={15} aria-hidden="true" /> {ticket.payment}</span></Datum>
           </section>
         </div>
+
+        {(ticket.hardware_diagnosis?.trim() || ticket.software_diagnosis?.trim()) && <section className="datum ticket-detail__diagnosis" aria-label="Diagnóstico técnico del ticket">
+          <div className="commerce-card__head"><h2 className="subtitle">Diagnóstico técnico</h2><span className="stamp">{diagnosisTypeLabel[ticket.diagnosis_type] || "Evaluación del equipo"}</span></div>
+          {ticket.hardware_diagnosis?.trim() && <Datum label="Hardware">{ticket.hardware_diagnosis}</Datum>}
+          {ticket.software_diagnosis?.trim() && <Datum label="Software">{ticket.software_diagnosis}</Datum>}
+        </section>}
 
         {apiMode && <section className="datum ticket-detail__quote" aria-label="Cotización existente">
           <div className="commerce-card__head"><h2 className="subtitle">Cotizaciones de servicio ({quoteHistory.length})</h2><button type="button" className="btn btn--sm" disabled={!serviceQuoteType} onClick={openQuoteForm}>Añadir cotización de servicio</button></div>

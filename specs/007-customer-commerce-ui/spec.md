@@ -37,6 +37,7 @@ Como cliente autenticado, quiero consultar los tickets de servicio y las cotizac
 **Acceptance Scenarios**:
 
 1. **Given** un cliente con tickets de servicio, **When** abre “Mis tickets”, **Then** ve el historial recibido del backend, incluyendo equipo, estado, fecha y cotizaciones de servicio disponibles.
+1a. **Given** un ticket propio con una evaluación técnica persistida, **When** el cliente abre “Mis tickets”, **Then** ve el tipo y el texto de diagnóstico de hardware/software devueltos por el backend.
 2. **Given** un cliente no tiene tickets, **When** abre “Mis tickets”, **Then** ve un estado vacío y una acción para iniciar una consulta; no ve una cotización de venta presentada como ticket.
 3. **Given** el cliente tiene cotizaciones de servicio y de venta, **When** abre sus cotizaciones, **Then** puede distinguir el tipo, el ticket asociado si existe, las líneas, el total y el estado de oferta.
 4. **Given** una cotización está pendiente, **When** el cliente acepta o rechaza usando la acción disponible, **Then** el estado mostrado procede de la respuesta del backend y la aceptación de una venta no se presenta como pago confirmado.
@@ -112,6 +113,7 @@ Como cliente, quiero revisar mis ofertas y ventas; como ADMIN, quiero revisar la
 - **FR-017**: Los fallos del servicio no deben transformarse en registros de demostración, mensajes de éxito ni escrituras optimistas persistidas; los formularios deben conservar la entrada que se pueda corregir.
 - **FR-018**: La integración debe conservar el lenguaje visual Banco, componentes, accesibilidad, navegación y comportamiento responsivo que ya usa el frontend.
 - **FR-019**: La interfaz no debe enlazar automáticamente un cliente manual a una cuenta portal por coincidencia de correo o teléfono. Un vínculo solo se muestra confirmado después de una operación autorizada y respuesta backend.
+- **FR-020**: «Mis Tickets» debe mostrar `diagnosis_type`, `hardware_diagnosis` y `software_diagnosis` recibidos de `GET /api/customer/tickets`, únicamente para los tickets propios que el backend resuelve desde la sesión. Si no hay evaluación técnica, la sección se omite.
 
 ### Key Entities
 

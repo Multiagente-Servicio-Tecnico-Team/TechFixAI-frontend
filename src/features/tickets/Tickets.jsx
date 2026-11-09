@@ -28,6 +28,12 @@ const requestLabels = {
   WARRANTY_CLAIM: "Reclamo de garantía",
 };
 
+const diagnosisTypeLabels = {
+  HARDWARE: "Hardware",
+  SOFTWARE: "Software",
+  HYBRID: "Hardware y software",
+};
+
 const filters = [
   { id: "all", label: "Todos", match: () => true },
   { id: "process", label: "En Proceso", match: (t) => ["received", "workshop", "approval", "payment"].includes(t.status) },
@@ -63,6 +69,9 @@ function cardFromTicket(ticket) {
     device: ticket.title,
     icon: ticket.requestType === "PC_BUILD" ? "monitor" : "laptop",
     summary: ticket.failure_description,
+    diagnosisType: ticket.diagnosis_type,
+    hardwareDiagnosis: ticket.hardware_diagnosis,
+    softwareDiagnosis: ticket.software_diagnosis,
     note: quotes.length ? `${quotes.length} ${quotes.length === 1 ? "cotización de servicio" : "cotizaciones de servicio"}.` : "",
     status: state.id,
     statusLabel: state.label,
@@ -199,6 +208,16 @@ function TicketTag({ ticket: t, canApprove }) {
           </div>
         )}
       </div>
+      {(t.hardwareDiagnosis?.trim() || t.softwareDiagnosis?.trim()) && (
+        <section className="tticket__diagnosis" aria-label="Diagnóstico técnico de tu ticket">
+          <div className="commerce-card__head">
+            <h4 className="subtitle">Diagnóstico técnico</h4>
+            <span className="stamp">{diagnosisTypeLabels[t.diagnosisType] || "Evaluación del equipo"}</span>
+          </div>
+          {t.hardwareDiagnosis?.trim() && <div><p className="datum__label">Hardware</p><p>{t.hardwareDiagnosis}</p></div>}
+          {t.softwareDiagnosis?.trim() && <div><p className="datum__label">Software</p><p>{t.softwareDiagnosis}</p></div>}
+        </section>
+      )}
       {!cancelled && (
         <ol className="rail" style={{ "--rail-steps": STEPS.length }} aria-label="Avance del ticket">
           {STEPS.map((s, i) => (

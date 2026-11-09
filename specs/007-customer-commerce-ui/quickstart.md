@@ -25,7 +25,7 @@ La instalación de paquetes solo es necesaria si no existe `node_modules`. No ag
 ## Escenarios portal
 
 1. Registra una cuenta CUSTOMER nueva. Confirma que el backend deja una cuenta y su perfil comercial vinculado; no debe aparecer un customer ID como dato solicitado ni almacenado por el navegador.
-2. Inicia sesión con una cuenta CUSTOMER existente. Abre “Mis tickets” y “Mis cotizaciones”; los tickets, las cotizaciones de servicio y las ofertas de venta deben quedar en sus vistas correctas.
+2. Inicia sesión con una cuenta CUSTOMER existente. Abre “Mis tickets” y “Mis cotizaciones”; los tickets, diagnósticos técnicos, cotizaciones de servicio y ofertas de venta deben quedar en sus vistas correctas. Comprueba con una segunda cuenta que un cliente no puede ver los diagnósticos del primero.
 3. Acepta una cotización de servicio y una de venta. La respuesta confirmada reemplaza el estado visible. La cotización de venta queda aceptada con pago pendiente; no aparece como pagada ni como venta confirmada.
 4. Consulta pagos y ventas. Antes de la confirmación ADMIN, no debe existir venta pagada ni decremento comunicado por la UI; después de confirmar, el backend devuelve la venta y la interfaz la muestra.
 5. Repite la aceptación simulando pérdida de respuesta. El backend debe devolver el resultado idempotente y no crear una segunda operación.

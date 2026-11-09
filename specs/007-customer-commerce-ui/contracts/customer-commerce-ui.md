@@ -14,7 +14,7 @@ El contrato HTTP canónico se mantiene en el backend: [customer-commerce.openapi
 
 | Pantalla/flujo | Operación backend | Datos de entrada relevantes | Resultado esperado en frontend |
 |---|---|---|---|
-| Portal: tickets | `GET /api/customer/tickets` | Sesión solamente | Lista own-only; admite `quotes[]` y el campo legacy singular |
+| Portal: tickets | `GET /api/customer/tickets` | Sesión solamente | Lista own-only; admite `quotes[]`, el campo legacy singular y diagnósticos persistidos de hardware/software |
 | Portal: iniciar ticket de servicio | `POST /api/customer/tickets` | `title`, `failure_description`, `request_type` | Ticket asociado al perfil de sesión; no incluir customer ID ni contacto comercial editable |
 | Portal: mis cotizaciones | `GET /api/customer/quotes` | Filtro/paginación opcionales del contrato | Una lista unificada de servicio y venta, sin consultar además la lista específica duplicada |
 | Portal: detalle cotización | `GET /api/customer/quotes/{quote_id}` | ID del recurso | Solo cotización propia; 404 para no encontrada/no propia |

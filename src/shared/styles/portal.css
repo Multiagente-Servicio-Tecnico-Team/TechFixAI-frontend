@@ -14,6 +14,10 @@
 .tticket__amount { display: grid; justify-items: end; }
 .tticket__amount strong { font: 600 var(--size-lg) var(--mono); white-space: nowrap; }
 .tticket__foot { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.tticket__diagnosis { display: grid; gap: 9px; padding: 12px; border-left: var(--rule) solid var(--accent); background: var(--surface); overflow-wrap: anywhere; }
+.tticket__diagnosis .commerce-card__head { align-items: center; }
+.tticket__diagnosis .subtitle { margin: 0; font-size: var(--size-base); }
+.tticket__diagnosis p { margin: 3px 0 0; white-space: pre-wrap; }
 .tticket--done::after { background: transparent; box-shadow: inset 0 0 0 2px var(--text-2); }
 .budget { display: grid; gap: 4px; padding-top: 8px; border-top: 1px solid var(--line); }
 .budget__row { display: flex; justify-content: space-between; gap: 16px; font-size: var(--size-sm); }
@@ -72,6 +76,15 @@
 .pattern { display: grid; gap: 4px; }
 .pattern label { font-size: var(--size-sm); font-weight: 700; }
 
+/* ---------- Chat administrativo ---------- */
+.admin-chat-proposal { display: grid; gap: 10px; margin-top: 8px; padding: 12px; border-left: var(--rule) solid var(--accent); background: var(--surface); overflow-wrap: anywhere; }
+.admin-chat-proposal__values { display: grid; gap: 6px; margin: 0; }
+.admin-chat-proposal__values > div { display: flex; justify-content: space-between; gap: 10px; padding-bottom: 5px; border-bottom: 1px solid var(--line); }
+.admin-chat-proposal__values dt { color: var(--text-2); font-size: var(--size-sm); font-weight: 700; }
+.admin-chat-proposal__values dd { margin: 0; max-width: 65%; text-align: right; white-space: pre-wrap; }
+.admin-chat-notice, .admin-chat-capabilities { margin: 0; padding: 10px; border-left: var(--rule) solid var(--text-2); background: var(--surface); font-size: var(--size-sm); }
+.admin-chat-capabilities p { margin: 4px 0 0; color: var(--text-2); }
+
 @media (max-width: 900px) {
   .desk { grid-template-columns: minmax(0, 1fr); }
   .desk__side { position: static; order: -1; }
@@ -84,4 +97,6 @@
   .msg { max-width: 96%; }
   .composer { gap: 6px; }
   .composer__mic { flex-basis: var(--control-lg); }
+  .admin-chat-proposal__values > div { display: grid; gap: 2px; }
+  .admin-chat-proposal__values dd { max-width: 100%; text-align: left; }
 }

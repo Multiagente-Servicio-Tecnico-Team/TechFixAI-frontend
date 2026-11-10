@@ -49,7 +49,7 @@ function QuoteCard({ quote, quoteId, busy, onAction }) {
       {pending ? (
         <div className="btn-row">
           <button type="button" className="btn btn--primary" disabled={busy} onClick={() => onAction("accept_quote")}>
-            <CircleCheck size={18} aria-hidden="true" /> Confirmar y guardar
+            <CircleCheck size={18} aria-hidden="true" /> {Number.isInteger(Number(quoteId)) && Number(quoteId) > 0 ? "Aceptar cotización" : "Confirmar y guardar"}
           </button>
           <button type="button" className="btn" disabled={busy} onClick={() => onAction("reject_quote")}>
             <CircleX size={18} aria-hidden="true" /> No guardar

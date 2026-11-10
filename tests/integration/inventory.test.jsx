@@ -201,9 +201,9 @@ describe("inventario conectado a la API", () => {
     };
     renderInventory(api);
     await user.click(await screen.findByRole("button", { name: "Ajustar stock RAM-16-D5" }));
-    await user.clear(screen.getByLabelText("Conteo físico"));
-    await user.type(screen.getByLabelText("Conteo físico"), "70");
-    await user.type(screen.getByLabelText("Motivo del ajuste"), "Conteo físico de almacén");
+    await user.clear(screen.getByLabelText(/^Conteo físico/));
+    await user.type(screen.getByLabelText(/^Conteo físico/), "70");
+    await user.type(screen.getByLabelText(/^Motivo del ajuste/), "Conteo físico de almacén");
     await user.click(screen.getByRole("button", { name: "Confirmar conteo" }));
 
     await waitFor(() => expect(api.adjustStock).toHaveBeenCalledTimes(1));
@@ -224,9 +224,9 @@ describe("inventario conectado a la API", () => {
     };
     renderInventory(api);
     await user.click(await screen.findByRole("button", { name: "Ajustar stock RAM-16-D5" }));
-    await user.clear(screen.getByLabelText("Conteo físico"));
-    await user.type(screen.getByLabelText("Conteo físico"), "60");
-    await user.type(screen.getByLabelText("Motivo del ajuste"), "Conciliación de conteo");
+    await user.clear(screen.getByLabelText(/^Conteo físico/));
+    await user.type(screen.getByLabelText(/^Conteo físico/), "60");
+    await user.type(screen.getByLabelText(/^Motivo del ajuste/), "Conciliación de conteo");
     await user.click(screen.getByRole("button", { name: "Confirmar conteo" }));
 
     expect(await screen.findByText(INVENTORY_MESSAGES.reservedStock)).toBeInTheDocument();
@@ -249,7 +249,7 @@ describe("inventario conectado a la API", () => {
     await user.click(screen.getByRole("button", { name: "Confirmar conteo" }));
     expect(screen.getByText("Indica el motivo del ajuste.")).toBeInTheDocument();
     expect(api.adjustStock).not.toHaveBeenCalled();
-    await user.type(screen.getByLabelText("Motivo del ajuste"), "Verificación de saldo");
+    await user.type(screen.getByLabelText(/^Motivo del ajuste/), "Verificación de saldo");
     await user.click(screen.getByRole("button", { name: "Confirmar conteo" }));
     await waitFor(() => expect(api.adjustStock).toHaveBeenCalledTimes(1));
     expect(await screen.findByText("El conteo coincide con el stock de RAM-16-D5; no hubo variación.")).toBeInTheDocument();
@@ -267,9 +267,10 @@ describe("inventario conectado a la API", () => {
     const movement = { id: 4, part_id: 17, code_snapshot: "RAM-16-D5", name_snapshot: "RAM 16GB DDR5", movement_type: "OPENING_BALANCE", quantity_delta: 8, stock_before: 0, stock_after: 8, reason: "Conteo inicial", actor_kind: "USER", actor_user_id: 2, actor_name: "Carlos Quispe", created_at: "2026-11-08T12:00:00Z", source_type: null, source_id: null, is_before_cutover: true };
     const api = { mode: "api", listMovements: vi.fn().mockResolvedValue({ items: [movement], total: 1, limit: 50, offset: 0 }) };
     renderHistory(api);
-    expect(await screen.findByText("RAM 16GB DDR5")).toBeInTheDocument();
-    expect(screen.getByText("Saldo inicial")).toBeInTheDocument();
-    expect(screen.getByText("+8")).toBeInTheDocument();
+    expect(await screen.findByText("RAM 16GB DDR5 · SKU RAM-16-D5")).toBeInTheDocument();
+    const table = screen.getByRole("table");
+    expect(within(table).getByText("Saldo inicial")).toBeInTheDocument();
+    expect(within(table).getByText("+8")).toBeInTheDocument();
     expect(screen.getByText("Carlos Quispe")).toBeInTheDocument();
     expect(screen.getByText("Conteo inicial")).toBeInTheDocument();
     expect(screen.getByText("Historia anterior al corte")).toBeInTheDocument();
@@ -440,6 +441,7 @@ describe("alta API con categoría de texto libre", () => {
   it("permite guardar una categoría nueva y muestra solo el repuesto confirmado", async () => {
     const user = userEvent.setup();
     const savedPart = {
+      id: 31,
       sku: "GPU-RTX-4060",
       name: "Tarjeta RTX 4060",
       category: "Tarjetas de video",
@@ -456,6 +458,7 @@ describe("alta API con categoría de texto libre", () => {
         .mockResolvedValueOnce(["Procesadores"])
         .mockResolvedValue(["Procesadores", "Tarjetas de video"]),
       create: vi.fn().mockResolvedValue(savedPart),
+      recordOpening: vi.fn().mockResolvedValue({ part: { id: 31, code: "GPU-RTX-4060", current_stock: 4 }, changed: true, movement: {} }),
     };
     renderPartForm(api);
 
@@ -471,6 +474,7 @@ describe("alta API con categoría de texto libre", () => {
     await user.click(screen.getByRole("button", { name: /Guardar Repuesto/ }));
 
     await waitFor(() => expect(api.create).toHaveBeenCalledWith(expect.objectContaining({ category: "Tarjetas de video" })));
+    await waitFor(() => expect(api.recordOpening).toHaveBeenCalledWith(31, { counted_stock: 4, reason: "Conteo inicial de demostración" }, expect.stringMatching(/^[\da-f-]{36}$/i)));
     expect(await screen.findByText("SKU: GPU-RTX-4060")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Tarjetas de video (1)" })).toBeInTheDocument();
   });

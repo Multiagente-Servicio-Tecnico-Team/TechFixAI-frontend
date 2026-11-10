@@ -76,14 +76,16 @@ describe("cliente de la API de inventario", () => {
   });
 
   it.each([
-    ["create", 409, "duplicate", INVENTORY_MESSAGES.duplicate],
-    ["remove", 409, "in_use", INVENTORY_MESSAGES.inUse],
-    ["list", 401, "session_required", INVENTORY_MESSAGES.session],
-    ["list", 403, "staff_only", INVENTORY_MESSAGES.staffOnly],
-    ["update", 404, "not_found", INVENTORY_MESSAGES.notFound],
-    ["list", 500, "unavailable", INVENTORY_MESSAGES.unavailable],
-  ])("%s con %i devuelve %s", async (method, status, code, message) => {
-    const api = createInventoryApi({ baseUrl: "http://api.local", fetchImpl: fakeFetch({ status }) });
+    // Los 409 llevan el código que envía el backend (`duplicate` con campo `code`, `in_use`).
+    ["create", 409, "duplicate", INVENTORY_MESSAGES.duplicate, { code: "duplicate", field: "code", detail: "Ya existe un repuesto con ese código." }],
+    ["remove", 409, "in_use", INVENTORY_MESSAGES.inUse, { code: "in_use", detail: "No se puede eliminar porque el repuesto figura en presupuestos." }],
+    ["create", 409, "conflict", INVENTORY_MESSAGES.conflict, {}],
+    ["list", 401, "session_required", INVENTORY_MESSAGES.session, undefined],
+    ["list", 403, "staff_only", INVENTORY_MESSAGES.staffOnly, undefined],
+    ["update", 404, "not_found", INVENTORY_MESSAGES.notFound, undefined],
+    ["list", 500, "unavailable", INVENTORY_MESSAGES.unavailable, undefined],
+  ])("%s con %i devuelve %s", async (method, status, code, message, body) => {
+    const api = createInventoryApi({ baseUrl: "http://api.local", fetchImpl: fakeFetch({ status, body }) });
     const arg = method === "remove" ? "RAM-16-D5" : fromApi(API_PART);
     await expect(api[method](arg)).rejects.toMatchObject({ code, message });
   });

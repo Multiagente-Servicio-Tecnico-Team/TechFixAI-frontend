@@ -1,14 +1,24 @@
-import { cleanup, render, screen, waitFor } from "@testing-library/react";
+import { cleanup, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { MemoryRouter } from "react-router-dom";
 import AccountingCreate from "../../src/features/accounting/AccountingCreate.jsx";
 import EntryLinesEditor from "../../src/features/accounting/EntryLinesEditor.jsx";
+import { accountingApi } from "../../src/features/accounting/accountingApi.js";
 import { calculateEntryTotals } from "../../src/domain/accounting.js";
 import { StoreProvider } from "../../src/state/store.jsx";
 
 const future = { v7_startTransition: true, v7_relativeSplatPath: true };
 const categories = { items: [{ id: 1, code: "SERVICE", name: "Servicio técnico" }] };
+const plans = { items: [{ id: 1, code: "PCGE_PE", name: "PCGE Perú", is_default: true }] };
+// Cuentas activas e imputables del catálogo, vigentes para cualquier fecha posterior a 2019.
+const accounts = {
+  items: [
+    { id: 101, plan_id: 1, code: "1011", name: "Caja", status: "ACTIVE", is_postable: true, effective_from: "2019-01-01" },
+    { id: 701, plan_id: 1, code: "7041", name: "Prestación de servicios", status: "ACTIVE", is_postable: true, effective_from: "2019-01-01" },
+  ],
+  total: 2,
+};
 
 function renderForm(api) {
   return render(
@@ -18,29 +28,44 @@ function renderForm(api) {
   );
 }
 
+// El selector de cuentas consulta el catálogo del plan con el cliente compartido de contabilidad.
+async function chooseAccount(user, line, accountId) {
+  const select = screen.getByLabelText(`Cuenta contable, línea ${line}`);
+  await waitFor(() => expect(within(select).getByRole("option", { name: new RegExp(`^${accounts.items.find((a) => a.id === accountId).code} `) })).toBeInTheDocument());
+  await user.selectOptions(select, String(accountId));
+}
+
 async function completeBalancedForm(user) {
-  await user.selectOptions(await screen.findByLabelText(/Categoría/), "1");
-  await user.type(screen.getByLabelText(/Concepto/), "Mantenimiento preventivo");
-  await user.type(screen.getByLabelText(/Detalle/), "Servicio realizado en taller");
-  await user.type(screen.getByLabelText(/Código de cuenta, línea 1/), "101");
-  await user.type(screen.getByLabelText(/Nombre de cuenta, línea 1/), "Caja");
+  await user.selectOptions(await screen.findByLabelText(/^Categoría/), "1");
+  expect(screen.getByLabelText(/^Plan contable/)).toHaveValue("1");
+  await user.type(screen.getByLabelText(/^Concepto/), "Mantenimiento preventivo");
+  await user.type(screen.getByLabelText(/^Detalle/), "Servicio realizado en taller");
+  await chooseAccount(user, 1, 101);
   await user.type(screen.getByLabelText(/Debe, línea 1/), "50.00");
-  await user.type(screen.getByLabelText(/Código de cuenta, línea 2/), "401");
-  await user.type(screen.getByLabelText(/Nombre de cuenta, línea 2/), "Ingresos");
+  await chooseAccount(user, 2, 701);
   await user.type(screen.getByLabelText(/Haber, línea 2/), "50.00");
 }
 
-afterEach(() => cleanup());
+beforeEach(() => {
+  vi.spyOn(accountingApi, "listAccounts").mockResolvedValue(accounts);
+});
+
+afterEach(() => {
+  cleanup();
+  vi.restoreAllMocks();
+});
 
 describe("alta contable", () => {
   it("revisa y confirma una sola vez y presenta el correlativo devuelto", async () => {
     const user = userEvent.setup();
     const api = {
       listCategories: vi.fn().mockResolvedValue(categories),
+      listPlans: vi.fn().mockResolvedValue(plans),
       createEntry: vi.fn().mockResolvedValue({ id: 17, entry_number: "117", status: "CONFIRMED", amount: "50.00", responsible: { display_name: "Admin" } }),
     };
     renderForm(api);
     await completeBalancedForm(user);
+    expect(accountingApi.listAccounts).toHaveBeenCalledWith("1", expect.objectContaining({ status: "ACTIVE", postable: true }));
     expect(screen.getAllByText("S/. 50.00")).toHaveLength(2);
     await user.click(screen.getByRole("button", { name: "Revisar y registrar" }));
     expect(screen.getByRole("alertdialog")).toHaveTextContent("no se podrá editar ni borrar");
@@ -48,18 +73,27 @@ describe("alta contable", () => {
     await user.click(confirm);
     expect(await screen.findByRole("heading", { name: /Asiento N.º 117/ })).toBeInTheDocument();
     expect(api.createEntry).toHaveBeenCalledTimes(1);
-    expect(api.createEntry.mock.calls[0][0].lines[0].debit).toBe("50.00");
-    expect(api.createEntry.mock.calls[0][1]).toMatch(/[0-9a-f-]{36}/i);
+    const [payload, idempotencyKey] = api.createEntry.mock.calls[0];
+    expect(payload).toMatchObject({ plan_id: 1, category_id: 1 });
+    expect(payload.lines[0]).toMatchObject({ account_id: 101, debit: "50.00" });
+    expect(payload.lines[1]).toMatchObject({ account_id: 701, credit: "50.00" });
+    expect(idempotencyKey).toMatch(/[0-9a-f-]{36}/i);
   });
 
   it("no permite revisar si hay un desbalance o líneas sin una cuenta", async () => {
     const user = userEvent.setup();
-    const api = { listCategories: vi.fn().mockResolvedValue(categories), createEntry: vi.fn() };
+    const api = { listCategories: vi.fn().mockResolvedValue(categories), listPlans: vi.fn().mockResolvedValue(plans), createEntry: vi.fn() };
     renderForm(api);
     await completeBalancedForm(user);
     await user.clear(screen.getByLabelText(/Haber, línea 2/));
     await user.click(screen.getByRole("button", { name: "Revisar y registrar" }));
     expect(screen.getByText(/Cada línea debe tener un importe positivo/i)).toBeInTheDocument();
+    expect(screen.queryByRole("alertdialog")).not.toBeInTheDocument();
+
+    await user.type(screen.getByLabelText(/Haber, línea 2/), "50.00");
+    await user.selectOptions(screen.getByLabelText("Cuenta contable, línea 2"), "");
+    await user.click(screen.getByRole("button", { name: "Revisar y registrar" }));
+    expect(screen.getByText("Selecciona una cuenta del catálogo.")).toBeInTheDocument();
     expect(screen.queryByRole("alertdialog")).not.toBeInTheDocument();
     expect(api.createEntry).not.toHaveBeenCalled();
   });
@@ -68,6 +102,7 @@ describe("alta contable", () => {
     const user = userEvent.setup();
     const api = {
       listCategories: vi.fn().mockResolvedValue(categories),
+      listPlans: vi.fn().mockResolvedValue(plans),
       createEntry: vi.fn().mockRejectedValueOnce(Object.assign(new Error("network"), { code: "network" }))
         .mockResolvedValueOnce({ id: 17, entry_number: "117", status: "CONFIRMED", amount: "50.00" }),
     };

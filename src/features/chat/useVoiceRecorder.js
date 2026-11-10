@@ -37,6 +37,7 @@ export function useVoiceRecorder({ onAudio, maxDurationMs = MAX_RECORDING_MS }) 
   const recorderRef = useRef(null);
   const streamRef = useRef(null);
   const chunksRef = useRef([]);
+  const pushToTalkHeldRef = useRef(false);
   const startedAtRef = useRef(0);
   const timerRef = useRef(null);
   const pendingRef = useRef(null);
@@ -69,13 +70,14 @@ export function useVoiceRecorder({ onAudio, maxDurationMs = MAX_RECORDING_MS }) 
   }, []);
 
   const stopRecording = useCallback(() => {
+    pushToTalkHeldRef.current = false;
     clearTimeout(timerRef.current);
     timerRef.current = null;
     const recorder = recorderRef.current;
     if (recorder?.state === "recording") recorder.stop();
   }, []);
 
-  const startRecording = useCallback(async () => {
+  const startRecording = useCallback(async ({ pushToTalk = false } = {}) => {
     setError("");
     const mediaDevices = navigator.mediaDevices;
     const Recorder = globalThis.MediaRecorder;
@@ -95,6 +97,11 @@ export function useVoiceRecorder({ onAudio, maxDurationMs = MAX_RECORDING_MS }) 
       const stream = await mediaDevices.getUserMedia({ audio: true });
       if (!mountedRef.current) {
         stream.getTracks().forEach((track) => track.stop());
+        return;
+      }
+      if (pushToTalk && !pushToTalkHeldRef.current) {
+        stream.getTracks().forEach((track) => track.stop());
+        setStatus("idle");
         return;
       }
       streamRef.current = stream;
@@ -159,6 +166,20 @@ export function useVoiceRecorder({ onAudio, maxDurationMs = MAX_RECORDING_MS }) 
     }
   }, [maxDurationMs, releaseStream, stopRecording, submit]);
 
+  const startPushToTalk = useCallback(() => {
+    if (["requesting", "recording", "submitting"].includes(status)) return;
+    pushToTalkHeldRef.current = true;
+    pendingRef.current = null;
+    setHasPending(false);
+    void startRecording({ pushToTalk: true });
+  }, [status, startRecording]);
+
+  const stopPushToTalk = useCallback(() => {
+    if (!pushToTalkHeldRef.current) return;
+    pushToTalkHeldRef.current = false;
+    stopRecording();
+  }, [stopRecording]);
+
   const toggle = useCallback(async () => {
     if (status === "requesting") return;
     if (status === "submitting") return;
@@ -201,5 +222,5 @@ export function useVoiceRecorder({ onAudio, maxDurationMs = MAX_RECORDING_MS }) 
     };
   }, [releaseStream]);
 
-  return { status, error, hasPending, toggle, retry, dismissError };
+  return { status, error, hasPending, toggle, startPushToTalk, stopPushToTalk, retry, dismissError };
 }

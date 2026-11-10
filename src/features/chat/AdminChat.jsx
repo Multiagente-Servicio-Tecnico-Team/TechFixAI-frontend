@@ -1,13 +1,15 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { CircleCheck, CircleX, Info, Mic, MicOff, RotateCcw, SendHorizontal, TriangleAlert } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { authApi } from "../auth/authApi.js";
 import { useStore } from "../../state/store.jsx";
 import RichText from "../../shared/ui/RichText.jsx";
+import AdminChatPresentation from "./AdminChatPresentation.jsx";
 import { ChatTitle, chatTime, CopilotHeader, TypingIndicator, UserMessage } from "./ChatParts.jsx";
 import { ChatError } from "./chatApi.js";
 import { adminChatApi as defaultApi } from "./adminChatApi.js";
 import { useVoiceRecorder } from "./useVoiceRecorder.js";
+import { useSpacebarPushToTalk } from "./useSpacebarPushToTalk.js";
 
 const FALLBACK_PATTERNS = [
   { id: "hierarchical", name: "Jerárquico" },
@@ -29,44 +31,68 @@ const PROPOSAL_STATUS = {
   CONFLICT: "No ejecutada: requiere revisión",
 };
 
-const FIELD_LABELS = {
-  customer_id: "Cliente",
-  ticket_id: "Ticket",
-  supplier_id: "Proveedor",
-  spare_part_id: "Repuesto",
-  quote_id: "Cotización",
-  purchase_id: "Compra",
-  order_id: "Orden",
-  accounting_entry_id: "Asiento contable",
-  title: "Título",
-  name: "Nombre",
-  description: "Descripción",
-  status: "Estado",
-  amount: "Importe",
-  total_amount: "Importe total",
-  quantity: "Cantidad",
-  date: "Fecha",
-};
-
 function welcomeMessage(name) {
   return `Hola${name ? `, ${name}` : ""}. Este es el asistente administrativo de TechFix.AI. Puedes consultar clientes, tickets, inventario, proveedores, compras, órdenes, ventas y contabilidad. Cada cambio se presenta primero como propuesta y requiere tu confirmación.`;
 }
 
-function proposalRows(summary) {
+function legacyProposalPresentation(proposal) {
   try {
-    const parsed = JSON.parse(summary);
-    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) return [["Resumen", String(summary || "")]];
-    return Object.entries(parsed).map(([key, value]) => [
-      FIELD_LABELS[key] || key.replaceAll("_", " "),
-      typeof value === "string" ? value : JSON.stringify(value),
-    ]);
+    const parsed = JSON.parse(proposal.summary);
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) throw new Error("legacy summary");
+    const toText = (value) => {
+      if (Array.isArray(value)) return value.map(toText).join("; ") || "Sin elementos";
+      if (value && typeof value === "object") return Object.entries(value)
+        .map(([key, nested]) => `${key.replaceAll("_", " ")}: ${toText(nested)}`).join("; ");
+      if (typeof value === "boolean") return value ? "S\u00ed" : "No";
+      return value == null || value === "" ? "Sin dato" : String(value);
+    };
+    return {
+      kind: "record",
+      title: "Datos de la propuesta",
+      fields: Object.entries(parsed).map(([key, value]) => ({
+        label: key.replaceAll("_", " ").replace(/^./, (letter) => letter.toUpperCase()),
+        value: toText(value),
+      })),
+    };
   } catch {
-    return [["Resumen", String(summary || "")]];
+    return { kind: "record", title: "Resumen", fields: [{ label: "Propuesta", value: proposal.summary || "Revisa los datos antes de confirmar." }] };
   }
 }
 
-function ProposalCard({ proposal, actionable, busy, onAction }) {
-  const rows = proposalRows(proposal.summary);
+function legacyResultPresentation(result) {
+  if (Array.isArray(result)) result = { items: result };
+  if (!result || typeof result !== "object") return null;
+
+  const items = Array.isArray(result.items) ? result.items : null;
+  if (items) {
+    const records = items.filter((item) => item && typeof item === "object" && !Array.isArray(item));
+    const keys = [...new Set(records.flatMap((record) => Object.keys(record)))].filter((key) =>
+      records.some((record) => record[key] == null || ["string", "number", "boolean"].includes(typeof record[key]))
+    ).slice(0, 7);
+    const label = (key) => key.replaceAll("_", " ").replace(/^./, (letter) => letter.toUpperCase());
+    const value = (entry) => entry == null || entry === "" ? "—"
+      : typeof entry === "boolean" ? (entry ? "Sí" : "No") : String(entry);
+    const count = Number.isInteger(result.total) ? result.total : items.length;
+    return {
+      kind: "table",
+      title: "Resultados de la consulta",
+      summary: `${count} ${count === 1 ? "resultado" : "resultados"}`,
+      empty_message: "No se encontraron registros con esos filtros.",
+      columns: keys.map((key) => ({ key, label: label(key) })),
+      rows: records.map((record) => Object.fromEntries(keys.map((key) => [key, value(record[key])]))),
+    };
+  }
+
+  const fields = Object.entries(result)
+    .filter(([, value]) => value == null || ["string", "number", "boolean"].includes(typeof value))
+    .map(([key, value]) => ({
+      label: key.replaceAll("_", " ").replace(/^./, (letter) => letter.toUpperCase()),
+      value: value == null ? "—" : typeof value === "boolean" ? (value ? "Sí" : "No") : String(value),
+    }));
+  return fields.length ? { kind: "record", title: "Resultado de la consulta", fields } : null;
+}
+
+function ProposalCard({ proposal, actionable, busy, onAction, resourceUrl }) {
   const expiry = proposal.expires_at ? new Date(proposal.expires_at) : null;
   const expiryLabel = expiry && !Number.isNaN(expiry.valueOf())
     ? new Intl.DateTimeFormat("es-PE", { dateStyle: "short", timeStyle: "short" }).format(expiry)
@@ -75,19 +101,16 @@ function ProposalCard({ proposal, actionable, busy, onAction }) {
   return (
     <section className="admin-chat-proposal" aria-label="Propuesta administrativa">
       <div className="commerce-card__head">
-        <strong>Propuesta · {proposal.resource_type?.replaceAll(".", " / ") || "Cambio administrativo"}</strong>
+        <strong>Propuesta: {proposal.resource_type?.replaceAll(".", " / ") || "Cambio administrativo"}</strong>
         <span className={`stamp${actionable ? " stamp--warn" : ""}`}>
           {PROPOSAL_STATUS[proposal.status] || proposal.status}
         </span>
       </div>
-      <dl className="admin-chat-proposal__values">
-        {rows.map(([label, value], index) => (
-          <div key={`${label}-${index}`}>
-            <dt>{label}</dt>
-            <dd>{value || "—"}</dd>
-          </div>
-        ))}
-      </dl>
+      <p className="small muted">{proposal.summary}</p>
+      <AdminChatPresentation
+        presentation={proposal.presentation || legacyProposalPresentation(proposal)}
+        resourceUrl={resourceUrl}
+      />
       {expiryLabel && actionable && <p className="small muted">Vence: {expiryLabel}</p>}
       {actionable && (
         <div className="btn-row">
@@ -166,7 +189,10 @@ export default function AdminChat({ api = defaultApi }) {
           from: "bot",
           time: chatTime(),
           text: data.reply,
-          proposal,
+          proposal: pendingProposal && proposal?.proposal_id === pendingProposal.proposal_id
+            ? null
+            : proposal,
+          presentation: data.presentation || legacyResultPresentation(data.result),
         },
       ];
     });
@@ -265,6 +291,15 @@ export default function AdminChat({ api = defaultApi }) {
 
   const voiceActive = ["requesting", "recording", "submitting"].includes(voice.status);
   const canUseApi = api.mode === "api";
+  const startSpaceRecording = useCallback(() => {
+    if (voice.status === "error") voice.dismissError();
+    voice.startPushToTalk();
+  }, [voice.dismissError, voice.startPushToTalk, voice.status]);
+  useSpacebarPushToTalk({
+    enabled: canUseApi && !busy,
+    onStart: startSpaceRecording,
+    onStop: voice.stopPushToTalk,
+  });
 
   return (
     <div className="desk admin-chat">
@@ -281,6 +316,12 @@ export default function AdminChat({ api = defaultApi }) {
             <div key={message.id} className="msg">
               <p className="msg__meta"><strong>Asistente ADMIN</strong> <time>{message.time}</time></p>
               <div className="msg__bubble"><p><RichText text={message.text} /></p></div>
+              {message.presentation && (
+                <AdminChatPresentation
+                  presentation={message.presentation}
+                  resourceUrl={api.resourceUrl || ((url) => url)}
+                />
+              )}
               {message.proposal && (
                 <ProposalCard
                   proposal={message.proposal}
@@ -288,6 +329,7 @@ export default function AdminChat({ api = defaultApi }) {
                     && pendingProposal?.proposal_id === message.proposal.proposal_id}
                   busy={busy}
                   onAction={actOnProposal}
+                  resourceUrl={api.resourceUrl || ((url) => url)}
                 />
               )}
             </div>
@@ -300,7 +342,7 @@ export default function AdminChat({ api = defaultApi }) {
           {!canUseApi && <div className="form-alert" role="alert">El chat ADMIN requiere configurar la URL del backend. No se ejecutan operaciones en modo demostración.</div>}
           {error && <div className="form-alert" role="alert"><TriangleAlert size={16} aria-hidden="true" /><span>{error}</span></div>}
           {voice.error && <div className="form-alert" role="alert"><TriangleAlert size={16} aria-hidden="true" /><span>{voice.error}</span>{voice.hasPending && <button type="button" className="btn btn--sm" onClick={voice.retry} disabled={busy}><RotateCcw size={14} aria-hidden="true" /> Reintentar audio</button>}</div>}
-          {voice.status === "recording" && <p className="composer__voice-status" role="status">Grabando… vuelve a pulsar para enviar. Máximo 120 segundos.</p>}
+          {voice.status === "recording" && <p className="composer__voice-status" role="status">Grabando… suelta la barra espaciadora o vuelve a pulsar el micrófono para enviar. Máximo 120 segundos.</p>}
           {voice.status === "requesting" && <p className="composer__voice-status" role="status">Solicitando permiso del micrófono…</p>}
           {voice.status === "submitting" && <p className="composer__voice-status" role="status">Transcribiendo y enviando tu mensaje…</p>}
           <form className="composer" onSubmit={send}>
@@ -330,7 +372,7 @@ export default function AdminChat({ api = defaultApi }) {
               Enviar <SendHorizontal size={16} aria-hidden="true" />
             </button>
           </form>
-          <p className="composer__hint"><Info size={12} aria-hidden="true" /> Las escrituras se ejecutan solo después de revisar y confirmar la propuesta.</p>
+          <p className="composer__hint"><Info size={12} aria-hidden="true" /> Mantén pulsada la barra espaciadora fuera del campo de texto para hablar; suéltala para enviar. En el campo de texto, espacio escribe normalmente. Las escrituras se ejecutan solo después de revisar y confirmar la propuesta.</p>
         </footer>
       </section>
 

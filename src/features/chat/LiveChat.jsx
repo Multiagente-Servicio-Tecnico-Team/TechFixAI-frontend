@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { CircleCheck, CircleX, Info, Mic, MicOff, RotateCcw, SendHorizontal, TriangleAlert } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useStore } from "../../state/store.jsx";
@@ -9,6 +9,7 @@ import { TICKET_STATUS_LABEL } from "../../domain/tickets.js";
 import RichText from "../../shared/ui/RichText.jsx";
 import { ChatTitle, chatTime, CopilotHeader, TypingIndicator, UserMessage } from "./ChatParts.jsx";
 import { useVoiceRecorder } from "./useVoiceRecorder.js";
+import { useSpacebarPushToTalk } from "./useSpacebarPushToTalk.js";
 
 function welcomeMessage(firstName) {
   return `Hola${firstName ? `, ${firstName}` : ""}. Soy TechFix Copilot. Puedo orientarte con soporte y reparaciones, consultar componentes y cotizaciones, ayudarte a armar una PC según tu presupuesto y resolver consultas de garantía o logística. ¿Qué necesitas hoy?`;
@@ -122,6 +123,15 @@ export default function LiveChat({ api = defaultChatApi }) {
     }
   };
   const voice = useVoiceRecorder({ onAudio: sendAudio });
+  const startSpaceRecording = useCallback(() => {
+    if (voice.status === "error") voice.dismissError();
+    voice.startPushToTalk();
+  }, [voice.dismissError, voice.startPushToTalk, voice.status]);
+  useSpacebarPushToTalk({
+    enabled: api.mode === "api" && !busy,
+    onStart: startSpaceRecording,
+    onStop: voice.stopPushToTalk,
+  });
 
   useEffect(() => {
     endRef.current?.scrollIntoView({ block: "nearest", behavior: window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
@@ -245,7 +255,7 @@ export default function LiveChat({ api = defaultChatApi }) {
             </div>
           )}
           {voice.status === "recording" && (
-            <p className="composer__voice-status" role="status">Grabando… vuelve a pulsar el micrófono para enviar. Máximo 120 segundos.</p>
+            <p className="composer__voice-status" role="status">Grabando… suelta la barra espaciadora o vuelve a pulsar el micrófono para enviar. Máximo 120 segundos.</p>
           )}
           {voice.status === "requesting" && (
             <p className="composer__voice-status" role="status">Solicitando permiso del micrófono…</p>
@@ -281,7 +291,7 @@ export default function LiveChat({ api = defaultChatApi }) {
             </button>
           </form>
           <p className="composer__hint">
-            Presiona Shift + Enter para salto de línea · <Info size={12} aria-hidden="true" /> No compartas contraseñas en el chat.{" "}
+            Mantén pulsada la barra espaciadora fuera del campo de texto para hablar; suéltala para enviar. En el campo de texto, espacio escribe normalmente. Presiona Shift + Enter para salto de línea · <Info size={12} aria-hidden="true" /> No compartas contraseñas en el chat.{" "}
             <Link to="/portal/tickets" className="link">Ver mis tickets</Link>
           </p>
         </footer>

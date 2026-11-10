@@ -58,6 +58,11 @@ export function createAdminChatApi({ baseUrl = "", fetchImpl } = {}) {
 
   return {
     mode: base ? "api" : "unconfigured",
+    resourceUrl(path) {
+      const value = String(path || "");
+      if (/^https?:\/\//i.test(value)) return value;
+      return `${base}${value.startsWith("/") ? value : `/${value}`}`;
+    },
     async listPatterns() {
       const data = await request("/api/admin/chat/patterns");
       return Array.isArray(data?.patterns) ? data.patterns : [];

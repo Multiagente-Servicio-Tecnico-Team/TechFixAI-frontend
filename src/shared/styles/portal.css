@@ -84,6 +84,19 @@
 .admin-chat-proposal__values dd { margin: 0; max-width: 65%; text-align: right; white-space: pre-wrap; }
 .admin-chat-notice, .admin-chat-capabilities { margin: 0; padding: 10px; border-left: var(--rule) solid var(--text-2); background: var(--surface); font-size: var(--size-sm); }
 .admin-chat-capabilities p { margin: 4px 0 0; color: var(--text-2); }
+.admin-chat-data { display: grid; gap: 10px; max-width: 100%; margin-top: 8px; padding: 12px; border: 1px solid var(--line); background: var(--surface); overflow-wrap: anywhere; }
+.admin-chat-data__head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px 12px; }
+.admin-chat-data__fields { display: grid; gap: 0; margin: 0; }
+.admin-chat-data__fields > div { display: grid; grid-template-columns: minmax(110px, 0.7fr) minmax(0, 1.3fr); gap: 10px; padding: 7px 0; border-bottom: 1px solid var(--line); }
+.admin-chat-data__fields dt { color: var(--text-2); font-size: var(--size-sm); font-weight: 700; }
+.admin-chat-data__fields dd { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; }
+.admin-chat-data__section { display: grid; gap: 8px; min-width: 0; padding-top: 8px; border-top: 1px solid var(--line); }
+.admin-chat-data__section > ul, .admin-chat-data > ul { margin: 0; padding-left: 20px; }
+.admin-chat-data__table-wrap { max-width: 100%; overflow-x: auto; border: 1px solid var(--line); }
+.admin-chat-data__table { width: 100%; border-collapse: collapse; font-size: var(--size-sm); }
+.admin-chat-data__table th, .admin-chat-data__table td { min-width: 90px; padding: 8px 10px; text-align: left; vertical-align: top; border-bottom: 1px solid var(--line); }
+.admin-chat-data__table th { background: var(--surface-2); font-weight: 700; }
+.admin-chat-data__table tbody tr:last-child td { border-bottom: 0; }
 
 @media (max-width: 900px) {
   .desk { grid-template-columns: minmax(0, 1fr); }
@@ -99,4 +112,6 @@
   .composer__mic { flex-basis: var(--control-lg); }
   .admin-chat-proposal__values > div { display: grid; gap: 2px; }
   .admin-chat-proposal__values dd { max-width: 100%; text-align: left; }
+  .admin-chat-data__fields > div { grid-template-columns: minmax(0, 1fr); gap: 2px; }
+  .admin-chat-data__table th, .admin-chat-data__table td { padding: 7px 8px; }
 }

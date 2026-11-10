@@ -33,7 +33,7 @@ integrante puede proponer cambios con un PR hacia `develop`.
 | `/taller/acceso`, `/taller` | Banco con cola, filtros, estados y exportación para `ADMIN` | API administrativa con `VITE_API_URL`; demo si no hay URL en desarrollo | `workshop.test.jsx`, `admin-ticket-workshop.test.jsx`, `admin-ticket-access.test.jsx` |
 | `/taller/tickets/nuevo`, `/taller/tickets/:id` | Alta presencial y detalle con cotización de solo lectura | API administrativa; protegido para `ADMIN` | `admin-ticket-create.test.jsx`, `admin-ticket-detail.test.jsx` |
 | `/taller/clientes` | Buscar, crear y editar clientes comerciales; distingue clientes manuales y perfiles vinculados | API comercial; solo ADMIN; no crea cuentas de acceso | `admin-customers.test.jsx`, `customer-commerce-access.test.jsx` |
-| `/taller/asistente` | Chat ADMIN por texto y voz; consulta operaciones y prepara propuestas que requieren confirmación | API `/api/admin/chat*`; protegido para `ADMIN`; sin modo demo | Cobertura automatizada pendiente |
+| `/taller/asistente` | Chat ADMIN por texto y voz; consulta operaciones y prepara propuestas que requieren confirmación | API `/api/admin/chat*`; protegido para `ADMIN`; sin modo demo; permite mantener Espacio para grabar fuera de campos de texto | Cobertura automatizada pendiente |
 | `/taller/ventas` | Crear cotizaciones de venta, registrar aceptación manual, confirmar pagos externos y consultar ventas | API comercial; solo ADMIN; inventario usa IDs numéricos | `admin-commerce.test.jsx`, `customer-commerce-access.test.jsx` |
 | `/taller/inventario`, `/taller/inventario/*` | Consulta y mantenimiento de repuestos | API de inventario; demo sin URL en desarrollo y `/backend` en producción | `inventory.test.jsx`, `inventory.test.js` |
 | `/taller/contabilidad` | Listado con filtros, paginación y resumen de asientos (solo ADMIN) | Implementada; depende de `VITE_API_URL` o `/backend` en producción | `accounting-list.test.jsx`, `accounting-access.test.jsx` |
@@ -53,16 +53,19 @@ integrante puede proponer cambios con un PR hacia `develop`.
 
 Todos los clientes de API comparten VITE_API_URL y agregan su propio prefijo de ruta. Compras exige el catalogo real y envia su id numerico como spare_part_id; nunca usa el SKU como clave ni datos falsos.
 
-## Consulta por voz en el asistente
+## Consulta por voz en los chats
 
-El chat conectado de `/portal/asistente` incluye un botón de micrófono: un toque inicia
-la captura y el siguiente la detiene y envía. La transcripción y respuesta aparecen en
-el mismo historial, conversación y patrón. Se limita la captura a 120 segundos y 25 MB;
+Los chats conectados de `/portal/asistente` y `/taller/asistente` incluyen un botón de
+micrófono: un toque inicia la captura y el siguiente la detiene y envía. También se
+puede mantener pulsada la barra espaciadora fuera de campos de texto y controles
+interactivos; al soltarla, se detiene y envía. Dentro del cuadro de texto, Espacio
+escribe normalmente. La transcripción y respuesta aparecen en el mismo historial,
+conversación y patrón. Se limita la captura a 120 segundos y 25 MB;
 los errores de permiso, formato, tamaño, cuota, proveedor o red permiten continuar por
 texto. El navegador debe permitir `MediaRecorder`/`getUserMedia` y la captura requiere
 HTTPS o `localhost`. El backend debe tener habilitada `AUDIO_TRANSCRIPTION_ENABLED`.
 
-Implementación en `src/features/chat/useVoiceRecorder.js`, `chatApi.js` y `LiveChat.jsx`.
+Implementación en `src/features/chat/useVoiceRecorder.js`, `useSpacebarPushToTalk.js`, `chatApi.js`, `LiveChat.jsx` y `AdminChat.jsx`.
 Pruebas: `chat-api-audio.test.js`, `voice-recorder.test.js`, `chat-audio.test.jsx` y
 `chat-audio-errors.test.jsx`. El contrato y requisitos canónicos se mantienen en el
 repositorio backend (ver `docs.md`).
@@ -126,3 +129,7 @@ cotización y los eventos de auditoría como solo lectura. El portal cliente con
 | Logotipo | `src/shared/ui/Logo.jsx` y `public/favicon.svg` |
 | Tema claro u oscuro | `src/shared/ui/ThemeToggle.jsx`; `index.html` aplica la preferencia antes de pintar |
 | Etiqueta de trabajo, carril y sellos | clases `jobtag`, `rail` y `stamp` de `src/shared/styles/components.css` |
+
+## Respuestas estructuradas del chat ADMIN
+
+`/taller/asistente` presenta `reply` como texto conversacional y `presentation` como componente visual: tablas para consultas, campos etiquetados para detalles y propuestas, listas para colecciones, y enlaces para reportes. La confirmación/cancelación permanece en la tarjeta de propuesta. No se representa el JSON crudo de `result`. `adminChatApi.resourceUrl()` resuelve enlaces de descarga usando la misma base de API. El contrato canónico está en el backend, `specs/011-chat-multirole-patrones/contracts/admin-chat.openapi.yaml`.

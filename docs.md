@@ -35,7 +35,7 @@ Dónde está explicado cada tema. Antes de documentar algo nuevo, revisa si ya e
 | `src/features/workshop/ticketsApi.js` y `useAdminTickets.js` | Cliente API ADMIN, normalización de DTO, filtros y carga paginada del taller |
 | `specs/007-customer-commerce-ui/` | Requisitos, plan, contratos frontend, escenarios y tareas de clientes comerciales, portal, tickets, cotizaciones, pagos y ventas |
 | `src/features/customers/` y `src/features/commerce/` | Clientes API y pantallas de consulta del portal y gestión ADMIN de comercio |
-| `src/features/chat/AdminChat.jsx`, `adminChatApi.js` | Chat ADMIN de texto/voz con propuestas de escritura y confirmación; contrato canónico backend en `specs/011-chat-multirole-patrones/contracts/admin-chat.openapi.yaml` |
+| `src/features/chat/AdminChat.jsx`, `AdminChatPresentation.jsx`, `adminChatApi.js` | Chat ADMIN de texto/voz con respuestas visuales estructuradas, propuestas de escritura, confirmación y enlaces de reporte; contrato canónico backend en `specs/011-chat-multirole-patrones/contracts/admin-chat.openapi.yaml` |
 | `specs/007-customer-commerce-ui/` | El contrato de tickets contempla la presentación de diagnósticos persistidos en «Mis Tickets»; el contrato HTTP canónico vive en el backend Spec 007 |
 
 ## En el backend ([TechFixAI-backend](https://github.com/Multiagente-Servicio-Tecnico-Team/TechFixAI-backend))

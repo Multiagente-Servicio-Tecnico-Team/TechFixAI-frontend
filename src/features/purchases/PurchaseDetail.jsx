@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { Link, useParams, useNavigate, useLocation } from "react-router-dom";
 import { ArrowLeft, RefreshCw } from "lucide-react";
 import { formatPurchaseMoney, parsePurchaseMoney, quantityToMilli, milliToQuantity, PURCHASE_STATUS_LABELS, PAYMENT_STATUS_LABELS, PAYMENT_METHOD_LABELS, DOCUMENT_TYPE_LABELS } from "../../domain/purchases.js";
-import { BackLink } from "../../shared/ui/ui.jsx";
+import { BackLink, Field } from "../../shared/ui/ui.jsx";
 import { FormAlert } from "../../shared/ui/FormAlert.jsx";
 import { ConfirmDialog } from "../../shared/ui/ConfirmDialog.jsx";
 import { purchasesApi as defaultApi } from "./purchasesApi.js";

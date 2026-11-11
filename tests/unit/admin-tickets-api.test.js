@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { createTicketsApi, TicketsApiError } from "../../src/features/workshop/ticketsApi.js";
+import { createTicketsApi, TICKETS_MESSAGES, TicketsApiError } from "../../src/features/workshop/ticketsApi.js";
 
 const response = (status, data) => ({ status, ok: status >= 200 && status < 300, json: async () => data });
 
@@ -20,9 +20,21 @@ describe("cliente administrativo de tickets", () => {
     expect(fetchImpl.mock.calls[1][1]).toMatchObject({ method: "PATCH", credentials: "include", body: JSON.stringify({ status: "IN_REPAIR" }) });
   });
 
-  it.each([401, 403, 404, 409, 422, 503])("mapea HTTP %i a mensaje seguro", async (status) => {
+  it.each([401, 403, 404, 409, 503])("mapea HTTP %i a mensaje seguro", async (status) => {
     const api = createTicketsApi({ baseUrl: "http://localhost:8000", fetchImpl: vi.fn().mockResolvedValue(response(status, { detail: "secret internals" })) });
     await expect(api.getTicket(1)).rejects.toMatchObject({ status, message: expect.not.stringContaining("secret internals") });
+  });
+
+  // El 422 muestra la validación que el backend redacta para el usuario, con el nombre del campo en español.
+  it("mapea HTTP 422 a los errores de validación por campo", async () => {
+    const body = { detail: "Datos inválidos.", errors: [{ campo: "quantity", mensaje: "Debe ser mayor que cero." }] };
+    const api = createTicketsApi({ baseUrl: "http://localhost:8000", fetchImpl: vi.fn().mockResolvedValue(response(422, body)) });
+    await expect(api.getTicket(1)).rejects.toMatchObject({ status: 422, code: "invalid", message: "Cantidad: Debe ser mayor que cero." });
+  });
+
+  it("usa el mensaje genérico si el 422 no trae detalle útil", async () => {
+    const api = createTicketsApi({ baseUrl: "http://localhost:8000", fetchImpl: vi.fn().mockResolvedValue(response(422, { detail: "Datos inválidos." })) });
+    await expect(api.getTicket(1)).rejects.toMatchObject({ status: 422, message: TICKETS_MESSAGES.invalid });
   });
 
   it("mapea error de red y base no configurada", async () => {

@@ -5,7 +5,8 @@ import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { StoreProvider } from "../../src/state/store.jsx";
 
 const ticketApiState = vi.hoisted(() => ({ mode: "api", getTicket: vi.fn(), updateTicket: vi.fn(), createServiceQuote: vi.fn() }));
-vi.mock("../../src/features/workshop/ticketsApi.js", () => ({ ticketsApi: ticketApiState }));
+// Conserva las funciones puras del módulo (normalizeTicketQuote) y reemplaza solo el cliente HTTP.
+vi.mock("../../src/features/workshop/ticketsApi.js", async (importOriginal) => ({ ...(await importOriginal()), ticketsApi: ticketApiState }));
 vi.mock("../../src/features/workshop/inventoryApi.js", () => ({ inventoryApi: { mode: "api", list: vi.fn().mockResolvedValue([{ id: 4, name: "Memoria DDR4", sku: "RAM-4", stock: 10, price: 15000 }]) } }));
 import TicketDetail from "../../src/features/workshop/TicketDetail.jsx";
 
@@ -71,9 +72,13 @@ describe("detalle de ticket administrativo", () => {
     const user = userEvent.setup();
     renderDetail();
     await user.click(await screen.findByRole("button", { name: /añadir cotización de servicio/i }));
-    await user.selectOptions(await screen.findByLabelText(/Repuesto/), "4");
+    // Los repuestos son opcionales: se añaden por línea cuando el inventario terminó de cargar.
+    const addPart = await screen.findByRole("button", { name: "Añadir repuesto" });
+    await waitFor(() => expect(addPart).toBeEnabled());
+    await user.click(addPart);
+    await user.selectOptions(screen.getByLabelText(/^Repuesto 1/), "4");
     await user.click(screen.getByRole("button", { name: "Crear cotización" }));
-    await waitFor(() => expect(ticketApiState.createServiceQuote).toHaveBeenCalledWith("76", { kind: "REPAIR", lines: [{ spare_part_id: 4, quantity: 1 }], observations: null }));
+    await waitFor(() => expect(ticketApiState.createServiceQuote).toHaveBeenCalledWith("76", { quote_type: "REPAIR", labor_task_type: "maintenance", parts: [{ spare_part_id: 4, quantity: 1 }], observations: null }));
     expect(await screen.findByText("Cotización #91")).toBeInTheDocument();
   });
 });

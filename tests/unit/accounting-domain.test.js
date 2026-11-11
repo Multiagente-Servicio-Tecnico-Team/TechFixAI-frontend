@@ -42,9 +42,10 @@ describe("reglas del asiento", () => {
     concept: "Servicio técnico",
     detail: "Pago por mantenimiento",
     category_id: 2,
+    plan_id: 1,
     lines: [
-      { account_code: "101", account_name: "Caja", description: "", debit: "50.00", credit: "" },
-      { account_code: "401", account_name: "Ingresos", description: "Servicio", debit: "", credit: "50.00" },
+      { account_id: 101, account: { id: 101, plan_id: 1, code: "1011", status: "ACTIVE", is_postable: true, effective_from: "2019-01-01" }, description: "", debit: "50.00", credit: "" },
+      { account_id: 701, account: { id: 701, plan_id: 1, code: "7041", status: "ACTIVE", is_postable: true, effective_from: "2019-01-01" }, description: "Servicio", debit: "", credit: "50.00" },
     ],
   };
 
@@ -57,8 +58,10 @@ describe("reglas del asiento", () => {
     expect(validateEntryDraft({ ...draft, detail: "x".repeat(4001) }).errors.detail).toBeTruthy();
     expect(validateEntryDraft({ ...draft, lines: [draft.lines[0]] }).errors.lines).toBeTruthy();
     expect(validateEntryDraft({ ...draft, lines: Array.from({ length: 101 }, (_, i) => ({ ...draft.lines[i % 2] })) }).errors.lines).toBeTruthy();
-    expect(validateEntryDraft({ ...draft, lines: [{ ...draft.lines[0], account_code: "x".repeat(41) }, draft.lines[1]] }).errors.line_fields).toBeTruthy();
-    expect(validateEntryDraft({ ...draft, lines: [{ ...draft.lines[0], account_name: "x".repeat(201) }, draft.lines[1]] }).errors.line_fields).toBeTruthy();
+    // Las cuentas vienen del catálogo: deben ser del plan elegido e imputables.
+    expect(validateEntryDraft({ ...draft, lines: [{ ...draft.lines[0], account: { ...draft.lines[0].account, plan_id: 2 } }, draft.lines[1]] }).errors.line_fields).toBeTruthy();
+    expect(validateEntryDraft({ ...draft, lines: [{ ...draft.lines[0], account: { ...draft.lines[0].account, is_postable: false } }, draft.lines[1]] }).errors.line_fields).toBeTruthy();
+    expect(validateEntryDraft({ ...draft, plan_id: "" }).errors.plan_id).toBeTruthy();
     expect(validateEntryDraft({ ...draft, lines: [{ ...draft.lines[0], description: "x".repeat(1001) }, draft.lines[1]] }).errors.line_fields).toBeTruthy();
   });
 });

@@ -92,6 +92,8 @@ describe("sign-up screen", () => {
     const stored = sessionStorage.getItem("techfix.session");
     expect(JSON.parse(stored)).toEqual({ role: "client", email: "martin.gomez@gmail.com", name: "Martín Gómez" });
     expect(stored).not.toContain("TriageTech");
+    expect(stored).not.toContain("customer_id");
+    expect(stored).not.toContain("user_id");
   });
 
   it("shows the duplicate email error on the matching field", async () => {

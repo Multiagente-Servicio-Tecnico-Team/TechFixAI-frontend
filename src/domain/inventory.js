@@ -33,7 +33,8 @@ export function validatePart(form, { editing = false, existingSkus = [] } = {}) 
   }
   const name = String(form.name ?? "").trim();
   if (name.length < 3 || name.length > 150) errors.name = "Ingresa el nombre del componente (3 a 150 caracteres).";
-  if (!PART_CATEGORIES.includes(form.category)) errors.category = "Elige una categoría.";
+  const category = String(form.category ?? "");
+  if (!category.trim() || category.length > 50) errors.category = "Ingresa una categoría de hasta 50 caracteres.";
   const stockText = String(form.stock ?? "").trim();
   const minText = String(form.min ?? "").trim();
   if (!WHOLE.test(stockText)) errors.stock = "Cantidad entera mayor o igual a 0.";
@@ -47,7 +48,7 @@ export function validatePart(form, { editing = false, existingSkus = [] } = {}) 
     part: {
       sku,
       name,
-      category: form.category,
+      category,
       compat: String(form.compat ?? "").trim(),
       stock: Number(stockText),
       min: Number(minText),

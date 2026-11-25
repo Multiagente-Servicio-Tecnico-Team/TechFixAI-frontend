@@ -273,7 +273,7 @@ function Chat({ ticketId }) {
 export default function Assistant({ api = chatApi }) {
   const [params] = useSearchParams();
   const ticketId = params.get("ticket");
-  // Con VITE_CHAT_URL, la consulta nueva va al patrón LangGraph con la sesión del inicio de sesión.
+  // Con VITE_API_URL, la consulta nueva va al patrón LangGraph con la sesión del inicio de sesión.
   if (!ticketId && api.mode === "api") return <LiveChat api={api} />;
   return <Chat key={ticketId || "nueva"} ticketId={ticketId} />;
 }

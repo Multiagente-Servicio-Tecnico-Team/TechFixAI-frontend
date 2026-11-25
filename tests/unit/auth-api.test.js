@@ -7,7 +7,7 @@ function jsonResponse(status, body) {
 }
 
 describe("authentication client (API mode)", () => {
-  it("sends POST /registro with the agreed contract and a normalized email", async () => {
+  it("sends POST /auth/registro with the agreed contract and a normalized email", async () => {
     const fetchImpl = vi.fn().mockResolvedValue(jsonResponse(201, { usuario: { id: 1, nombre: "Martín Gómez", email: "martin@demo.pe" } }));
     const api = createAuthApi({ baseUrl: "http://api.local/", fetchImpl });
 
@@ -15,19 +15,21 @@ describe("authentication client (API mode)", () => {
 
     expect(user).toEqual({ id: 1, nombre: "Martín Gómez", email: "martin@demo.pe" });
     const [url, init] = fetchImpl.mock.calls[0];
-    expect(url).toBe("http://api.local/registro");
+    expect(url).toBe("http://api.local/auth/registro");
     expect(init.method).toBe("POST");
     expect(init.credentials).toBe("include");
     expect(JSON.parse(init.body)).toEqual({ nombre: "Martín Gómez", email: "martin@demo.pe", telefono: "+51987654321", password: "Clave#2026" });
+    expect(JSON.parse(init.body)).not.toHaveProperty("customer_id");
+    expect(JSON.parse(init.body)).not.toHaveProperty("user_id");
   });
 
-  it("sends POST /login and returns the user without the password", async () => {
+  it("sends POST /auth/login and returns the user without the password", async () => {
     const fetchImpl = vi.fn().mockResolvedValue(jsonResponse(200, { usuario: { id: 7, nombre: "Ana", email: "ana@demo.pe" } }));
     const api = createAuthApi({ baseUrl: "http://api.local", fetchImpl });
 
     const user = await api.login({ email: "ana@demo.pe", password: "secreta" });
 
-    expect(fetchImpl.mock.calls[0][0]).toBe("http://api.local/login");
+    expect(fetchImpl.mock.calls[0][0]).toBe("http://api.local/auth/login");
     expect(user).not.toHaveProperty("password");
   });
 
@@ -80,11 +82,11 @@ describe("backend integration", () => {
     expect(JSON.parse(fetchImpl.mock.calls[0][1].body)).toMatchObject({ nombre: "Martín", apellido: "Gómez" });
   });
 
-  it("logout calls POST /logout and does not fail if the server does not respond", async () => {
+  it("logout calls POST /auth/logout and does not fail if the server does not respond", async () => {
     const fetchImpl = vi.fn().mockRejectedValue(new TypeError("Failed to fetch"));
     const api = createAuthApi({ baseUrl: "http://api.local", fetchImpl });
     await expect(api.logout()).resolves.toBeUndefined();
-    expect(fetchImpl.mock.calls[0][0]).toBe("http://api.local/logout");
+    expect(fetchImpl.mock.calls[0][0]).toBe("http://api.local/auth/logout");
   });
 
   it("splits the full name and assigns the area by role", () => {

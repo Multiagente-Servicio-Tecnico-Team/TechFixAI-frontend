@@ -77,6 +77,24 @@ export function ItemIcon({ name, size = 20 }) {
   return <Icon size={size} aria-hidden="true" />;
 }
 
+/**
+ * Páginas visibles: primera, última y las vecinas de la actual; "gap" marca los saltos.
+ * Con muchas páginas (p. ej. 110) no se dibuja un botón por página.
+ */
+export function pageWindow(page, pages, radius = 1) {
+  if (pages <= 7) return Array.from({ length: pages }, (_, i) => i + 1);
+  const visible = new Set([1, pages]);
+  for (let n = page - radius; n <= page + radius; n += 1) if (n >= 1 && n <= pages) visible.add(n);
+  const sorted = [...visible].sort((a, b) => a - b);
+  const items = [];
+  sorted.forEach((n, i) => {
+    if (i > 0 && n - sorted[i - 1] === 2) items.push(n - 1);
+    else if (i > 0 && n - sorted[i - 1] > 2) items.push(`gap-${n}`);
+    items.push(n);
+  });
+  return items;
+}
+
 export function Pagination({ page, pages, onChange, label }) {
   if (pages <= 1) return label ? <p className="pager__label">{label}</p> : null;
   return (
@@ -86,7 +104,9 @@ export function Pagination({ page, pages, onChange, label }) {
         <button type="button" className="pager__btn" disabled={page === 1} onClick={() => onChange(page - 1)} aria-label="Página anterior">
           <ChevronLeft size={16} />
         </button>
-        {Array.from({ length: pages }, (_, i) => i + 1).map((n) => (
+        {pageWindow(page, pages).map((n) => (typeof n === "string" ? (
+          <span key={n} className="pager__gap" aria-hidden="true">…</span>
+        ) : (
           <button
             key={n}
             type="button"
@@ -96,7 +116,7 @@ export function Pagination({ page, pages, onChange, label }) {
           >
             {n}
           </button>
-        ))}
+        )))}
         <button type="button" className="pager__btn" disabled={page === pages} onClick={() => onChange(page + 1)} aria-label="Página siguiente">
           <ChevronRight size={16} />
         </button>

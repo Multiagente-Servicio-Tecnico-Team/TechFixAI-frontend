@@ -18,7 +18,7 @@ Frontend de TechFix.AI (React 18 + Vite 5 + React Router 6). La API está en
 - Piezas comunes sin estado: `src/shared/ui/` (`ui.jsx`, `FormAlert`, `RichText`, `Logo`…). No dupliques un botón, campo o aviso: usa los existentes.
 - Estado de React y datos de demostración: `src/state/`.
 - Estilos: lo que usan varias pantallas va en `src/shared/styles/components.css`; los colores, radios y sombras salen de `src/shared/styles/tokens.css` con `var(--…)`. Lo propio de la landing va en `src/features/landing/landing.css`; la estructura común en `shell.css` y cada área en `auth.css`, `portal.css` y `workshop.css` de `src/shared/styles/`.
-- Llamadas al backend: solo desde `src/features/auth/authApi.js` (cuentas) y `src/features/chat/chatApi.js` (chat y tickets). Siempre con `credentials: "include"`; la sesión vive en una cookie HttpOnly que el frontend no lee.
+- Llamadas al backend: desde clientes de API por funcionalidad (`authApi.js` para cuentas, `chatApi.js` para chat/tickets del portal, `ticketsApi.js` para tickets ADMIN, `customersApi.js` para clientes, `commerceApi.js` para cotizaciones/pagos/ventas, además de los clientes existentes de inventario, contabilidad y compras). Las pantallas no hacen `fetch` directo. Siempre con `credentials: "include"`; la sesión vive en una cookie HttpOnly que el frontend no lee.
 - Contrato con el backend: `POST /api/chat` y `/auth/*` están documentados en el backend (`app/chat/README.md`, `app/accounts/README.md`). Si cambias lo que envías o esperas, coordínalo con el backend.
 
 ## Reglas

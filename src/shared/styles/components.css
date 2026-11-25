@@ -147,7 +147,8 @@
 /* ---------- Paginación ---------- */
 .pager { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
 .pager__label { font-size: var(--size-sm); color: var(--text-2); }
-.pager__nav { display: flex; gap: 4px; }
+.pager__nav { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; }
+.pager__gap { min-width: 18px; text-align: center; color: var(--text-2); font: 600 var(--size-xs) var(--mono); }
 .pager__btn { display: grid; place-items: center; min-width: var(--control-sm); height: var(--control-sm); border: var(--border) solid var(--text); border-radius: var(--radius); background: transparent; font: 600 var(--size-xs) var(--mono); }
 .pager__btn:hover:not(:disabled) { background: var(--surface-2); }
 .pager__btn.is-active { background: var(--text); color: var(--bg); }

@@ -9,6 +9,7 @@ import "./shared/styles/shell.css";
 import "./shared/styles/auth.css";
 import "./shared/styles/portal.css";
 import "./shared/styles/workshop.css";
+import "./shared/styles/customer-commerce.css";
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>

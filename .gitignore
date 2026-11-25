@@ -5,3 +5,6 @@ dist/
 #specify
 .agents/
 .specify/
+.env*
+!.env.example
+*.log

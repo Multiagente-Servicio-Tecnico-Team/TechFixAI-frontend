@@ -53,7 +53,7 @@ describe("chat client", () => {
       await expect(api.sendMessage({ message: "x" })).rejects.toMatchObject({ code });
     });
 
-  it("stays in demo mode without VITE_CHAT_URL", () => {
+  it("stays in demo mode without VITE_API_URL", () => {
     expect(createChatApi().mode).toBe("mock");
   });
 

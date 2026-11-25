@@ -1,5 +1,5 @@
-import { useEffect, useRef, useState } from "react";
-import { CircleCheck, CircleX, Info, RotateCcw, SendHorizontal, TriangleAlert } from "lucide-react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { CircleCheck, CircleX, Info, Mic, MicOff, RotateCcw, SendHorizontal, TriangleAlert } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useStore } from "../../state/store.jsx";
 import { formatPEN, parseMoney } from "../../domain/money.js";
@@ -8,6 +8,8 @@ import { chatApi as defaultChatApi } from "./chatApi.js";
 import { TICKET_STATUS_LABEL } from "../../domain/tickets.js";
 import RichText from "../../shared/ui/RichText.jsx";
 import { ChatTitle, chatTime, CopilotHeader, TypingIndicator, UserMessage } from "./ChatParts.jsx";
+import { useVoiceRecorder } from "./useVoiceRecorder.js";
+import { useSpacebarPushToTalk } from "./useSpacebarPushToTalk.js";
 
 function welcomeMessage(firstName) {
   return `Hola${firstName ? `, ${firstName}` : ""}. Soy TechFix Copilot. Puedo orientarte con soporte y reparaciones, consultar componentes y cotizaciones, ayudarte a armar una PC según tu presupuesto y resolver consultas de garantía o logística. ¿Qué necesitas hoy?`;
@@ -26,7 +28,7 @@ const PATTERN_DESCRIPTIONS = {
   decentralized: "Modo experimental: usa herramientas simuladas y no guarda tickets ni presupuestos.",
 };
 
-function QuoteCard({ quote, busy, onAction }) {
+function QuoteCard({ quote, quoteId, busy, onAction }) {
   const pending = quote.status === "proposed";
   return (
     <div className="quote">
@@ -44,10 +46,11 @@ function QuoteCard({ quote, busy, onAction }) {
         <strong>Total:</strong>
         <span className="quote__sum">{money(quote.total)}<small> {quote.currency}</small></span>
       </div>
+      {Number.isInteger(Number(quoteId)) && Number(quoteId) > 0 && <Link className="link" to={`/portal/cotizaciones#quote-${quoteId}`}>Ver cotización guardada #{quoteId}</Link>}
       {pending ? (
         <div className="btn-row">
           <button type="button" className="btn btn--primary" disabled={busy} onClick={() => onAction("accept_quote")}>
-            <CircleCheck size={18} aria-hidden="true" /> Confirmar y guardar
+            <CircleCheck size={18} aria-hidden="true" /> {Number.isInteger(Number(quoteId)) && Number(quoteId) > 0 ? "Aceptar cotización" : "Confirmar y guardar"}
           </button>
           <button type="button" className="btn" disabled={busy} onClick={() => onAction("reject_quote")}>
             <CircleX size={18} aria-hidden="true" /> No guardar
@@ -78,6 +81,57 @@ export default function LiveChat({ api = defaultChatApi }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(null);
   const endRef = useRef(null);
+  const audioRequestRef = useRef(null);
+
+  const sendAudio = async ({ audio, durationMs, requestId }) => {
+    setBusy(true);
+    setError(null);
+    if (audioRequestRef.current?.requestId !== requestId) {
+      audioRequestRef.current = { audio, durationMs, requestId, conversationId, pattern };
+    }
+    const request = audioRequestRef.current;
+    try {
+      const data = await api.sendAudioMessage({
+        audio: request.audio,
+        durationMs: request.durationMs,
+        conversationId: request.conversationId,
+        pattern: request.pattern,
+        requestId: request.requestId,
+      });
+      if (!data?.transcript?.trim() || !data?.conversation_id || !data?.reply) {
+        throw new Error("No se recibió una transcripción válida. Inténtalo de nuevo o continúa por escrito.");
+      }
+      const messageId = Date.now();
+      audioRequestRef.current = null;
+      setConversationId(data.conversation_id);
+      setMessages((messagesBefore) => [
+        ...messagesBefore,
+        { id: messageId, from: "user", time: chatTime(), text: data.transcript.trim() },
+        { id: messageId + 1, from: "bot", time: chatTime(), text: data.reply, quote: data.quote, quoteId: data.quote_id, ticket: data.ticket },
+      ]);
+    } catch (err) {
+      if (err?.code === "session_required") {
+        await authApi.logout?.();
+        logout({ voluntary: false });
+        navigate("/portal/acceso", { replace: true, state: { from: "/portal/asistente" } });
+        throw err;
+      }
+      if (err?.code === "not_found") setConversationId(null);
+      throw err;
+    } finally {
+      setBusy(false);
+    }
+  };
+  const voice = useVoiceRecorder({ onAudio: sendAudio });
+  const startSpaceRecording = useCallback(() => {
+    if (voice.status === "error") voice.dismissError();
+    voice.startPushToTalk();
+  }, [voice.dismissError, voice.startPushToTalk, voice.status]);
+  useSpacebarPushToTalk({
+    enabled: api.mode === "api" && !busy,
+    onStart: startSpaceRecording,
+    onStop: voice.stopPushToTalk,
+  });
 
   useEffect(() => {
     endRef.current?.scrollIntoView({ block: "nearest", behavior: window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
@@ -89,7 +143,7 @@ export default function LiveChat({ api = defaultChatApi }) {
     try {
       const data = await api.sendMessage({ conversationId, pattern, ...payload });
       setConversationId(data.conversation_id);
-      setMessages((m) => [...m, { id: Date.now() + 1, from: "bot", time: chatTime(), text: data.reply, quote: data.quote, ticket: data.ticket }]);
+      setMessages((m) => [...m, { id: Date.now() + 1, from: "bot", time: chatTime(), text: data.reply, quote: data.quote, quoteId: data.quote_id, ticket: data.ticket }]);
     } catch (err) {
       if (err?.code === "session_required") {
         // La sesión del servidor terminó: se cierra la local y se vuelve al chat después de ingresar.
@@ -108,7 +162,9 @@ export default function LiveChat({ api = defaultChatApi }) {
   const send = (e) => {
     e?.preventDefault();
     const text = draft.trim();
-    if (!text || busy) return;
+    if (!text || busy || voice.status === "requesting" || voice.status === "recording" || voice.status === "submitting") return;
+    voice.dismissError();
+    audioRequestRef.current = null;
     setMessages((m) => [...m, { id: Date.now(), from: "user", time: chatTime(), text }]);
     setDraft("");
     call({ message: text });
@@ -124,6 +180,10 @@ export default function LiveChat({ api = defaultChatApi }) {
       text: welcomeMessage(firstName),
     }]);
     setError(null);
+  };
+  const toggleVoice = () => {
+    if (voice.status === "error") audioRequestRef.current = null;
+    voice.toggle();
   };
 
   // Solo la última tarjeta de presupuesto reacciona a los botones y va en la etiqueta lateral.
@@ -150,6 +210,7 @@ export default function LiveChat({ api = defaultChatApi }) {
                   <div className="jobtag">
                     <QuoteCard
                       quote={{ ...m.quote, status: m.quote.status === "proposed" ? "superseded" : m.quote.status }}
+                      quoteId={m.quoteId}
                       busy
                       onAction={() => {}}
                     />
@@ -182,6 +243,26 @@ export default function LiveChat({ api = defaultChatApi }) {
               )}
             </div>
           )}
+          {voice.error && (
+            <div className="form-alert" role="alert">
+              <TriangleAlert size={16} aria-hidden="true" />
+              <span>{voice.error}</span>
+              {voice.hasPending && (
+                <button type="button" className="btn btn--sm" onClick={voice.retry} disabled={busy}>
+                  <RotateCcw size={14} aria-hidden="true" /> Reintentar envío de voz
+                </button>
+              )}
+            </div>
+          )}
+          {voice.status === "recording" && (
+            <p className="composer__voice-status" role="status">Grabando… suelta la barra espaciadora o vuelve a pulsar el micrófono para enviar. Máximo 120 segundos.</p>
+          )}
+          {voice.status === "requesting" && (
+            <p className="composer__voice-status" role="status">Solicitando permiso del micrófono…</p>
+          )}
+          {voice.status === "submitting" && (
+            <p className="composer__voice-status" role="status">Transcribiendo y enviando tu mensaje de voz…</p>
+          )}
           <form className="composer" onSubmit={send}>
             <textarea
               rows={1}
@@ -189,16 +270,28 @@ export default function LiveChat({ api = defaultChatApi }) {
               placeholder="Ej.: Mi laptop HP no detecta el disco desde ayer"
               value={draft}
               maxLength={2000}
+              disabled={busy || voice.status === "requesting" || voice.status === "recording" || voice.status === "submitting"}
               onChange={(e) => setDraft(e.target.value)}
               onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) send(e); }}
               aria-label="Mensaje"
             />
-            <button type="submit" className="btn btn--primary btn--lg" disabled={!draft.trim() || busy}>
+            <button
+              type="button"
+              className={`btn btn--lg composer__mic${voice.status === "recording" ? " is-recording" : ""}`}
+              onClick={toggleVoice}
+              disabled={busy || voice.status === "submitting" || voice.status === "requesting"}
+              aria-label={voice.status === "recording" ? "Detener grabación" : "Grabar mensaje de voz"}
+              aria-pressed={voice.status === "recording"}
+              title={voice.status === "recording" ? "Detener grabación" : "Grabar mensaje de voz"}
+            >
+              {voice.status === "recording" ? <MicOff size={18} aria-hidden="true" /> : <Mic size={18} aria-hidden="true" />}
+            </button>
+            <button type="submit" className="btn btn--primary btn--lg" disabled={!draft.trim() || busy || voice.status === "requesting" || voice.status === "recording" || voice.status === "submitting"}>
               Enviar <SendHorizontal size={16} aria-hidden="true" />
             </button>
           </form>
           <p className="composer__hint">
-            Presiona Shift + Enter para salto de línea · <Info size={12} aria-hidden="true" /> No compartas contraseñas en el chat.{" "}
+            Mantén pulsada la barra espaciadora fuera del campo de texto para hablar; suéltala para enviar. En el campo de texto, espacio escribe normalmente. Presiona Shift + Enter para salto de línea · <Info size={12} aria-hidden="true" /> No compartas contraseñas en el chat.{" "}
             <Link to="/portal/tickets" className="link">Ver mis tickets</Link>
           </p>
         </footer>
@@ -213,7 +306,7 @@ export default function LiveChat({ api = defaultChatApi }) {
               id="chat-pattern"
               className="input"
               value={pattern}
-              disabled={busy || Boolean(conversationId)}
+              disabled={busy || voice.status === "requesting" || voice.status === "recording" || voice.status === "submitting" || Boolean(conversationId)}
               onChange={(event) => setPattern(event.target.value)}
             >
               {PATTERNS.map((item) => (
@@ -223,12 +316,12 @@ export default function LiveChat({ api = defaultChatApi }) {
             <span className="small muted" role="status">{PATTERN_DESCRIPTIONS[pattern]}</span>
           </div>
           {conversationId && (
-            <button type="button" className="btn btn--sm" disabled={busy} onClick={startNewConversation}>
+              <button type="button" className="btn btn--sm" disabled={busy || voice.status === "requesting" || voice.status === "recording" || voice.status === "submitting"} onClick={startNewConversation}>
               <RotateCcw size={14} aria-hidden="true" /> Nueva conversación
             </button>
           )}
           {lastQuoteMessage ? (
-            <QuoteCard quote={lastQuoteMessage.quote} busy={busy} onAction={(action) => call({ action })} />
+            <QuoteCard quote={lastQuoteMessage.quote} quoteId={lastQuoteMessage.quoteId} busy={busy} onAction={(action) => call({ action })} />
           ) : (
             <p className="tagfield tagfield--wait">El presupuesto aparecerá aquí en cuanto esté listo.</p>
           )}

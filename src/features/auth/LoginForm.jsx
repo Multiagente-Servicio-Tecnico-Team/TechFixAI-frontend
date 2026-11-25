@@ -8,6 +8,12 @@ import { authApi as defaultApi, MESSAGES } from "./authApi.js";
 import { areaForRole, fullName } from "../../domain/user.js";
 import { FormAlert } from "../../shared/ui/FormAlert.jsx";
 
+function safeReturnPath(candidate, role, fallback) {
+  if (typeof candidate !== "string" || !candidate.startsWith("/") || candidate.startsWith("//") || candidate.includes("\\")) return fallback;
+  const prefix = role === "staff" ? "/taller" : "/portal";
+  return candidate === prefix || candidate.startsWith(`${prefix}/`) ? candidate : fallback;
+}
+
 /**
  * Formulario de acceso reutilizado por el portal del cliente y por el personal del taller.
  * Llama a POST /login mediante el cliente de autenticación (o al simulador si no hay backend).
@@ -23,7 +29,7 @@ export function LoginForm({ role, badge, title, subtitle, defaultTo, footer, api
   const [loading, setLoading] = useState(false);
 
   // Si ya hay sesión con este rol, el formulario no tiene sentido: ir directo al área.
-  if (session?.role === role && !loading) return <Navigate to={location.state?.from || defaultTo} replace />;
+  if (session?.role === role && !loading) return <Navigate to={safeReturnPath(location.state?.from, role, defaultTo)} replace />;
 
   const submit = async (e) => {
     e.preventDefault();
@@ -49,8 +55,9 @@ export function LoginForm({ role, badge, title, subtitle, defaultTo, footer, api
         setLoading(false);
         return;
       }
-      login({ role: area, email: user.email, name: fullName(user) || user.email });
-      const target = area === role ? location.state?.from || defaultTo : "/taller";
+      const accountRole = user.rol ?? user.role;
+      login({ role: area, ...(accountRole ? { accountRole } : {}), email: user.email, name: fullName(user) || user.email });
+      const target = area === role ? safeReturnPath(location.state?.from, role, defaultTo) : "/taller";
       navigate(target, { replace: true });
     } catch (err) {
       setFormError(err?.message || MESSAGES.unexpected);

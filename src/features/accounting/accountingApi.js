@@ -69,6 +69,10 @@ export function createAccountingApi({ baseUrl = "", fetchImpl } = {}) {
       try { errorBody = contentType.includes("json") ? await response.json() : null; } catch { errorBody = null; }
       const error = errorForStatus(response.status);
       if (errorBody?.code) error.code = error.code === "invalid" ? errorBody.code : error.code;
+      if (errorBody?.errors || Array.isArray(errorBody?.detail)) {
+        error.errors = errorBody.errors ?? errorBody.detail;
+        error.message = error.errors.join(" ");
+      }
       throw error;
     }
     if (response.status === 204) return null;
@@ -125,6 +129,14 @@ export function createAccountingApi({ baseUrl = "", fetchImpl } = {}) {
     async getTrialBalance(filters = {}) { return report("trial-balance", filters); },
     async listEntries(filters = {}) {
       return list("/entries", filters, ["from_date", "to_date", "category_id", "status", "entry_number", "limit", "offset"]);
+    },
+    async validatePle(year, month) {
+      return request(`/ple/libro-diario/validate${queryString({ year, month }, ["year", "month"])}`);
+    },
+    async exportPle(year, month) {
+      return request(`/ple/libro-diario/export${queryString({ year, month }, ["year", "month"])}`, {
+        responseType: "file", fallbackFilename: `libro-diario-${year}-${String(month).padStart(2, "0")}.txt`,
+      });
     },
     async getEntry(entryId) {
       return request(`/entries/${encodeURIComponent(entryId)}`);

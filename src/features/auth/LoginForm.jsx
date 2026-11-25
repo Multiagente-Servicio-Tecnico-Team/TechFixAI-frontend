@@ -1,0 +1,118 @@
+import { useState } from "react";
+import { Link, Navigate, useLocation, useNavigate } from "react-router-dom";
+import { ArrowRight, AtSign, Info, Lock, LoaderCircle } from "lucide-react";
+import { Field, InputIcon, PasswordInput } from "../../shared/ui/ui.jsx";
+import { useStore } from "../../state/store.jsx";
+import { EMAIL_RE } from "../../domain/validation.js";
+import { authApi as defaultApi, MESSAGES } from "./authApi.js";
+import { areaForRole, fullName } from "../../domain/user.js";
+import { FormAlert } from "../../shared/ui/FormAlert.jsx";
+
+function safeReturnPath(candidate, role, fallback) {
+  if (typeof candidate !== "string" || !candidate.startsWith("/") || candidate.startsWith("//") || candidate.includes("\\")) return fallback;
+  const prefix = role === "staff" ? "/taller" : "/portal";
+  return candidate === prefix || candidate.startsWith(`${prefix}/`) ? candidate : fallback;
+}
+
+/**
+ * Formulario de acceso reutilizado por el portal del cliente y por el personal del taller.
+ * Llama a POST /login mediante el cliente de autenticación (o al simulador si no hay backend).
+ */
+export function LoginForm({ role, badge, title, subtitle, defaultTo, footer, api = defaultApi }) {
+  const { session, login, logout } = useStore();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [errors, setErrors] = useState({});
+  const [formError, setFormError] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  // Si ya hay sesión con este rol, el formulario no tiene sentido: ir directo al área.
+  if (session?.role === role && !loading) return <Navigate to={safeReturnPath(location.state?.from, role, defaultTo)} replace />;
+
+  const submit = async (e) => {
+    e.preventDefault();
+    if (loading) return;
+    const next = {};
+    if (!EMAIL_RE.test(email.trim())) next.email = "Ingresa un correo electrónico válido.";
+    if (!password) next.password = "Ingresa tu contraseña.";
+    setErrors(next);
+    setFormError("");
+    if (Object.keys(next).length) return;
+
+    setLoading(true);
+    try {
+      const user = await api.login({ email, password });
+      setPassword("");
+      // El rol lo decide el servidor (tabla users); la pantalla solo indica el área esperada.
+      const area = areaForRole(user.rol, role);
+      if (role === "staff" && area === "client") {
+        // El servidor ya abrió sesión: se cierra en ambos lados para no dejar estados distintos.
+        await api.logout?.();
+        logout();
+        setFormError(MESSAGES.notStaff);
+        setLoading(false);
+        return;
+      }
+      const accountRole = user.rol ?? user.role;
+      login({ role: area, ...(accountRole ? { accountRole } : {}), email: user.email, name: fullName(user) || user.email });
+      const target = area === role ? safeReturnPath(location.state?.from, role, defaultTo) : "/taller";
+      navigate(target, { replace: true });
+    } catch (err) {
+      setFormError(err?.message || MESSAGES.unexpected);
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="auth">
+      <div className="auth__intro">
+        <span className="stamp stamp--info">{badge}</span>
+        <h1 className="auth__title">{title}</h1>
+        <p className="auth__lead">{subtitle}</p>
+        <div className="auth__links">{footer}</div>
+      </div>
+      <div className="jobtag jobtag--lg">
+        <form className="form" onSubmit={submit} noValidate aria-busy={loading}>
+          <FormAlert>{formError}</FormAlert>
+          <Field label="Correo electrónico" htmlFor="email" error={errors.email}>
+            <InputIcon icon={AtSign}>
+              <input
+                id="email"
+                type="email"
+                className="input input--icon"
+                placeholder="tu.correo@ejemplo.com"
+                autoComplete="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                aria-invalid={!!errors.email || undefined}
+              />
+            </InputIcon>
+          </Field>
+          <Field label="Contraseña" htmlFor="password" error={errors.password}>
+            <PasswordInput
+              id="password"
+              icon={Lock}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="••••••••••••"
+              invalid={!!errors.password}
+            />
+          </Field>
+          <Link to="/portal/recuperar" className="link form__right">¿Olvidaste tu contraseña?</Link>
+          <button type="submit" className="btn btn--primary btn--block btn--lg" disabled={loading}>
+            {loading ? (
+              <><LoaderCircle size={18} className="spin" aria-hidden="true" /> Ingresando…</>
+            ) : (
+              <>Iniciar Sesión <ArrowRight size={18} aria-hidden="true" /></>
+            )}
+          </button>
+          {api.mode === "mock" && (
+            <p className="demo-note"><Info size={14} aria-hidden="true" /> Modo demostración sin backend: cualquier correo válido y contraseña permiten ingresar.</p>
+          )}
+        </form>
+      </div>
+    </div>
+  );
+}

@@ -1,0 +1,276 @@
+/* Taller: tablero por estaciones, detalle en etiqueta grande, orden de ingreso y estantes de repuestos. */
+.summary { display: flex; flex-wrap: wrap; gap: 4px 20px; padding: 8px 0; border-top: var(--rule) solid var(--text); border-bottom: 1px solid var(--line); font-size: var(--size-sm); }
+.summary strong { font: 600 var(--size-base) var(--mono); }
+.summary .link { font-weight: 700; }
+
+/* ---------- Tablero ---------- */
+.board { display: grid; grid-template-columns: repeat(var(--stations, 6), minmax(196px, 1fr)); gap: 12px; overflow-x: auto; padding: 6px 6px 10px; margin: -6px; }
+.board:focus-visible { outline-offset: 4px; }
+.station { display: grid; gap: 8px; align-content: start; min-width: 0; }
+.station__head { display: flex; justify-content: space-between; align-items: flex-end; gap: 6px; min-height: 44px; padding-bottom: 6px; border-bottom: var(--rule) solid var(--text); font-size: var(--size-sm); font-weight: 700; }
+.station__list { display: grid; gap: 8px; }
+.station__picker { display: none; }
+.wtag { padding-top: 12px; }
+.wtag:focus { outline: 3px solid var(--focus); outline-offset: 2px; }
+.wtag__id { display: flex; flex-wrap: wrap; gap: 2px 8px; padding-right: 30px; }
+.wtag__id a { font: 600 var(--size-xs) var(--mono); color: var(--accent); text-decoration: underline; text-underline-offset: 2px; }
+.wtag__device { font-size: var(--size-base); font-weight: 700; line-height: 1.25; }
+.wtag__issue { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; font-size: var(--size-sm); color: var(--text-2); }
+.wtag__who { font-size: var(--size-sm); }
+.wtag__who span { display: block; color: var(--text-2); font: var(--size-xs) var(--mono); }
+.wtag__meta { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 2px 8px; font-size: var(--size-xs); color: var(--text-2); }
+.wtag__meta > span { display: inline-flex; align-items: center; gap: 4px; }
+.wtag__price { font: 600 var(--size-sm) var(--mono); color: var(--text); white-space: nowrap; }
+.wtag__move { display: grid; gap: 2px; font-size: var(--size-xs); font-weight: 700; }
+.wtag__move select { width: 100%; min-height: var(--control); padding: 0 4px; border: var(--border) solid var(--text); border-radius: var(--radius); background: var(--surface); font-size: var(--size-sm); font-weight: 400; }
+.wtag__tools { display: flex; gap: 4px; }
+
+/* ---------- Detalle ---------- */
+.detail__top { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-start; gap: 12px 20px; padding-right: 32px; }
+.detail__device { font: 800 clamp(26px, 3.6vw, 40px)/1.05 var(--font-display); letter-spacing: -0.025em; }
+.detail__meta { display: flex; flex-wrap: wrap; gap: 6px 10px; margin-top: 8px; }
+.detail__move { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 8px; }
+.detail__move .field { flex: 1 1 220px; max-width: 320px; }
+.detail__cols { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px 28px; padding-top: 16px; border-top: var(--rule) solid var(--text); }
+.ticket-detail__quote, .ticket-detail__audit { margin-top: 18px; padding-top: 14px; border-top: var(--rule) solid var(--text); }
+.ticket-detail__diagnosis { display: grid; gap: 10px; margin-top: 18px; padding: 14px; border: 1px solid var(--line); background: var(--surface); }
+.ticket-detail__diagnosis .commerce-card__head { align-items: center; }
+.ticket-detail__diagnosis .subtitle { margin: 0; }
+.ticket-detail__quote .detail__cols { grid-template-columns: repeat(auto-fit, minmax(min(100%, 180px), 1fr)); }
+.ticket-detail__audit ol { display: grid; gap: 10px; margin: 0; padding-left: 22px; }
+.ticket-detail__audit li { overflow-wrap: anywhere; }
+.ticket-detail__audit pre { max-width: 100%; overflow: auto; padding: 8px; background: var(--surface-2, var(--surface)); border-radius: var(--radius); font-size: var(--size-xs); }
+.datum { display: grid; gap: 2px; align-content: start; min-width: 0; overflow-wrap: anywhere; }
+.datum__label { font-size: var(--size-xs); font-weight: 700; color: var(--text-2); }
+.datum__row { display: flex; align-items: center; gap: 8px; }
+.amount { font: 600 var(--size-xl) var(--mono); }
+.ok-text { display: inline-flex; align-items: flex-start; gap: 6px; }
+.ok-text svg { color: var(--ok); margin-top: 3px; }
+
+/* ---------- Orden de ingreso y ficha de repuesto ---------- */
+.intake { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(280px, 1fr); gap: 28px; align-items: start; }
+.intake__main { display: grid; gap: 28px; min-width: 0; }
+.intake__section { display: grid; gap: 14px; }
+.intake__head { padding-bottom: 8px; border-bottom: var(--rule) solid var(--text); }
+.intake__head p { font-size: var(--size-sm); color: var(--text-2); }
+.intake__side { position: sticky; top: calc(var(--strip-h) + 24px); display: grid; gap: 12px; }
+.intake__actions { display: grid; gap: 8px; }
+
+/* ---------- Repuestos ---------- */
+.alerts { display: flex; flex-wrap: wrap; align-items: stretch; gap: 10px; }
+.alert-btn { flex: 1 1 280px; display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 64px; padding: 10px 14px; border: var(--border) solid var(--danger); border-radius: var(--radius); background: transparent; color: var(--danger); font-weight: 700; text-align: left; }
+.alert-btn:hover { background: var(--surface); }
+.alert-btn[aria-pressed="true"] { background: var(--danger); color: var(--on-danger); }
+.alert-btn strong { font: 600 var(--size-xl) var(--mono); }
+.total-box { flex: 0 1 280px; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 14px; border-top: var(--rule) solid var(--text); font-size: var(--size-sm); font-weight: 700; }
+.total-box strong { font: 600 var(--size-xl) var(--mono); }
+.total-box span span { display: block; font-weight: 400; color: var(--text-2); }
+
+.list-note { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 12px; font-size: var(--size-sm); color: var(--text-2); }
+.shelf { display: grid; gap: 10px; }
+.shelf__title { padding-bottom: 6px; border-bottom: var(--rule) solid var(--text); font: 800 var(--size-md) var(--font-display); }
+.bins { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr)); gap: 10px; }
+.bin { padding-top: 12px; gap: 8px; }
+.bin__top { display: flex; align-items: flex-start; gap: 8px; padding-right: 30px; }
+.bin__name { font-weight: 700; line-height: 1.25; }
+.bin__sku { font: 600 var(--size-xs) var(--mono); color: var(--text-2); overflow-wrap: anywhere; }
+.bin__compat { display: flex; align-items: flex-start; gap: 5px; font-size: var(--size-sm); color: var(--text-2); }
+.bin__compat svg { margin-top: 3px; }
+.gauge { display: grid; gap: 3px; }
+.gauge__bar { position: relative; height: 10px; background: var(--surface-2); }
+.gauge__fill { display: block; height: 100%; background: var(--ok); }
+.gauge--low .gauge__fill { background: var(--danger); }
+.gauge__min { position: absolute; top: -3px; bottom: -3px; width: 2px; background: var(--text); }
+.gauge__row { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 2px 8px; font-size: var(--size-sm); }
+.gauge__row strong { font-family: var(--mono); font-size: var(--size-sm); }
+.gauge--low .gauge__row strong { color: var(--danger); }
+
+/* ---------- Libro contable ---------- */
+.accounting-page { display: grid; gap: 18px; }
+.accounting-page .page-head { align-items: center; }
+.accounting-filters { display: grid; gap: 12px; }
+.accounting-filters .grid-2 { grid-template-columns: repeat(auto-fit, minmax(min(100%, 190px), 1fr)); }
+.accounting-list { display: grid; gap: 10px; }
+.accounting-card { display: grid; gap: 8px; padding: 14px; }
+.accounting-card__top { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 8px; }
+.accounting-entry-number { font: 700 var(--size-base) var(--mono); color: var(--accent); text-underline-offset: 3px; }
+.accounting-summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 150px), 1fr)); gap: 10px 16px; margin: 0; }
+.accounting-summary > div { min-width: 0; overflow-wrap: anywhere; }
+.accounting-summary dt { color: var(--text-2); font-size: var(--size-xs); font-weight: 700; }
+.accounting-summary dd { margin: 2px 0 0; }
+.accounting-summary--detail { grid-template-columns: repeat(auto-fit, minmax(min(100%, 210px), 1fr)); }
+.accounting-section { display: grid; gap: 12px; }
+.accounting-section .subtitle { padding-bottom: 6px; border-bottom: var(--rule) solid var(--text); }
+.accounting-line { min-width: 0; margin: 10px 0; padding: 12px; border: 1px solid var(--line); border-radius: var(--radius); }
+.accounting-line__head { display: flex; justify-content: space-between; align-items: center; }
+.accounting-line__head legend { font-weight: 700; }
+.accounting-line__amounts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.accounting-totals { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px 18px; padding: 10px 0; border-block: var(--rule) solid var(--text); font-size: var(--size-sm); }
+.accounting-totals strong { font: 600 var(--size-base) var(--mono); }
+.accounting-totals--balanced { color: var(--ok); }
+.accounting-form__actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.accounting-review dl { display: grid; gap: 6px; }
+.accounting-review dl > div { display: flex; justify-content: space-between; gap: 12px; }
+.accounting-review dt { color: var(--text-2); }
+.accounting-review dd { margin: 0; font: 600 var(--size-sm) var(--mono); }
+.accounting-table-wrap { width: 100%; overflow-x: auto; }
+.accounting-table { width: 100%; border-collapse: collapse; font-size: var(--size-sm); }
+.accounting-table th, .accounting-table td { padding: 9px 8px; border-bottom: 1px solid var(--line); text-align: left; overflow-wrap: anywhere; }
+.accounting-table th { font-size: var(--size-xs); }
+.accounting-timeline { display: grid; gap: 12px; margin: 0; padding-left: 22px; }
+.accounting-timeline li { padding-left: 4px; }
+.accounting-timeline p { margin: 3px 0; color: var(--text-2); font-size: var(--size-sm); }
+.accounting-success { display: grid; gap: 8px; }
+.accounting-shortcuts { display: flex; flex-wrap: wrap; gap: 8px; }
+.accounting-shortcuts .btn { display: inline-flex; align-items: center; gap: 6px; }
+.accounting-catalog-form { display: grid; gap: 14px; padding: 16px; }
+.accounting-account-select { margin-top: 7px; }
+.accounting-account-picker { min-width: 0; }
+.accounting-account-selected { margin: 5px 0 0; font-size: var(--size-sm); overflow-wrap: anywhere; }
+.accounting-account-sub { display: block; color: var(--text-2); }
+.accounting-legacy-badge { display: block; width: fit-content; margin-top: 4px; padding: 2px 6px; border: 1px solid var(--line); border-radius: 99px; color: var(--text-2); font-size: var(--size-xs); }
+.accounting-audit-list { display: grid; gap: 8px; }
+.accounting-audit-card { display: grid; gap: 5px; padding: 12px; overflow-wrap: anywhere; }
+.accounting-audit-card > p { margin: 0; }
+.accounting-audit-card pre { max-width: 100%; overflow: auto; padding: 9px; background: var(--surface); border-radius: var(--radius); font-size: var(--size-xs); }
+.accounting-period-close { display: grid; grid-template-columns: minmax(0, 1fr) minmax(180px, 260px) auto; align-items: end; gap: 12px; padding: 14px; }
+.accounting-period-close .subtitle { margin: 0 0 4px; }
+.accounting-period-close p { margin: 0; }
+.accounting-period-conflict { display: grid; gap: 5px; padding: 12px; border-left: var(--rule) solid var(--danger); background: var(--surface); }
+.accounting-ledger-source { display: grid; gap: 10px; min-width: 0; margin: 0; padding: 12px; border: 1px solid var(--line); border-radius: var(--radius); }
+.accounting-ledger-source legend { padding: 0 5px; font-weight: 700; }
+.accounting-radio { display: flex; align-items: center; gap: 8px; min-height: var(--control); font-weight: 700; }
+.accounting-radio input { width: 18px; height: 18px; accent-color: var(--accent); }
+.accounting-report-filters { display: grid; gap: 12px; }
+.accounting-report-filters .grid-2 { grid-template-columns: repeat(auto-fit, minmax(min(100%, 190px), 1fr)); }
+.accounting-report-totals { justify-content: flex-start; }
+.accounting-report-totals > span { display: grid; gap: 3px; min-width: 130px; }
+.badge--warn { color: var(--danger); }
+.tabs__link--purchases { white-space: nowrap; }
+.purchases-menu-link { display: none; }
+.purchases-page { display: grid; gap: 18px; min-width: 0; }
+.purchases-page .page-head { align-items: center; }
+.purchases-page .page-head .muted { margin-top: 4px; }
+.purchases-filters { display: grid; gap: 12px; }
+.purchases-filters .grid-2, .purchases-form__section .grid-2, .purchases-line-form .grid-2 { grid-template-columns: repeat(auto-fit, minmax(min(100%, 210px), 1fr)); }
+.purchases-search { display: flex; align-items: flex-end; gap: 10px; }
+.purchases-search .field { flex: 1; min-width: 0; }
+.purchases-list { display: grid; gap: 10px; min-width: 0; }
+.purchases-card { display: grid; gap: 10px; min-width: 0; padding: 14px; }
+.purchases-card__top { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; }
+.purchases-card__top .subtitle { margin: 0; }
+.purchases-card__document { font: 700 var(--size-base) var(--mono); color: var(--accent); overflow-wrap: anywhere; }
+.purchases-summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 140px), 1fr)); gap: 10px 16px; margin: 0; }
+.purchases-summary > div { min-width: 0; overflow-wrap: anywhere; }
+.purchases-summary dt { color: var(--text-2); font-size: var(--size-xs); font-weight: 700; }
+.purchases-summary dd, .purchases-detail__grid dd { margin: 2px 0 0; overflow-wrap: anywhere; }
+.purchases-form { display: grid; gap: 16px; min-width: 0; }
+.purchases-form__section { display: grid; gap: 14px; padding: 16px; min-width: 0; }
+.purchases-inline-link { display: inline-block; margin-top: 5px; font-size: var(--size-sm); }
+.purchases-section { display: grid; gap: 10px; min-width: 0; }
+.purchases-section > .subtitle { padding-bottom: 6px; border-bottom: var(--rule) solid var(--text); }
+.purchases-section__head { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 12px; }
+.purchases-section__head p { margin-top: 4px; }
+.purchases-line { display: grid; gap: 10px; padding: 14px; min-width: 0; }
+.purchases-line h3, .purchases-event h3 { overflow-wrap: anywhere; }
+.purchases-detail { display: grid; gap: 14px; padding: 16px; min-width: 0; }
+.purchases-detail__grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 180px), 1fr)); gap: 14px 20px; margin: 0; }
+.purchases-notes { margin: 0; padding-top: 10px; border-top: 1px solid var(--line); overflow-wrap: anywhere; }
+.purchases-detail__actions { padding-top: 10px; border-top: 1px solid var(--line); }
+.purchases-line-form { display: grid; gap: 14px; padding: 14px; margin: 0; min-width: 0; }
+.purchases-line-form legend { padding: 0 6px; font-weight: 700; }
+.purchases-line-form__foot { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 8px; }
+.purchases-totals { display: grid; gap: 10px; padding: 16px; }
+.purchases-totals dl { display: grid; gap: 8px; margin: 0; }
+.purchases-totals dl > div { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px; }
+.purchases-totals dd { margin: 0; font-family: var(--mono); }
+.purchases-grand-total { padding-top: 10px; border-top: var(--rule) solid var(--text); font-weight: 800; }
+.purchases-grand-total dd { font-size: var(--size-lg); }
+.purchases-event { display: grid; gap: 8px; padding: 14px; }
+.purchases-event p { margin: 0; }
+.purchases-movement { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 12px; padding-top: 6px; border-top: 1px solid var(--line); font-size: var(--size-sm); }
+.purchases-audit { display: grid; gap: 10px; margin: 0; padding-left: 22px; }
+.purchases-audit li { display: grid; gap: 3px; overflow-wrap: anywhere; }
+.purchases-audit span, .purchases-audit small { color: var(--text-2); }
+.purchases-receive-form, .purchases-receipt-review { display: grid; gap: 12px; padding: 14px; }
+.purchases-receipt-review h3, .purchases-receipt-review ul { margin: 0; }
+.purchases-receipt-review ul { padding-left: 20px; overflow-wrap: anywhere; }
+.purchases-receive-form .field { min-width: 0; }
+.purchases-success, .purchases-notice { padding: 10px 12px; border-left: var(--rule) solid var(--ok); background: var(--surface); }
+.purchases-notice { border-left-color: var(--text-2); }
+.purchases-page .btn-row { flex-wrap: wrap; }
+@media (max-width: 600px) {
+  .accounting-period-close { grid-template-columns: minmax(0, 1fr); }
+  .accounting-shortcuts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .accounting-shortcuts .btn { justify-content: center; text-align: center; }
+  .accounting-line__amounts { grid-template-columns: minmax(0, 1fr); }
+  .accounting-table thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; }
+  .accounting-table, .accounting-table tbody, .accounting-table tr, .accounting-table td { display: block; width: 100%; }
+  .accounting-table tr { margin: 8px 0; padding: 8px; border: 1px solid var(--line); border-radius: var(--radius); }
+  .accounting-table td { display: grid; grid-template-columns: minmax(95px, .7fr) minmax(0, 1.3fr); gap: 8px; border: 0; }
+  .accounting-table td::before { content: attr(data-label); color: var(--text-2); font-weight: 700; }
+}
+.bin__foot { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.bin__price { font: 600 var(--size-base) var(--mono); white-space: nowrap; }
+.bin__tools { display: flex; gap: 4px; }
+
+@media (max-width: 1100px) {
+  .intake { grid-template-columns: minmax(0, 1fr); }
+  .intake__side { position: static; }
+  .detail__cols { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 1100px) {
+  .tabs__link--accounting, .tabs__link--purchases, .tabs__link--admin-extension { display: none; }
+  .accounting-menu-link, .purchases-menu-link { display: flex; }
+}
+@media (max-width: 760px) {
+  .station__picker { display: grid; gap: 2px; font-size: var(--size-sm); font-weight: 700; }
+  .board { grid-template-columns: minmax(0, 1fr); overflow-x: visible; }
+  .station { display: none; }
+  .station.is-focus { display: grid; }
+  .detail__cols { grid-template-columns: minmax(0, 1fr); }
+  .detail__top { padding-right: 24px; }
+  .purchases-search { align-items: stretch; flex-direction: column; }
+}
+@media (min-width: 1101px) {
+  .accounting-menu-link, .purchases-menu-link { display: none; }
+}
+/* Proveedores: misma ficha que los repuestos del inventario. */
+.supplier-card { display: grid; gap: 10px; align-content: start; }
+.supplier-card--inactive { opacity: .78; }
+.supplier-card__facts { display: grid; gap: 4px; margin: 0; padding: 0; list-style: none; font-size: var(--size-sm); color: var(--text-2); }
+.supplier-card__facts li { display: flex; align-items: center; gap: 6px; min-width: 0; overflow-wrap: anywhere; }
+.supplier-card__facts svg { flex: none; }
+
+/* Trazabilidad de stock: estados claros y tablas adaptables a móvil. */
+.inventory-demo-note { margin: 0; padding: 10px 12px; border-left: var(--rule) solid var(--text-2); background: var(--surface); color: var(--text-2); }
+.inventory-retired-notice { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; padding: 10px 12px; border-left: var(--rule) solid var(--ok); background: var(--surface); }
+.inventory-retired-notice > span { flex: 1 1 220px; }
+.inventory-retired-notice .icon-btn { margin-left: auto; }
+.inventory-movements { display: grid; gap: 16px; min-width: 0; }
+.inventory-movements .page-head { align-items: center; }
+.inventory-movement-filters { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 170px), 1fr)); align-items: end; gap: 12px; padding: 14px; border: 1px solid var(--line); border-radius: var(--radius); }
+.inventory-movement-filters .field { min-width: 0; }
+.inventory-movement-filters__actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.inventory-movements__table-wrap { width: 100%; min-width: 0; overflow-x: auto; border: 1px solid var(--line); border-radius: var(--radius); }
+.inventory-movements__table { width: 100%; border-collapse: collapse; font-size: var(--size-sm); }
+.inventory-movements__table th, .inventory-movements__table td { padding: 10px 9px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; overflow-wrap: anywhere; }
+.inventory-movements__table th { background: var(--surface); font-size: var(--size-xs); }
+.inventory-movements__table tr:last-child td { border-bottom: 0; }
+.inventory-legacy-badge { display: block; width: fit-content; margin-top: 4px; padding: 2px 6px; border: 1px solid var(--line); border-radius: 99px; color: var(--text-2); font-size: var(--size-xs); }
+.inventory-movement-source { display: block; margin-top: 4px; color: var(--text-2); }
+.stock-adjustment-dialog { max-height: min(90vh, 720px); overflow-y: auto; }
+.stock-adjustment-dialog form { display: grid; gap: 12px; }
+.stock-adjustment-dialog .dialog__actions { margin-top: 4px; }
+.inventory-movements .empty, .inventory-movements .retry { margin: 0; }
+@media (max-width: 600px) {
+  .inventory-movement-filters { grid-template-columns: minmax(0, 1fr); }
+  .inventory-movement-filters__actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .inventory-movements__table, .inventory-movements__table tbody, .inventory-movements__table tr, .inventory-movements__table td { display: block; width: 100%; }
+  .inventory-movements__table thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; }
+  .inventory-movements__table tr { padding: 8px; border-bottom: 1px solid var(--line); }
+  .inventory-movements__table tr:last-child { border-bottom: 0; }
+  .inventory-movements__table td { display: grid; grid-template-columns: minmax(100px, .7fr) minmax(0, 1.3fr); gap: 8px; padding: 6px 2px; border: 0; }
+  .inventory-movements__table td::before { content: attr(data-label); color: var(--text-2); font-weight: 700; }
+}
+.inventory-inactive-badge { display: inline-block; margin-left: 8px; padding: 2px 7px; border: 1px solid var(--line); border-radius: 99px; font-size: var(--size-xs); color: var(--text-2); vertical-align: middle; }

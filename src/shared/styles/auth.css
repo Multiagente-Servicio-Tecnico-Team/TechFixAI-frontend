@@ -1,0 +1,60 @@
+/* Acceso, registro, recuperación, ayuda y 404: mensaje a la izquierda y etiqueta de trabajo a la derecha. */
+.auth { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 32px 64px; align-items: start; padding: 32px 0; }
+.auth--wide { grid-template-columns: minmax(0, 0.7fr) minmax(0, 1.3fr); }
+.auth__intro { display: grid; gap: 14px; justify-items: start; position: sticky; top: calc(var(--strip-h) + 32px); }
+.auth__title { font: 800 clamp(32px, 4.6vw, 60px)/1.02 var(--font-display); letter-spacing: -0.03em; }
+.auth__lead { max-width: 46ch; font-size: var(--size-md); color: var(--text-2); }
+.auth__links { display: grid; gap: 4px; padding-top: 12px; border-top: var(--rule) solid var(--text); width: 100%; }
+.auth__links a { display: inline-flex; min-height: 24px; }
+
+.reg-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px 24px; align-items: start; }
+.reg-grid__col { display: grid; gap: 16px; min-width: 0; }
+.phone-row { display: grid; grid-template-columns: 96px minmax(0, 1fr); gap: 6px; }
+.hint-ok { display: inline-flex; align-items: flex-start; gap: 6px; }
+.hint-ok svg { margin-top: 3px; }
+
+.strength { font-size: var(--size-xs); font-weight: 700; color: var(--text-2); }
+.meter { height: 8px; margin-top: 4px; background: var(--surface-2); }
+.meter__bar { display: block; height: 100%; background: var(--danger); transition: width var(--base) var(--ease); }
+.meter__bar--3 { background: var(--warn); }
+.meter__bar--4 { background: var(--ok); }
+.rules { display: grid; gap: 2px; margin-top: 6px; font-size: var(--size-sm); color: var(--text-2); }
+.rules li { display: flex; align-items: center; gap: 6px; }
+.rules li.is-ok { color: var(--ok); font-weight: 700; }
+.match { display: inline-flex; align-items: center; gap: 4px; font-size: var(--size-xs); font-weight: 700; color: var(--ok); }
+.form__right { justify-self: end; font-size: var(--size-sm); }
+
+.result { display: grid; gap: 12px; justify-items: start; }
+.result__seal { display: grid; place-items: center; width: 56px; height: 56px; border: var(--rule) solid var(--ok); color: var(--ok); transform: rotate(-4deg); }
+.result__seal--warn { border-color: var(--warn); color: var(--warn); }
+
+/* ---------- Ayuda ---------- */
+.help { display: grid; grid-template-columns: minmax(0, 260px) minmax(0, 1fr); gap: 32px 48px; align-items: start; padding: 16px 0; }
+.help__index { position: sticky; top: calc(var(--strip-h) + 24px); display: grid; gap: 2px; padding-top: 10px; border-top: var(--rule) solid var(--text); }
+.help__index a { display: flex; align-items: center; min-height: var(--control); font-weight: 700; }
+.help__index a:hover { text-decoration: underline; text-underline-offset: 3px; }
+.help__content { display: grid; gap: 40px; min-width: 0; }
+.help__content section { display: grid; gap: 12px; }
+.help__head { display: grid; gap: 12px; }
+.help-channels { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr)); gap: 10px; }
+.help-channel { padding-top: 16px; }
+.help-channel:hover strong, .help-channel:focus-visible strong { text-decoration: underline; text-underline-offset: 3px; }
+.help-channel span { color: var(--text-2); font-size: var(--size-sm); }
+.faq details { border-top: var(--border) solid var(--text); }
+.faq details:last-child { border-bottom: var(--border) solid var(--text); }
+.faq summary { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 48px; padding: 8px 0; font-weight: 700; cursor: pointer; }
+.faq summary::after { content: "+"; font: 600 var(--size-lg) var(--mono); }
+.faq details[open] summary::after { content: "–"; }
+.faq p { padding-bottom: 14px; max-width: 70ch; color: var(--text-2); }
+
+/* ---------- 404 ---------- */
+.lost { display: grid; gap: 16px; justify-items: start; max-width: 640px; margin: 32px auto; }
+
+@media (max-width: 900px) {
+  .auth, .auth--wide, .help { grid-template-columns: minmax(0, 1fr); padding: 8px 0; }
+  .auth__intro, .help__index { position: static; }
+  .auth__title { font-size: clamp(28px, 8vw, 40px); }
+}
+@media (max-width: 640px) {
+  .reg-grid { grid-template-columns: minmax(0, 1fr); }
+}

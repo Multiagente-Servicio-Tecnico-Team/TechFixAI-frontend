@@ -1,0 +1,75 @@
+/* Tokens del sistema de diseño «Banco» (ver design/DESIGN.md). Tema claro de base; el oscuro se activa con [data-theme="dark"]. */
+:root {
+  --font-display: "Bricolage Grotesque", system-ui, sans-serif;
+  --font: "Atkinson Hyperlegible", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: "Martian Mono", ui-monospace, Consolas, monospace;
+
+  --size-xs: 12px;
+  --size-sm: 13px;
+  --size-base: 15px;
+  --size-md: 17px;
+  --size-lg: 20px;
+  --size-xl: 26px;
+  --size-2xl: 34px;
+  --size-3xl: 48px;
+  --size-4xl: 72px;
+
+  --radius: 2px;
+  --border: 2px;
+  --rule: 3px;
+  --notch: 18px;
+  --notch-lg: 32px;
+
+  --control: 40px;
+  --control-sm: 32px;
+  --control-lg: 48px;
+  --strip-h: 60px;
+  --tabbar-h: 64px;
+  --content: 1360px;
+
+  --fast: 120ms;
+  --base: 180ms;
+  --ease: cubic-bezier(0.3, 0, 0, 1);
+
+  --bg: #e9edf5;
+  --surface: #ffffff;
+  --surface-2: #dde3ef;
+  --line: #b7c1d6;
+  --text: #101b3b;
+  --text-2: #46527a;
+  --accent: #1f3fbf;
+  --on-accent: #ffffff;
+  --accent-hover: #18329a;
+  --mark: #ffc91f;
+  --on-mark: #101b3b;
+  --danger: #b3261e;
+  --on-danger: #ffffff;
+  --ok: #0e7043;
+  --warn: #7a5200;
+  --focus: #1f3fbf;
+  --overlay: rgba(16, 27, 59, 0.55);
+  --band: #101b3b;
+  --on-band: #f2f4fb;
+  color-scheme: light;
+}
+
+[data-theme="dark"] {
+  --bg: #0e1530;
+  --surface: #18224a;
+  --surface-2: #222e5e;
+  --line: #3a4883;
+  --text: #f2f4fb;
+  --text-2: #b6bedc;
+  --accent: #ffc91f;
+  --on-accent: #101b3b;
+  --accent-hover: #ffd755;
+  --danger: #ff8a80;
+  --on-danger: #101b3b;
+  --ok: #5fd7a1;
+  --warn: #ffd755;
+  --focus: #ffc91f;
+  --overlay: rgba(5, 9, 24, 0.72);
+  --band: #222e5e;
+  --on-band: #f2f4fb;
+  color-scheme: dark;
+}

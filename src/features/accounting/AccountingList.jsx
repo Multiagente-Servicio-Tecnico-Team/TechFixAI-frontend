@@ -19,6 +19,26 @@ export default function AccountingList({ api = defaultApi }) {
   const [result, setResult] = useState({ items: [], total: 0, limit: 50, offset: 0 });
   const [state, setState] = useState("loading");
   const [error, setError] = useState("");
+  const now = new Date();
+  const [pleYear, setPleYear] = useState(String(now.getFullYear()));
+  const [pleMonth, setPleMonth] = useState(String(now.getMonth() + 1).padStart(2, "0"));
+  const [pleLoading, setPleLoading] = useState(false);
+  const [pleResult, setPleResult] = useState(null);
+  const [pleError, setPleError] = useState("");
+
+  const exportPle = async (event) => {
+    event.preventDefault(); setPleLoading(true); setPleError(""); setPleResult(null);
+    try {
+      const result = await api.validatePle(Number(pleYear), Number(pleMonth));
+      setPleResult(result);
+      if (!result.valid) { setPleError(result.errors.join(" ")); return; }
+      const file = await api.exportPle(Number(pleYear), Number(pleMonth));
+      const url = URL.createObjectURL(file.blob);
+      const link = document.createElement("a"); link.href = url; link.download = result.filename;
+      document.body.appendChild(link); link.click(); link.remove(); URL.revokeObjectURL(url);
+    } catch (e) { setPleError(e.message || "No se pudo validar o descargar el PLE."); }
+    finally { setPleLoading(false); }
+  };
 
   const load = async (nextFilters = applied, nextPage = page) => {
     setState("loading"); setError("");
@@ -49,6 +69,16 @@ export default function AccountingList({ api = defaultApi }) {
       <Link className="btn" to="/taller/contabilidad/periodos"><CalendarDays size={16} aria-hidden="true" /> Periodos</Link>
       <Link className="btn" to="/taller/contabilidad/informes/diario"><FileBarChart size={16} aria-hidden="true" /> Informes</Link>
     </nav>
+    <form className="jobtag accounting-filters" onSubmit={exportPle} aria-label="Exportación PLE SUNAT">
+      <h2 className="subtitle">Exportación PLE SUNAT (Libro Diario 5.1)</h2>
+      <div className="grid-2">
+        <Field label="Año" htmlFor="ple-year"><select id="ple-year" className="input" value={pleYear} onChange={e => setPleYear(e.target.value)}>{Array.from({ length: 6 }, (_, i) => now.getFullYear() - i).map(year => <option key={year} value={year}>{year}</option>)}</select></Field>
+        <Field label="Mes" htmlFor="ple-month"><select id="ple-month" className="input" value={pleMonth} onChange={e => setPleMonth(e.target.value)}>{Array.from({ length: 12 }, (_, i) => String(i + 1).padStart(2, "0")).map(month => <option key={month} value={month}>{month}</option>)}</select></Field>
+      </div>
+      <div className="btn-row"><button className="btn btn--primary" type="submit" disabled={pleLoading}>{pleLoading ? "Validando…" : "Validar y Exportar PLE (.txt)"}</button></div>
+      {pleError && <FormAlert>{pleError}</FormAlert>}
+      {pleResult && <dl className="accounting-summary" aria-live="polite"><div><dt>Asientos</dt><dd>{pleResult.entries_count}</dd></div><div><dt>Total Debe</dt><dd>S/ {pleResult.total_debit}</dd></div><div><dt>Total Haber</dt><dd>S/ {pleResult.total_credit}</dd></div><div><dt>Archivo oficial</dt><dd>{pleResult.filename}</dd></div></dl>}
+    </form>
     <form className="jobtag accounting-filters" onSubmit={apply}>
       <div className="grid-2">
         <Field label="Desde" htmlFor="accounting-from"><input className="input" id="accounting-from" type="date" value={filters.from_date} max={filters.to_date || undefined} onChange={e => setFilters({...filters, from_date:e.target.value})}/></Field>

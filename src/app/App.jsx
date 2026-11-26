@@ -80,10 +80,11 @@ export default function App() {
           <Route path="/taller/inventario/:partId/movimientos" element={<InventoryMovements />} />
           <Route path="/taller/inventario/nuevo" element={<PartForm />} />
           <Route path="/taller/inventario/:sku/editar" element={<PartForm />} />
-          <Route element={<RequireRole role="staff" accountRole="ADMIN" deniedStateKey="adminChatDenied"><Outlet /></RequireRole>}>
+          {/* El personal sin rol ADMIN vuelve a Repuestos: el Banco también es solo para ADMIN. */}
+          <Route element={<RequireRole role="staff" accountRole="ADMIN" deniedStateKey="adminChatDenied" deniedTo="/taller/inventario"><Outlet /></RequireRole>}>
             <Route path="/taller/asistente" element={<AdminChat />} />
           </Route>
-          <Route element={<RequireRole role="staff" accountRole="ADMIN"><Outlet /></RequireRole>}>
+          <Route element={<RequireRole role="staff" accountRole="ADMIN" deniedTo="/taller/inventario"><Outlet /></RequireRole>}>
             <Route path="/taller/contabilidad" element={<AccountingList />} />
             <Route path="/taller/contabilidad/nuevo" element={<AccountingCreate />} />
             <Route path="/taller/contabilidad/:id" element={<AccountingDetail />} />
